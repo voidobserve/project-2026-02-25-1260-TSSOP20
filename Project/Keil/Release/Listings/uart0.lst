@@ -1,0 +1,141 @@
+C51 COMPILER V9.60.7.0   UART0                                                             02/26/2026 17:11:38 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART0
+OBJECT MODULE PLACED IN .\Release\Objects\uart0.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\..\User\uart0.c LARGE OPTIMIZE(9,SIZE) BROWSE INTVECTOR(0X000C) INCDI
+                    -R(..\..\Libraries\Include;..\..\User) INTERVAL(3) DEBUG OBJECTEXTEND PRINT(.\Release\Listings\uart0.lst) OBJECT(.\Releas
+                    -e\Objects\uart0.obj)
+
+line level    source
+
+   1          #include "uart0.h"
+   2          #include "my_config.h"
+   3          
+   4          volatile uart_rx_buffer_t uart0_rx_buffer = {0};
+   5          
+   6          #if USE_MY_DEBUG
+   7          // 重写puchar()函数
+   8          char putchar(char c)
+   9          {
+  10   1          while (!(UART0_STA & UART_TX_DONE(0x01)))
+  11   1              ;
+  12   1          UART0_DATA = c;
+  13   1          return c;
+  14   1      }
+  15          #endif
+  16          
+  17          void uart0_init(void)
+  18          {
+  19   1          P2_MD1 &= ~(GPIO_P25_MODE_SEL(0x3));
+  20   1          P2_MD1 |= GPIO_P25_MODE_SEL(0x1); // 配置为输出模式
+  21   1          FOUT_S25 |= GPIO_FOUT_UART0_TX;   // 配置为UART0_TX
+  22   1      
+  23   1          P2_MD1 &= ~GPIO_P26_MODE_SEL(0x03); // 清空对应的寄存器配置，对应输入模式
+  24   1          FIN_S7 = GPIO_FIN_SEL_P26;          // 选择 uart0 rx 对应的引脚
+  25   1      
+  26   1          UART0_BAUD1 = (USER_UART0_BAUD >> 8) & 0xFF; // 配置波特率高八位
+  27   1          UART0_BAUD0 = USER_UART0_BAUD & 0xFF;        // 配置波特率低八位
+  28   1          UART0_CON0 = UART_STOP_BIT(0x00) |           // 0x00：一位停止位
+  29   1                       UART_RX_IRQ_EN(0x01) |          // 0x01：rx中断使能
+  30   1                       UART_EN(0x01);                  // UART 使能
+  31   1      
+  32   1          __EnableIRQ(UART0_IRQn); // 打开模块中断
+  33   1          IE_EA = 1;               // 打开总中断
+  34   1      }
+  35          
+  36          // UART0发送一个字节数据的函数
+  37          void uart0_sendbyte(u8 byte)
+  38          {
+  39   1          while (!(UART0_STA & UART_TX_DONE(0x01))) // 等待上一次发送完成
+  40   1              ;
+  41   1          // IE_EA = 0; // 关闭总中断
+  42   1          UART0_DATA = byte;
+  43   1          // IE_EA = 1;
+  44   1          while (!(UART0_STA & UART_TX_DONE(0x01))) // 等待这次发送完成
+  45   1              ;
+  46   1      }
+  47          
+  48          void uart0_sendbuf(u8 *buf, u8 len)
+  49          {
+  50   1          u8 i = 0;
+  51   1          for (; i < len; i++)
+  52   1          {
+  53   2              uart0_sendbyte(buf[i]);
+C51 COMPILER V9.60.7.0   UART0                                                             02/26/2026 17:11:38 PAGE 2   
+
+  54   2          }
+  55   1      }
+  56          
+  57          // 获取接收缓冲区中有效的数据个数，单位：字节Byte
+  58          u8 uart0_rxbuffer_get_count(void)
+  59          {
+  60   1          return uart0_rx_buffer.count;
+  61   1      }
+  62          
+  63          // 从接收缓冲区中取出一个字节数据
+  64          u8 uart0_rxbuffer_get_byte(void)
+  65          {
+  66   1          u8 rxbyte;
+  67   1      
+  68   1          if (0 == uart0_rx_buffer.count)
+  69   1          {
+  70   2              // 缓冲区空
+  71   2              return 0;
+  72   2          }
+  73   1      
+  74   1          // 先偏移索引，再取出数据
+  75   1          uart0_rx_buffer.tail = (uart0_rx_buffer.tail + 1) % UART_RX_BUF_SIZE;
+  76   1          rxbyte = uart0_rx_buffer.buffer[uart0_rx_buffer.tail];
+  77   1      
+  78   1          uart0_rx_buffer.count--;
+  79   1      
+  80   1          return rxbyte;
+  81   1      }
+  82          
+  83          static void uart0_rxbuffer_put_byte(u8 byte)
+  84          {
+  85   1          // 目前的逻辑：缓冲区满，覆盖旧的数据
+  86   1      
+  87   1          // 先偏移索引，再存放数据
+  88   1          uart0_rx_buffer.head = (uart0_rx_buffer.head + 1) % UART_RX_BUF_SIZE;
+  89   1          uart0_rx_buffer.buffer[uart0_rx_buffer.head] = byte;
+  90   1      
+  91   1          uart0_rx_buffer.count++;
+  92   1      
+  93   1          if (uart0_rx_buffer.count > UART_RX_BUF_SIZE)
+  94   1          {
+  95   2              uart0_rx_buffer.count = UART_RX_BUF_SIZE;
+  96   2          }
+  97   1      }
+  98          
+  99          // UART0中断服务函数（接收中断）
+ 100          void UART0_IRQHandler(void) interrupt UART0_IRQn
+ 101          {
+ 102   1          // 进入中断设置IP，不可删除
+ 103   1          __IRQnIPnPush(UART0_IRQn);
+ 104   1          // ---------------- 用户函数处理 -------------------
+ 105   1          // RX接收完成中断
+ 106   1          if (UART0_STA & UART_RX_DONE(0x1))
+ 107   1          {
+ 108   2              uart0_rxbuffer_put_byte(UART0_DATA);
+ 109   2          }
+ 110   1          // 退出中断设置IP，不可删除
+ 111   1          __IRQnIPnPop(UART0_IRQn);
+ 112   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+C51 COMPILER V9.60.7.0   UART0                                                             02/26/2026 17:11:38 PAGE 3   
+
+   CODE SIZE        =    205    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =    131       3
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

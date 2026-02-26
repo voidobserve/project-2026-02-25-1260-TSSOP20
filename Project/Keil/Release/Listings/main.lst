@@ -1,0 +1,130 @@
+C51 COMPILER V9.60.7.0   MAIN                                                              02/26/2026 17:11:38 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
+OBJECT MODULE PLACED IN .\Release\Objects\main.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\..\User\main.c LARGE OPTIMIZE(9,SIZE) BROWSE INTVECTOR(0X000C) INCDIR
+                    -(..\..\Libraries\Include;..\..\User) INTERVAL(3) DEBUG OBJECTEXTEND PRINT(.\Release\Listings\main.lst) OBJECT(.\Release\
+                    -Objects\main.obj)
+
+line level    source
+
+   1          /**
+   2           ******************************************************************************
+   3           * @file    main.c
+   4           * @author  HUGE-IC Application Team
+   5           * @version V1.0.0
+   6           * @date    02-09-2022
+   7           * @brief   Main program body
+   8           ******************************************************************************
+   9           * @attention
+  10           *
+  11           * <h2><center>&copy; COPYRIGHT 2021 HUGE-IC</center></h2>
+  12           *
+  13           * 版权说明后续补上
+  14           *
+  15           ******************************************************************************
+  16           */
+  17          
+  18          /* Includes ------------------------------------------------------------------*/
+  19          #include "my_config.h"
+  20          #include "include.h"
+  21          #include "uart0.h"
+  22          #include "timer0.h"
+  23          #include "adc.h"
+  24          
+  25          
+  26          #include "uart_data_handle.h"
+  27          #include "ad_key.h"
+  28          
+  29          void debug_pin_init(void)
+  30          {
+  31   1          P1_MD1 &= GPIO_P17_MODE_SEL(0x03); 
+  32   1          P1_MD1 |= GPIO_P17_MODE_SEL(0x01); 
+  33   1      }
+  34          
+  35          volatile u8 flag_debug = 0;
+  36          
+  37          void main(void)
+  38          {
+  39   1          // 看门狗默认打开, 复位时间2s
+  40   1          WDT_KEY = WDT_KEY_VAL(0xDD); //  关闭看门狗 (如需配置看门狗请查看“WDT\WDT_Reset”示
+             -例)
+  41   1      
+  42   1          system_init();
+  43   1      
+  44   1          // 关闭HCK和HDA的调试功能
+  45   1          WDT_KEY = 0x55;  // 解除写保护
+  46   1          IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除�
+             -��射）
+  47   1          WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
+  48   1      
+  49   1          timer0_init();
+  50   1          adc_pin_init();
+  51   1          adc_init();
+C51 COMPILER V9.60.7.0   MAIN                                                              02/26/2026 17:11:38 PAGE 2   
+
+  52   1          uart0_init();
+  53   1          
+  54   1      
+  55   1      #if USE_MY_DEBUG
+  56   1          debug_pin_init();
+  57   1          printf("sys reset\n");
+  58   1      #endif
+  59   1      
+  60   1          while (1)
+  61   1          {
+  62   2              u16 adkey_val = 0;
+  63   2              // if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
+  64   2              // {
+  65   2              //     adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
+  66   2              //     adkey_val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
+  67   2              //     printf("adkey_val == %u\n", adkey_val); 
+  68   2              //     delay_ms(500);
+  69   2              // }
+  70   2      
+  71   2              // printf("adkey 1 press val == %u\n", AD_KEY_1_PRESS_VAL);
+  72   2              // printf("adkey 2 press val == %u\n", AD_KEY_2_PRESS_VAL);
+  73   2              // printf("adkey 3 press val == %u\n", AD_KEY_3_PRESS_VAL);
+  74   2              // printf("adkey 4 press val == %u\n", AD_KEY_4_PRESS_VAL);
+  75   2              // printf("adkey index 1 val == %u\n", AD_KEY_INDEX_1_VAL);
+  76   2              // printf("adkey index 2 val == %u\n", AD_KEY_INDEX_2_VAL);
+  77   2              // printf("adkey index 3 val == %u\n", AD_KEY_INDEX_3_VAL);
+  78   2              // printf("adkey index 4 val == %u\n", AD_KEY_INDEX_4_VAL);
+  79   2              // delay_ms(500);
+  80   2      
+  81   2              if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET) && flag_debug)
+  82   2              {
+  83   3                  flag_debug = 0;
+  84   3                  adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
+  85   3                  adkey_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
+  86   3                  printf("adkey_val == %u\n", adkey_val); 
+  87   3                  // delay_ms(500); 
+  88   3              }
+  89   2      
+  90   2              key_driver_scan(&ad_key_para);
+  91   2              ad_key_handle();
+  92   2      
+  93   2              uart_data_handle();
+  94   2          }
+  95   1      }
+  96          
+  97          /**
+  98           * @}
+  99           */
+ 100          
+ 101          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    129    ----
+   CONSTANT SIZE    =     28    ----
+   XDATA SIZE       =      1       2
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
