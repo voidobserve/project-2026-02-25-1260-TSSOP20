@@ -2,16 +2,19 @@
  
 void pwm_init(void)
 { 
-    P1_MD1 &= ~GPIO_P16_MODE_SEL(0x03); // P16 14脚
-    P1_MD1 |= GPIO_P16_MODE_SEL(0x01);
-    P1_MD1 &= ~GPIO_P14_MODE_SEL(0x03); // P14 16脚
-    P1_MD1 |= GPIO_P14_MODE_SEL(0x01);
-    FOUT_S14 = GPIO_FOUT_AF_FUNC;      // AF功能输出
-    FOUT_S16 = GPIO_FOUT_STMR0_PWMOUT; // stmr0_pwmout
+    P3_MD0 &= ~GPIO_P30_MODE_SEL(0x03);  
+    P3_MD0 |= GPIO_P30_MODE_SEL(0x01);// 输出模式
+    FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT; // stmr0_pwmout
 
+    P2_MD1 &= ~GPIO_P27_MODE_SEL(0x03); 
+    P2_MD1 |= GPIO_P27_MODE_SEL(0x01);  // 输出模式
+    FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;  // 选择 stmr1_pwmout 
+
+    // ==================================================================
+    // STMR0 用作 Y 黄灯输出
     STMR_CNTCLR |= STMR_0_CNT_CLR(0x1); // 清空计数值 
-    STMR0_PSC = STMR_PRESCALE_VAL(0x07);                        // 预分频
-    STMR0_PRH = STMR_PRD_VAL_H((STMR0_PEROID_VAL >> 8) & 0xFF); // 周期值
+    STMR0_PSC = STMR_PRESCALE_VAL(0x07);                        // 预分频（填入的值范围：0~254，对应1~255分频）
+    STMR0_PRH = STMR_PRD_VAL_H((STMR0_PEROID_VAL >> 8) & 0xFF); // 周期值 
     STMR0_PRL = STMR_PRD_VAL_L((STMR0_PEROID_VAL >> 0) & 0xFF);
     STMR0_CMPAH = STMR_CMPA_VAL_H(((0) >> 8) & 0xFF); // 比较值
     STMR0_CMPAL = STMR_CMPA_VAL_L(((0) >> 0) & 0xFF); // 比较值
@@ -23,8 +26,8 @@ void pwm_init(void)
     STMR_CNTEN |= STMR_0_CNT_EN(0x1);   // 使能
     STMR_PWMEN |= STMR_0_PWM_EN(0x1);   // PWM输出使能
 
-
-    // P15 15脚 作为第2路PWM输出
+    // ==================================================================
+    // STMR1 用作 W 白灯输出
     STMR_CNTCLR |= STMR_1_CNT_CLR(0x1);                         // 清空计数值
     STMR1_PSC = STMR_PRESCALE_VAL(0x07);                        // 预分频
     STMR1_PRH = STMR_PRD_VAL_H((STMR1_PEROID_VAL >> 8) & 0xFF); // 周期值
@@ -39,9 +42,7 @@ void pwm_init(void)
     STMR_CNTEN |= STMR_1_CNT_EN(0x1);   // 使能
     STMR_PWMEN |= STMR_1_PWM_EN(0x1);   // PWM输出使能
  
-    P1_MD1 &= ~GPIO_P15_MODE_SEL(0x03); // P15 15脚
-    P1_MD1 |= GPIO_P15_MODE_SEL(0x01);  // 输出模式
-    FOUT_S15 = GPIO_FOUT_STMR1_PWMOUT;  // 选择stmr1_pwmout 
+
 }
 
 // 设置通道0的占空比

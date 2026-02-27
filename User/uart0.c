@@ -1,9 +1,9 @@
 #include "uart0.h"
-#include "my_config.h"
+#include "user_config.h"
 
 volatile uart_rx_buffer_t uart0_rx_buffer = {0};
 
-#if USE_MY_DEBUG
+#if USER_DEBUG_ENABLE
 // 重写puchar()函数
 char putchar(char c)
 {

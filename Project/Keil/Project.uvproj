@@ -426,6 +426,26 @@
               <FileType>1</FileType>
               <FilePath>..\..\User\ad_key.c</FilePath>
             </File>
+            <File>
+              <FileName>user_test.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\user_test.c</FilePath>
+            </File>
+            <File>
+              <FileName>led.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\led.c</FilePath>
+            </File>
+            <File>
+              <FileName>battery_monitor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\battery_monitor.c</FilePath>
+            </File>
+            <File>
+              <FileName>bluetooth_ic_handle.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\bluetooth_ic_handle.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

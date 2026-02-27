@@ -1,278 +1,314 @@
 #include "uart_data_handle.h"
-#include "my_config.h"
+#include "user_config.h"
 #include "uart0.h"
+#include <stdio.h>
+#include <string.h>
 
-#include <stdio.h> // printf
+// 接收器
+static volatile uart_receiver_t uart_receiver;
 
-static volatile u8 cmd_buff[10] = {0};    // 存放接收到的一条指令
-static volatile u8 cur_cmd_buff_len = 0;  // 指示当前接收到的指令的索引（之后会在程序中更新，不用清零）
-static volatile u8 dest_cmd_buff_len = 0; // 存放最终要接收的指令长度（之后会在程序中更新，不用清零）
-
-static volatile u8 timeout_enable = 0; // 超时计数使能
-static volatile u16 timeout_cnt = 0;   // 超时计数
-
-// 由定时中断调用，累计超时计数
-void uart_data_recv_timeout_add(void)
+// 重置接收器状态
+void uart_receiver_reset(void)
 {
-    if (timeout_enable)
+    memset((void *)&uart_receiver, 0, sizeof(uart_receiver_t));
+    uart_receiver.status = UART_DATA_HANDLE_STATUS_IDLE;
+}
+
+/**
+ * @brief 接收器超时使能时，累计超时时间，在定时器中断中调用
+ *
+ */
+void uart_receiver_timeout_add(void)
+{
+    if (uart_receiver.timeout_enable)
     {
-        timeout_cnt += 10; // 有计数溢出的风险，要注意在溢出前进行处理
+        uart_receiver.timeout_cnt++;
     }
 }
 
-void uart_data_handle(void)
+/**
+ * @brief 计算校验和。有接收完校验和之后，才调用该函数
+ *
+ * @return u8 0：校验通过；   1：校验不通过
+ */
+u8 uart_receiver_process_checksum(void)
 {
-    static volatile u8 uart_data_handle_status = UART_DATA_HANDLE_STATUS_IDLE; // 状态机
-
-    u8 recv_byte;
-    u8 check_sum = 0;        // 存放计算之后的校验和
-    u8 i;                    // 循环计数值
-    u8 is_recv_complete = 0; // 是否接收到完整的一帧指令
-
-    if (0 == uart0_rxbuffer_get_count())
+    u8 i;
+    u8 check_sum = 0;
+    for (i = 0; i < 5; i++) // 只计算前5个字节的校验和
     {
-        // 未收到数据，累加超时计时
-        if (timeout_cnt >= UART_DATA_HANDLE_TIMEOUT)
-        {
-            // 接收超时
-            timeout_cnt = 0;
-            timeout_enable = 0;                                     // 不使能超时计数
-            uart_data_handle_status = UART_DATA_HANDLE_STATUS_IDLE; // 重新开始接收
+        check_sum += uart_receiver.buffer[i];
+    }
 
-            // 打印超时之后，缓冲区内的数据
-            printf("=================================>\n");
-            printf("uart recv timeout\n");
-            for (i = 0; i < ARRAY_SIZE(cmd_buff); i++)
-            {
-                printf("%02x", (u16)cmd_buff[i]);
-            }
-            printf("=================================^\n");
+    if (check_sum == uart_receiver.buffer[6])
+    {
+        return 0;
+    }
+    else
+    {
+#if USER_DEBUG_ENABLE
+        // 校验和错误
+        printf("Checksum error: expected 0x%02x, got 0x%02x\n",
+               (u16)check_sum, (u16)uart_receiver.buffer[6]);
+#endif
+
+        return 1;
+    }
+}
+
+/**
+ * @brief 接收器处理单个字节
+ *
+ * @param byte
+ * @return u8 0：接收成功
+ *            非0：接收失败
+ */
+u8 uart_receiver_process_byte(u8 byte)
+{
+    switch (uart_receiver.status)
+    {
+    case UART_DATA_HANDLE_STATUS_IDLE:
+        if (byte == UART_DATA_HANDLE_FORMAT_HEAD0)
+        {
+            uart_receiver.buffer[uart_receiver.index++] = byte;
+            uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD0;
+            return 0;
+        }
+        else
+        {
+            return 1;
         }
 
-        return; // 串口缓冲区的数据为空，直接返回
-    }
+        break;
 
-    while (1) // 一次性把缓冲区中的数据读出来
-    {
-        if (uart0_rxbuffer_get_count() == 0 || is_recv_complete) // 退出条件
+    case UART_DATA_HANDLE_STATUS_FORMAT_HEAD0:
+        if (byte == UART_DATA_HANDLE_FORMAT_HEAD1)
         {
-            if (is_recv_complete)
-            {
-                is_recv_complete = 0;
-            }
+            uart_receiver.buffer[uart_receiver.index++] = byte;
+            uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD1;
+            return 0;
+        }
+        else
+        {
+            // 错误
+            return 1;
+        }
+        break;
 
-            break;
+    case UART_DATA_HANDLE_STATUS_FORMAT_HEAD1:
+        if (byte == UART_DATA_HANDLE_FORMAT_FIX_VAL0)
+        {
+            uart_receiver.buffer[uart_receiver.index++] = byte;
+            uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0;
+            return 0;
+        }
+        else
+        {
+            return 1;
+        }
+        break;
+
+    case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0:
+        // CMD字节，任何值都可以接受
+        uart_receiver.buffer[uart_receiver.index++] = byte;
+        uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_CMD;
+        return 0;
+        break;
+
+    case UART_DATA_HANDLE_STATUS_FORMAT_CMD:
+        // DATA字节，任何值都可以接受
+        uart_receiver.buffer[uart_receiver.index++] = byte;
+        uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_DATA;
+        return 0;
+        break;
+
+    case UART_DATA_HANDLE_STATUS_FORMAT_DATA:
+        if (byte == UART_DATA_HANDLE_FORMAT_FIX_VAL1)
+        {
+            uart_receiver.buffer[uart_receiver.index++] = byte;
+            uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL1;
+            return 0;
+        }
+        else
+        {
+            return 1;
         }
 
-        timeout_enable = 1; // 使能超时计数
-        timeout_cnt = 0;
-        recv_byte = uart0_rxbuffer_get_byte();
-
-        switch (uart_data_handle_status)
+    case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL1:
+        // 校验和字节
+        uart_receiver.buffer[uart_receiver.index++] = byte;
+        uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM;
+        if (uart_receiver_process_checksum())
         {
-        case UART_DATA_HANDLE_STATUS_FORMAT_HEAD0:
-            if (UART_DATA_HANDLE_FORMAT_HEAD0 == recv_byte)
-            {
-                cmd_buff[0] = recv_byte;
-                uart_data_handle_status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD1;
-            }
-            break;
-        case UART_DATA_HANDLE_STATUS_FORMAT_HEAD1:
-            if (UART_DATA_HANDLE_FORMAT_HEAD1 == recv_byte)
-            {
-                cmd_buff[1] = recv_byte;
-                uart_data_handle_status = UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0;
-            }
-            else
-            {
-                // 如果数据有误，重新开始接收
-                uart_data_handle_status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD0;
-            }
-            break;
-        case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0:
-            if (UART_DATA_HANDLE_FORMAT_FIX_VAL0 == recv_byte)
-            {
-                cmd_buff[2] = recv_byte;
-                uart_data_handle_status = UART_DATA_HANDLE_STATUS_FORMAT_CMD;
-            }
-            else
-            {
-                // 如果数据有误，重新开始接收
-                uart_data_handle_status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD0;
-            }
-
-            break;
-        case UART_DATA_HANDLE_STATUS_FORMAT_CMD:
-            cmd_buff[3] = recv_byte;
-            uart_data_handle_status = UART_DATA_HANDLE_STATUS_FORMAT_DATA;
-            break;
+            // 校验和出错
+            return 1;
         }
-    }
+        else
+        {
+            return 0;
+        }
+        break;
 
-    if (UART_DATA_HANDLE_STATUS_FORMAT_TAIL != uart_data_handle_status)
-    {
-        return; // 未接收完数据，不进入下面的处理操作，函数直接返回
-    }
-
-    // 打印接收到的一帧数据
-    for (i = 0; i < dest_cmd_buff_len; i++)
-    {
-        printf("0x%02x ", (u16)cmd_buff[i]);
-    }
-    printf("\n");
-
-    switch (cmd_buff[2])
-    {
+    case UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM:
+        if (byte == UART_DATA_HANDLE_FORMAT_TAIL)
+        {
+            uart_receiver.buffer[uart_receiver.index++] = byte;
+            uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_TAIL;
+            return 0;
+        }
+        else
+        {
+            return 1;
+        }
+        break;
 
     default:
         break;
     }
 
-    // 处理完成后，重新接收数据
-    timeout_cnt = 0;
-    timeout_enable = 0; // 不使能超时计数
-    uart_data_handle_status = UART_DATA_HANDLE_STATUS_IDLE;
+    return 1;
+}
 
-#if 0
-    static volatile u8 cmd_buff[10] = {0};    // 存放接收到的一条指令
-    static volatile u8 cur_cmd_buff_len = 0;  // 指示当前接收到的指令的索引（之后会在程序中更新，不用清零）
-    static volatile u8 dest_cmd_buff_len = 0; // 存放最终要接收的指令长度（之后会在程序中更新，不用清零）
+// 超时处理函数
+void uart_receiver_timeout_handler(void)
+{
+    u8 i;
+    if (uart_receiver.timeout_cnt >= UART_DATA_HANDLE_TIMEOUT)
+    {
+#if USER_DEBUG_ENABLE
+        printf("UART receive timeout, current status: %d\n", (u16)uart_receiver.status);
 
-    static volatile u8 timeout_enable = 0; // 超时计数使能
-    static volatile u32 timeout_cnt = 0;   // 超时计数（基于系统时基，运行时值不为0）
+        // 打印当前缓冲区内容
+        printf("Buffer content: \n");
+        for (i = 0; i < uart_receiver.index; i++)
+        {
+            printf("0x%02x ", (u16)uart_receiver.buffer[i]);
+        }
+        printf("\n");
+#endif
 
-    static volatile u8 uart_data_handle_status = UART_DATA_HANDLE_STATUS_IDLE; // 状态机
-
+        // 重置接收器
+        uart_receiver_reset();
+    }
+}
+void uart_data_handle(void)
+{
     u8 recv_byte;
-    u8 check_sum = 0;        // 存放计算之后的校验和
-    u8 i;                    // 循环计数值
-    u8 is_recv_complete = 0; // 是否接收到完整的一帧指令
+    u8 i;
+    static u8 initialized = 0; // 串口接收器对象是否已经完成初始化
 
-    // 接收超时处理：
-    if (0 == uart_rxbuffer_get_count())
+    // 初始化接收器（只执行一次）
+    if (!initialized)
     {
-        if (timeout_enable &&
-            tick_check_expire(timeout_cnt, UART_DATA_HANDLE_TIMEOUT))
+        uart_receiver_reset();
+        initialized = 1;
+    }
+
+    // 检查超时
+    // if (uart_receiver.timeout_enable &&
+    //     uart0_rxbuffer_get_count() == 0)
+    if (uart_receiver.timeout_enable)
+    {
+        uart_receiver_timeout_handler();
+    }
+
+    if (uart0_rxbuffer_get_count() == 0)
+    {
+        return;
+    }
+
+    // 处理接收缓冲区中的数据
+    while (1)
+    {
+        if (0 == uart0_rxbuffer_get_count() ||
+            uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
         {
-            // 接收超时
-            // timeout_cnt = 0;
-            // timeout_cnt = tick_get();
-            timeout_enable = 0;                                     // 不使能超时计数
-            uart_data_handle_status = UART_DATA_HANDLE_STATUS_IDLE; // 重新开始接收
+#if USER_DEBUG_ENABLE
+            // 缓冲区为空或者接收完成，退出循环
+            // if (0 == uart0_rxbuffer_get_count() && uart_receiver.status != UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
+            // {
+            //     printf("0 == uart0_rxbuffer_get_count()\n");
+            // }
 
-            // 超时之后，打印缓冲区内的数据
-            my_printf("=================================>\n");
-            my_printf("uart recv timeout\n");
-            for (i = 0; i < ARRAY_SIZE(cmd_buff); i++)
+            if (uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
             {
-                my_printf("%02x ", (u16)cmd_buff[i]);
+                printf("recv complete \n");
             }
-            my_printf("=================================^\n");
-        }
-
-        return; // 串口缓冲区的数据为空，直接返回
-    }
-
-    while (1) // 有时候该函数会100~200ms才调用一次，这里一次性把缓冲区中的数据读出来
-    {
-        if (uart_rxbuffer_get_count() == 0 || is_recv_complete) // 退出条件
-        {
-            if (is_recv_complete)
-            {
-                is_recv_complete = 0;
-            }
-
-            break;
-        }
-
-        timeout_enable = 1;       // 使能超时计数
-        timeout_cnt = tick_get(); // 更新超时计数的时基
-        recv_byte = uart_rxbuffer_get_byte();
-
-        switch (uart_data_handle_status)
-        {
-        case UART_DATA_HANDLE_STATUS_IDLE:
-            if (UART_DATA_HANDLE_FORMAT_HEAD == recv_byte)
-            {
-                cmd_buff[0] = recv_byte;
-                cur_cmd_buff_len = 1;
-                uart_data_handle_status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD;
-            }
-            else
-            {
-                // 不是格式头，重新开始接收，关掉超时计数
-                timeout_enable = 0;
-            }
-            break;
-            // ===============================================================
-        case UART_DATA_HANDLE_STATUS_FORMAT_HEAD:
-            cmd_buff[cur_cmd_buff_len++] = recv_byte;
-            dest_cmd_buff_len = recv_byte;                         // 存放要接收的数据长度
-            uart_data_handle_status = UART_DATA_HANDLE_STATUS_LEN; // 表示接收到了数据帧长度
-            // my_printf("len == %bu\n", dest_cmd_buff_len);
-            break;
-            // ===============================================================
-        case UART_DATA_HANDLE_STATUS_LEN:
-            cmd_buff[cur_cmd_buff_len++] = recv_byte;
-            if (cur_cmd_buff_len >= dest_cmd_buff_len) // 如果接收完所有的数据
-            {
-                for (i = 0; i < dest_cmd_buff_len - 1; i++)
-                {
-                    check_sum += cmd_buff[i];
-                }
-
-                if (check_sum != cmd_buff[dest_cmd_buff_len - 1])
-                {
-                    // 校验和错误
-                    my_printf("=================================>\n");
-                    my_printf("check sum error\n");
-                    for (i = 0; i < ARRAY_SIZE(cmd_buff); i++)
-                    {
-                        my_printf("%02x ", (u16)cmd_buff[i]);
-                    }
-                    my_printf("=================================^\n");
-
-                    // timeout_cnt = 0;
-                    timeout_enable = 0;                                     // 不使能超时计数
-                    uart_data_handle_status = UART_DATA_HANDLE_STATUS_IDLE; // 重新接收数据
-                }
-                else
-                {
-                    // 校验和正确
-                    my_printf("check sum ok\n");
-                    uart_data_handle_status = UART_DATA_HANDLE_STATUS_END;
-                    is_recv_complete = 1;
-                }
-            }
-            break;
-        // ===============================================================
-        default:
-
-            break;
-        }
-    }
-
-    if (UART_DATA_HANDLE_STATUS_END != uart_data_handle_status)
-    {
-        return; // 未接收完数据，不进入下面的处理操作，函数直接返回
-    }
-
-    // 打印接收到的一帧数据
-    // for (i = 0; i < dest_cmd_buff_len; i++)
-    // {
-    //     my_printf("0x%02x ", (u16)cmd_buff[i]);
-    // }
-    // my_printf("\n");
-
-    // 处理一帧数据：
-    switch (cmd_buff[2])
-    {
-    }
-
-    // 处理完成后，重新接收数据
-    // timeout_cnt = 0;
-    timeout_enable = 0; // 不使能超时计数
-    uart_data_handle_status = UART_DATA_HANDLE_STATUS_IDLE;
 
 #endif
+            break;
+        }
+
+        recv_byte = uart0_rxbuffer_get_byte();
+
+        // 启用超时计数
+        uart_receiver.timeout_enable = 1;
+        uart_receiver.timeout_cnt = 0;
+
+        // 处理字节
+        if (uart_receiver_process_byte(recv_byte))
+        {
+#if USER_DEBUG_ENABLE
+            // 处理失败
+            printf("Byte processing failed\n");
+            printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
+            printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
+            printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
+#endif
+            uart_receiver_reset();
+        }
+    }
+
+    if (uart_receiver.status != UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
+    {
+        return;
+    }
+
+    // ===========================================================
+    // 接收完成，处理数据
+
+#if USER_DEBUG_ENABLE
+    // 打印接收到的一帧数据
+    printf("================================>\n");
+    printf("Received complete frame: \n");
+    for (i = 0; i < uart_receiver.index; i++)
+    {
+        printf("0x%02x ", (u16)uart_receiver.buffer[i]);
+    }
+    printf("\n");
+    printf("================================^\n");
+#endif
+
+    switch (uart_receiver.buffer[3])
+    { // CMD字段在索引3位置
+#if USER_DEBUG_ENABLE
+    case 0x01:
+        printf("Processing command 0x01\n");
+        break;
+    case 0x02:
+        printf("Processing command 0x02\n");
+        break;
+    default:
+        printf("Unknown command: 0x%02x\n", (u16)uart_receiver.buffer[3]);
+        break;
+#endif
+    }
+
+    // 重置接收器，准备下一次接收
+    uart_receiver_reset();
+}
+
+// 根据命令，自动打包数据并发送
+// USER_TO_DO 
+void uart_data_send_cmd(uart_send_cmd_t cmd)
+{
+    switch (cmd)
+    {
+    // case constant expression:
+    //     /* code */
+    //     break;
+    
+    default:
+        break;
+    }
 }

@@ -1,0 +1,34 @@
+#ifndef __LED_H__
+#define __LED_H__
+
+#include "include.h"
+
+// 定义LED指示灯对应的驱动引脚
+#define LED_PIN_100_PERCENT P13
+#define LED_PIN_75_PERCENT P06
+#define LED_PIN_50_PERCENT P05
+#define LED_PIN_25_PERCENT P00
+
+
+#define LED_100_PERCENT_ON() (LED_PIN_100_PERCENT = 1)
+#define LED_100_PERCENT_OFF() (LED_PIN_100_PERCNET = 0)
+#define LED_100_PERCENT_TOGGLE() (LED_PIN_100_PERCENT ^= 1)
+
+#define LED_75_PERCENT_ON() (LED_PIN_75_PERCENT = 1)
+#define LED_75_PERCENT_OFF() (LED_PIN_75_PERCENT = 0)
+#define LED_75_PERCENT_TOGGLE() (LED_PIN_75_PERCENT ^= 1)
+
+#define LED_50_PERCENT_ON() (LED_PIN_50_PERCENT = 1)
+#define LED_50_PERCENT_OFF() (LED_PIN_50_PERCENT = 0)
+#define LED_50_PERCENT_TOGGLE() (LED_PIN_50_PERCENT ^= 1)
+
+#define LED_25_PERCENT_ON() (LED_PIN_25_PERCENT = 1)
+#define LED_25_PERCENT_OFF() (LED_PIN_25_PERCENT = 0)
+#define LED_25_PERCENT_TOGGLE() (LED_PIN_25_PERCENT ^= 1)
+
+
+
+
+void led_init(void);
+
+#endif

@@ -6,7 +6,11 @@
 ".\Release\Objects\uart_data_handle.obj",
 ".\Release\Objects\adc.obj",
 ".\Release\Objects\key_driver.obj",
-".\Release\Objects\ad_key.obj" 
+".\Release\Objects\ad_key.obj",
+".\Release\Objects\user_test.obj",
+".\Release\Objects\led.obj",
+".\Release\Objects\battery_monitor.obj",
+".\Release\Objects\bluetooth_ic_handle.obj" 
 TO ".\Release\Objects\Demo" 
 PRINT(".\Release\Listings\Demo.m51") RAMSIZE(256) 
 CODE( 0X0000-0X3EEF )

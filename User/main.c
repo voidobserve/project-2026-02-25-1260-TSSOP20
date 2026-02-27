@@ -18,11 +18,12 @@
 /* Includes ------------------------------------------------------------------*/
 
 #include "include.h"
-#include "my_config.h"
+#include "user_config.h"
 #include "uart0.h"
 #include "timer0.h"
 #include "adc.h"
-#include "battery_monitor.h"  // 添加电池监测头文件
+#include "led.h"
+// #include "battery_monitor.h"  // 添加电池监测头文件
 
 #include "uart_data_handle.h"
 #include "ad_key.h"
@@ -34,10 +35,12 @@ static u8 battery_check_counter = 0;
 
 void debug_pin_init(void)
 {
-    P1_MD1 &= GPIO_P17_MODE_SEL(0x03); 
+    P1_MD1 &= ~GPIO_P17_MODE_SEL(0x03); 
     P1_MD1 |= GPIO_P17_MODE_SEL(0x01); 
+    FOUT_S17 = GPIO_FOUT_AF_FUNC; // 选择AF功能输出
 }
 
+#if 0
 void battery_monitor_task(void)
 {
     // 每隔一定时间检测电池状态
@@ -58,7 +61,7 @@ void battery_monitor_task(void)
                 battery_level_t battery_level = get_battery_level_by_adc(current_adc_val);
                 u8 battery_percentage = get_battery_percentage_by_adc(current_adc_val);
                 
-#if USE_MY_DEBUG
+#if USER_DEBUG_ENABLE
                 printf("Battery: %d mV, %d%%, Level: %s\n", 
                        battery_voltage, 
                        battery_percentage,
@@ -75,6 +78,7 @@ void battery_monitor_task(void)
         }
     }
 }
+#endif
 
 void main(void)
 {
@@ -91,14 +95,15 @@ void main(void)
     timer0_init();
     adc_pin_init();
     adc_init();
+    led_init();
     uart0_init();
     
 
-#if USE_MY_DEBUG
+#if USER_DEBUG_ENABLE
     debug_pin_init();
     printf("sys reset\n");
-    printf("Battery Monitor Initialized\n");
-    printf("Voltage Range: %d-%d mV\n", BATTERY_VOLTAGE_MIN_MV, BATTERY_VOLTAGE_MAX_MV);
+    // printf("Battery Monitor Initialized\n");
+    // printf("Voltage Range: %d-%d mV\n", BATTERY_VOLTAGE_MIN_MV, BATTERY_VOLTAGE_MAX_MV);
 #endif
 
     while (1)
@@ -107,12 +112,12 @@ void main(void)
         ad_key_handle();
 
         uart_data_handle();
+
+        user_test_adc_scan();
         
         // // 添加电池监测任务
         // battery_monitor_task();
-        
-        // // ADC扫描任务
-        // adc_scan();
+         
     }
 }
 

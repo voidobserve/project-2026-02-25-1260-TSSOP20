@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/26/2026 17:11:38 PAGE 1   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE AD_KEY
@@ -62,7 +62,7 @@ line level    source
              -�
   42              0,                  // const u8 click_delay_time; // 按键被抬起后等待连击事件延时数量
   43              0,                  // volatile u8 notify_value;    // 在延时的待发送按键值
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/26/2026 17:11:38 PAGE 2   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 2   
 
   44              KEY_TYPE_AD,        // const u8 key_type;
   45              ad_key_get_key_val, // u8 (*get_value)(void); // 用户自定义的获取键值的函数
@@ -74,7 +74,7 @@ line level    source
   51          
   52          // 将采集到的ad值转换成自定义的键值
   53          
-  54          static u16 ad_key_val_to_ad_key_index(const u16 cur_ad_key)
+  54          static u16 ad_key_val_to_ad_key_index(const u16 ad_key_val)
   55          {
   56   1          u8 i = 0;
   57   1          u16 ad_key_index = NO_KEY;
@@ -82,7 +82,7 @@ line level    source
   59   1          // ARRAY_SIZE(ad_key_scan_table) 这里是求出数组中存放的按键个数
   60   1          for (i = 0; i < ARRAY_SIZE(ad_key_scan_table); i++)
   61   1          {
-  62   2              if (cur_ad_key < ad_key_scan_table[i][1])
+  62   2              if (ad_key_val < ad_key_scan_table[i][1])
   63   2              {
   64   3                  ad_key_index = ad_key_scan_table[i][0];
   65   3                  break;
@@ -126,7 +126,7 @@ line level    source
  102   2          }
  103   1          else
  104   1          {
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/26/2026 17:11:38 PAGE 3   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 3   
 
  105   2              return (u8)AD_KEY_EVENT_NONE;
  106   2          }
@@ -157,120 +157,123 @@ line level    source
  131          u8 ad_key_get_key_val(void)
  132          {
  133   1          static volatile u16 val = AD_KEY_NONE_VAL; // 单次按键标志
- 134   1      
- 135   1          // 有数据更新，才获取数据
- 136   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
- 137   1          {
- 138   2              adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
- 139   2              val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
- 140   2          }
- 141   1      
- 142   1          val = ad_key_val_to_ad_key_index(val); // 将采集到的ad值转换成自定义的键值
- 143   1          return val;
- 144   1      }
- 145          
- 146          void ad_key_handle(void)
- 147          {
- 148   1          u8 ad_key_event = AD_KEY_EVENT_NONE;
- 149   1      
- 150   1          if (ad_key_para.latest_key_val == AD_KEY_INDEX_NONE)
- 151   1          {
- 152   2              return;
- 153   2          }
- 154   1      
- 155   1          ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
- 156   1          ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
- 157   1          ad_key_para.latest_key_event = KEY_EVENT_NONE;
- 158   1      
- 159   1          switch (ad_key_event)
- 160   1          {
- 161   2              // ================================================================
- 162   2              // key 1，对应的丝印是 上一曲
- 163   2          case AD_KEY_EVENT_ID_1_CLICK:
- 164   2              printf("key 1 click\n");
- 165   2              break;
- 166   2      
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/26/2026 17:11:38 PAGE 4   
+ 134   1          u8 ret = NO_KEY;
+ 135   1      
+ 136   1          // 有数据更新，才获取数据
+ 137   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
+ 138   1          {
+ 139   2              adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
+ 140   2              val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);   
+ 141   2              
+ 142   2              // printf("ad key val == %u\n", val);
+ 143   2          }
+ 144   1      
+ 145   1          ret = ad_key_val_to_ad_key_index(val); // 将采集到的ad值转换成自定义的键值
+ 146   1          return ret;
+ 147   1      }
+ 148          
+ 149          void ad_key_handle(void)
+ 150          {
+ 151   1          u8 ad_key_event = AD_KEY_EVENT_NONE;
+ 152   1      
+ 153   1          if (ad_key_para.latest_key_val == AD_KEY_INDEX_NONE)
+ 154   1          {
+ 155   2              return;
+ 156   2          }
+ 157   1      
+ 158   1          ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
+ 159   1          ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
+ 160   1          ad_key_para.latest_key_event = KEY_EVENT_NONE;
+ 161   1      
+ 162   1          switch (ad_key_event)
+ 163   1          {
+ 164   2              // ================================================================
+ 165   2              // key 1，对应的丝印是 上一曲
+ 166   2          case AD_KEY_EVENT_ID_1_CLICK:
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 4   
 
- 167   2          case AD_KEY_EVENT_ID_1_LONG:
- 168   2              printf("key 1 long\n");
- 169   2              break;
- 170   2      
- 171   2          case AD_KEY_EVENT_ID_1_HOLD:
- 172   2              printf("key 1 hold\n");
- 173   2              break;
- 174   2      
- 175   2          case AD_KEY_EVENT_ID_1_LOOSE:
- 176   2              printf("key 1 loose\n");
- 177   2              break;
- 178   2      
- 179   2              // ================================================================
- 180   2              // key 2，对应的丝印是 灯开关
- 181   2          case AD_KEY_EVENT_ID_2_CLICK:
- 182   2              printf("key 2 click\n");
- 183   2              break;
- 184   2      
- 185   2          case AD_KEY_EVENT_ID_2_LONG:
- 186   2              printf("key 2 long\n");
- 187   2              break;
- 188   2      
- 189   2          case AD_KEY_EVENT_ID_2_HOLD:
- 190   2              printf("key 2 hold\n");
- 191   2              break;
- 192   2      
- 193   2          case AD_KEY_EVENT_ID_2_LOOSE:
- 194   2              printf("key 2 loose\n");
- 195   2              break;
- 196   2      
- 197   2              // ================================================================
- 198   2              // key 3，对应的丝印是 下一曲 
+ 167   2              printf("key 1 click\n");
+ 168   2              break;
+ 169   2      
+ 170   2          case AD_KEY_EVENT_ID_1_LONG:
+ 171   2              printf("key 1 long\n");
+ 172   2              break;
+ 173   2      
+ 174   2          case AD_KEY_EVENT_ID_1_HOLD:
+ 175   2              printf("key 1 hold\n");
+ 176   2              break;
+ 177   2      
+ 178   2          case AD_KEY_EVENT_ID_1_LOOSE:
+ 179   2              printf("key 1 loose\n");
+ 180   2              break;
+ 181   2      
+ 182   2              // ================================================================
+ 183   2              // key 2，对应的丝印是 灯开关
+ 184   2          case AD_KEY_EVENT_ID_2_CLICK:
+ 185   2              printf("key 2 click\n");
+ 186   2              break;
+ 187   2      
+ 188   2          case AD_KEY_EVENT_ID_2_LONG:
+ 189   2              printf("key 2 long\n");
+ 190   2              break;
+ 191   2      
+ 192   2          case AD_KEY_EVENT_ID_2_HOLD:
+ 193   2              printf("key 2 hold\n");
+ 194   2              break;
+ 195   2      
+ 196   2          case AD_KEY_EVENT_ID_2_LOOSE:
+ 197   2              printf("key 2 loose\n");
+ 198   2              break;
  199   2      
- 200   2          case AD_KEY_EVENT_ID_3_CLICK:
- 201   2              printf("key 3 click\n");
- 202   2              break;
- 203   2      
- 204   2          case AD_KEY_EVENT_ID_3_LONG:
- 205   2              printf("key 3 long\n");
- 206   2              break;
- 207   2      
- 208   2          case AD_KEY_EVENT_ID_3_HOLD:
- 209   2              printf("key 3 hold\n");
- 210   2              break;
- 211   2      
- 212   2          case AD_KEY_EVENT_ID_3_LOOSE:
- 213   2              printf("key 3 loose\n");
- 214   2              break;
- 215   2      
- 216   2              // ================================================================
- 217   2              // key 4，对应的丝印是 总开关 
- 218   2          case AD_KEY_EVENT_ID_4_CLICK:
- 219   2              printf("key 4 click\n");
- 220   2              break;
- 221   2      
- 222   2          case AD_KEY_EVENT_ID_4_LONG:
- 223   2              printf("key 4 long\n");
- 224   2              break;
- 225   2      
- 226   2          case AD_KEY_EVENT_ID_4_HOLD:
- 227   2              printf("key 4 hold\n");
- 228   2              break;
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/26/2026 17:11:38 PAGE 5   
+ 200   2              // ================================================================
+ 201   2              // key 3，对应的丝印是 下一曲 
+ 202   2      
+ 203   2          case AD_KEY_EVENT_ID_3_CLICK:
+ 204   2              printf("key 3 click\n");
+ 205   2              break;
+ 206   2      
+ 207   2          case AD_KEY_EVENT_ID_3_LONG:
+ 208   2              printf("key 3 long\n");
+ 209   2              break;
+ 210   2      
+ 211   2          case AD_KEY_EVENT_ID_3_HOLD:
+ 212   2              printf("key 3 hold\n");
+ 213   2              break;
+ 214   2      
+ 215   2          case AD_KEY_EVENT_ID_3_LOOSE:
+ 216   2              printf("key 3 loose\n");
+ 217   2              break;
+ 218   2      
+ 219   2              // ================================================================
+ 220   2              // key 4，对应的丝印是 总开关 
+ 221   2          case AD_KEY_EVENT_ID_4_CLICK:
+ 222   2              printf("key 4 click\n");
+ 223   2              break;
+ 224   2      
+ 225   2          case AD_KEY_EVENT_ID_4_LONG:
+ 226   2              printf("key 4 long\n");
+ 227   2              break;
+ 228   2      
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 5   
 
- 229   2      
- 230   2          case AD_KEY_EVENT_ID_4_LOOSE:
- 231   2              printf("key 4 loose\n");
- 232   2              break;
- 233   2      
- 234   2          default:
+ 229   2          case AD_KEY_EVENT_ID_4_HOLD:
+ 230   2              printf("key 4 hold\n");
+ 231   2              break;
+ 232   2      
+ 233   2          case AD_KEY_EVENT_ID_4_LOOSE:
+ 234   2              printf("key 4 loose\n");
  235   2              break;
- 236   2          }
- 237   1      }
+ 236   2      
+ 237   2          default:
+ 238   2              break;
+ 239   2          }
+ 240   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    428    ----
+   CODE SIZE        =    426    ----
    CONSTANT SIZE    =    200    ----
-   XDATA SIZE       =     57       2
+   XDATA SIZE       =     57       3
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

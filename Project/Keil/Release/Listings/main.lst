@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              02/26/2026 17:11:38 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              02/27/2026 18:03:14 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -27,99 +27,127 @@ line level    source
   16           */
   17          
   18          /* Includes ------------------------------------------------------------------*/
-  19          #include "my_config.h"
+  19          
   20          #include "include.h"
-  21          #include "uart0.h"
-  22          #include "timer0.h"
-  23          #include "adc.h"
-  24          
-  25          
-  26          #include "uart_data_handle.h"
-  27          #include "ad_key.h"
-  28          
-  29          void debug_pin_init(void)
-  30          {
-  31   1          P1_MD1 &= GPIO_P17_MODE_SEL(0x03); 
-  32   1          P1_MD1 |= GPIO_P17_MODE_SEL(0x01); 
-  33   1      }
-  34          
-  35          volatile u8 flag_debug = 0;
-  36          
-  37          void main(void)
-  38          {
-  39   1          // 看门狗默认打开, 复位时间2s
-  40   1          WDT_KEY = WDT_KEY_VAL(0xDD); //  关闭看门狗 (如需配置看门狗请查看“WDT\WDT_Reset”示
-             -例)
-  41   1      
-  42   1          system_init();
-  43   1      
-  44   1          // 关闭HCK和HDA的调试功能
-  45   1          WDT_KEY = 0x55;  // 解除写保护
-  46   1          IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除�
-             -��射）
-  47   1          WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
-  48   1      
-  49   1          timer0_init();
-  50   1          adc_pin_init();
-  51   1          adc_init();
-C51 COMPILER V9.60.7.0   MAIN                                                              02/26/2026 17:11:38 PAGE 2   
+  21          #include "user_config.h"
+  22          #include "uart0.h"
+  23          #include "timer0.h"
+  24          #include "adc.h"
+  25          #include "led.h"
+  26          // #include "battery_monitor.h"  // 添加电池监测头文件
+  27          
+  28          #include "uart_data_handle.h"
+  29          #include "ad_key.h"
+  30          
+  31          // 电池检测相关变量
+  32          static u16 last_battery_adc_val = 0;
+  33          static u8 battery_check_counter = 0;
+  34          #define BATTERY_CHECK_INTERVAL 100  // 每100次循环检测一次电池
+  35          
+  36          void debug_pin_init(void)
+  37          {
+  38   1          P1_MD1 &= ~GPIO_P17_MODE_SEL(0x03); 
+  39   1          P1_MD1 |= GPIO_P17_MODE_SEL(0x01); 
+  40   1          FOUT_S17 = GPIO_FOUT_AF_FUNC; // 选择AF功能输出
+  41   1      }
+  42          
+  43          #if 0
+              void battery_monitor_task(void)
+              {
+                  // 每隔一定时间检测电池状态
+                  battery_check_counter++;
+                  if (battery_check_counter >= BATTERY_CHECK_INTERVAL) {
+                      battery_check_counter = 0;
+                      
+                      // 检查电池ADC值是否更新
+                      if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET)) {
+                          u16 current_adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
+C51 COMPILER V9.60.7.0   MAIN                                                              02/27/2026 18:03:14 PAGE 2   
 
-  52   1          uart0_init();
-  53   1          
-  54   1      
-  55   1      #if USE_MY_DEBUG
-  56   1          debug_pin_init();
-  57   1          printf("sys reset\n");
-  58   1      #endif
-  59   1      
-  60   1          while (1)
-  61   1          {
-  62   2              u16 adkey_val = 0;
-  63   2              // if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
-  64   2              // {
-  65   2              //     adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
-  66   2              //     adkey_val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
-  67   2              //     printf("adkey_val == %u\n", adkey_val); 
-  68   2              //     delay_ms(500);
-  69   2              // }
-  70   2      
-  71   2              // printf("adkey 1 press val == %u\n", AD_KEY_1_PRESS_VAL);
-  72   2              // printf("adkey 2 press val == %u\n", AD_KEY_2_PRESS_VAL);
-  73   2              // printf("adkey 3 press val == %u\n", AD_KEY_3_PRESS_VAL);
-  74   2              // printf("adkey 4 press val == %u\n", AD_KEY_4_PRESS_VAL);
-  75   2              // printf("adkey index 1 val == %u\n", AD_KEY_INDEX_1_VAL);
-  76   2              // printf("adkey index 2 val == %u\n", AD_KEY_INDEX_2_VAL);
-  77   2              // printf("adkey index 3 val == %u\n", AD_KEY_INDEX_3_VAL);
-  78   2              // printf("adkey index 4 val == %u\n", AD_KEY_INDEX_4_VAL);
-  79   2              // delay_ms(500);
-  80   2      
-  81   2              if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET) && flag_debug)
-  82   2              {
-  83   3                  flag_debug = 0;
-  84   3                  adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
-  85   3                  adkey_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
-  86   3                  printf("adkey_val == %u\n", adkey_val); 
-  87   3                  // delay_ms(500); 
-  88   3              }
-  89   2      
-  90   2              key_driver_scan(&ad_key_para);
-  91   2              ad_key_handle();
-  92   2      
-  93   2              uart_data_handle();
-  94   2          }
-  95   1      }
-  96          
-  97          /**
-  98           * @}
-  99           */
- 100          
- 101          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
+                          
+                          // 只有当ADC值发生变化时才处理
+                          if (current_adc_val != last_battery_adc_val) {
+                              last_battery_adc_val = current_adc_val;
+                              
+                              // 计算电池电压和电量
+                              u16 battery_voltage = ADC_TO_BATTERY_VOLTAGE_MV(current_adc_val);
+                              battery_level_t battery_level = get_battery_level_by_adc(current_adc_val);
+                              u8 battery_percentage = get_battery_percentage_by_adc(current_adc_val);
+                              
+              #if USER_DEBUG_ENABLE
+                              printf("Battery: %d mV, %d%%, Level: %s\n", 
+                                     battery_voltage, 
+                                     battery_percentage,
+                                     get_battery_level_string(battery_level));
+              #endif
+                              
+                              // 可以在这里添加低电量警告逻辑
+                              if (battery_level == BATTERY_LEVEL_CRITICAL) {
+                                  // 添加低电量处理逻辑
+                              }
+                          }
+                          
+                          adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
+                      }
+                  }
+              }
+              #endif
+  82          
+  83          void main(void)
+  84          {
+  85   1          // 看门狗默认打开, 复位时间2s
+  86   1          WDT_KEY = WDT_KEY_VAL(0xDD); //  关闭看门狗 (如需配置看门狗请查看"WDT\WDT_Reset"示例)
+  87   1      
+  88   1          system_init();
+  89   1      
+  90   1          // 关闭HCK和HDA的调试功能
+  91   1          WDT_KEY = 0x55;  // 解除写保护
+  92   1          IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除�
+             -��射）
+  93   1          WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
+  94   1      
+  95   1          timer0_init();
+  96   1          adc_pin_init();
+  97   1          adc_init();
+  98   1          led_init();
+  99   1          uart0_init();
+ 100   1          
+ 101   1      
+ 102   1      #if USER_DEBUG_ENABLE
+ 103   1          debug_pin_init();
+ 104   1          printf("sys reset\n");
+ 105   1          // printf("Battery Monitor Initialized\n");
+ 106   1          // printf("Voltage Range: %d-%d mV\n", BATTERY_VOLTAGE_MIN_MV, BATTERY_VOLTAGE_MAX_MV);
+ 107   1      #endif
+ 108   1      
+ 109   1          while (1)
+ 110   1          {   
+ 111   2              key_driver_scan(&ad_key_para);
+ 112   2              ad_key_handle();
+ 113   2      
+ 114   2              uart_data_handle();
+C51 COMPILER V9.60.7.0   MAIN                                                              02/27/2026 18:03:14 PAGE 3   
+
+ 115   2      
+ 116   2              user_test_adc_scan();
+ 117   2              
+ 118   2              // // 添加电池监测任务
+ 119   2              // battery_monitor_task();
+ 120   2               
+ 121   2          }
+ 122   1      }
+ 123          
+ 124          /**
+ 125           * @}
+ 126           */
+ 127          
+ 128          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    129    ----
-   CONSTANT SIZE    =     28    ----
-   XDATA SIZE       =      1       2
+   CODE SIZE        =     82    ----
+   CONSTANT SIZE    =     11    ----
+   XDATA SIZE       =      3    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

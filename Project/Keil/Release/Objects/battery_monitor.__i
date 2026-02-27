@@ -1,0 +1,1 @@
+"..\..\User\battery_monitor.c" LARGE OPTIMIZE (9,SIZE) BROWSE INTVECTOR(0x000C) INCDIR(..\..\Libraries\Include;..\..\User) interval(3) DEBUG OBJECTEXTEND PRINT(.\Release\Listings\battery_monitor.lst) OBJECT(.\Release\Objects\battery_monitor.obj)

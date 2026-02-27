@@ -18,7 +18,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "debug.h"
 #include "include.h"
-#include "my_config.h"
+#include "user_config.h"
 
 /** @addtogroup Template_Project
  * @{

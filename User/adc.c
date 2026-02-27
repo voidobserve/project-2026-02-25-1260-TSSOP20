@@ -1,5 +1,5 @@
 #include "adc.h"
-#include "my_config.h"
+#include "user_config.h"
 
 volatile u8 cur_adc_status = ADC_STATUS_IDLE;
 
@@ -139,38 +139,33 @@ void adc_clear_update_flag(adc_channel_sel_t adc_channel)
 
 void adc_channel_sel(adc_channel_sel_t adc_channel)
 {
+    ADC_ACON1 &= ~(ADC_VREF_SEL(0x07) |  // 清空参考电压选择位
+                   ADC_EXREF_SEL(0x01) | // 关闭外部参考电压
+                   ADC_INREF_SEL(0x01)); // 关闭内部参考电压
+
     switch (adc_channel)
     {
     case ADC_CHANNEL_SEL_AD_KEY:
         // ADC配置
-        ADC_ACON1 &= ~(ADC_VREF_SEL(0x07) |  // 清空参考电压选择位
-                       ADC_EXREF_SEL(0x01) | // 关闭外部参考电压
-                       ADC_INREF_SEL(0x01)); // 关闭内部参考电压
-        ADC_ACON1 |= ADC_VREF_SEL(0x06) |    // 选择 VCC 作为参考电压
-                     ADC_TEN_SEL(0x03);      // 关闭测试信号
-        ADC_CHS0 = ADC_ANALOG_CHAN(0x14);    // 选则引脚对应的通道（0x14--P24）
+        ADC_ACON1 |= ADC_VREF_SEL(0x06) | // 选择 VCC 作为参考电压
+                     ADC_TEN_SEL(0x03);   // 关闭测试信号
+        ADC_CHS0 = ADC_ANALOG_CHAN(0x14); // 选则引脚对应的通道（0x14--P24）
         break;
     case ADC_CHANNEL_SEL_BAT_DET:
-        ADC_ACON1 &= ~(ADC_VREF_SEL(0x07) |  // 清空参考电压选择位
-                       ADC_EXREF_SEL(0x01) | // 关闭外部参考电压
-                       ADC_INREF_SEL(0x01)); // 关闭内部参考电压
-        ADC_ACON1 |= ADC_VREF_SEL(0x01) |    // 选择 内部2.0V 作为参考电压
-                     ADC_TEN_SEL(0x03) |     // 关闭测试信号
-                     ADC_INREF_SEL(0x01);    // 使能内部参考电压
-        ADC_CHS0 = ADC_EXT_SEL(0x01) |       // 选择内部通道
-                   ADC_ANALOG_CHAN(0x03);    // 选择 VDD 1/5分压的通道
+        ADC_ACON1 |= ADC_VREF_SEL(0x01) | // 选择 内部2.0V 作为参考电压
+                     ADC_TEN_SEL(0x03) |  // 关闭测试信号
+                     ADC_INREF_SEL(0x01); // 使能内部参考电压
+        ADC_CHS0 = ADC_EXT_SEL(0x01) |    // 选择内部通道
+                   ADC_ANALOG_CHAN(0x03); // 选择 VDD 1/5 分压的通道
         break;
     case ADC_CHANNEL_SEL_SOLAR_DET:
         //  0 ~ 5 V， 经过二极管0.3V后，实际的充电电压范围：0 ~ 4.7V
         // 经过 1/2 分压后，单片机检测到的电压范围：0 ~ 2.35V
-        // 使用2.4V参考电压
-        ADC_ACON1 &= ~(ADC_VREF_SEL(0x07) |  // 清空参考电压选择位
-                       ADC_EXREF_SEL(0x01) | // 关闭外部参考电压
-                       ADC_INREF_SEL(0x01)); // 关闭内部参考电压
-        ADC_ACON1 |= ADC_VREF_SEL(0x02) |    // 选择 内部2.4V 作为参考电压
-                     ADC_TEN_SEL(0x03) |     // 关闭测试信号
-                     ADC_INREF_SEL(0x01);    // 使能内部参考电压
-        ADC_CHS0 = ADC_ANALOG_CHAN(0x0C);    // 选则引脚对应的通道（0x0C -- P14）
+        // 使用2.4V参考电压 
+        ADC_ACON1 |= ADC_VREF_SEL(0x02) | // 选择 内部2.4V 作为参考电压
+                     ADC_TEN_SEL(0x03) |  // 关闭测试信号
+                     ADC_INREF_SEL(0x01); // 使能内部参考电压
+        ADC_CHS0 = ADC_ANALOG_CHAN(0x0C); // 选则引脚对应的通道（0x0C -- P14）
         break;
 
     default:

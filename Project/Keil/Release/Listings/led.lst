@@ -1,0 +1,53 @@
+C51 COMPILER V9.60.7.0   LED                                                               02/27/2026 16:56:07 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED
+OBJECT MODULE PLACED IN .\Release\Objects\led.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\..\User\led.c LARGE OPTIMIZE(9,SIZE) BROWSE INTVECTOR(0X000C) INCDIR(
+                    -..\..\Libraries\Include;..\..\User) INTERVAL(3) DEBUG OBJECTEXTEND PRINT(.\Release\Listings\led.lst) OBJECT(.\Release\Ob
+                    -jects\led.obj)
+
+line level    source
+
+   1          #include "led.h"
+   2          
+   3          void led_init(void)
+   4          {
+   5   1          // 100% 电量指示灯
+   6   1          P1_MD0 &= ~GPIO_P13_MODE_SEL(0x03);
+   7   1          P1_MD0 |= GPIO_P13_MODE_SEL(0x01); // 输出
+   8   1          FOUT_S13 = GPIO_FOUT_AF_FUNC;
+   9   1          P13 = 0; 
+  10   1      
+  11   1          // 75% 电量指示灯
+  12   1          P0_MD1 &= ~GPIO_P06_MODE_SEL(0x03);
+  13   1          P0_MD1 |= GPIO_P06_MODE_SEL(0x01);
+  14   1          FOUT_S06 = GPIO_FOUT_AF_FUNC;
+  15   1          P06 = 0; // 不点亮指示灯
+  16   1      
+  17   1          // 50% 电量指示灯
+  18   1          P0_MD1 &= ~GPIO_P05_MODE_SEL(0x03);
+  19   1          P0_MD1 |= GPIO_P05_MODE_SEL(0x01);
+  20   1          FOUT_S05 = GPIO_FOUT_AF_FUNC;
+  21   1          P05 = 0; // 不点亮指示灯
+  22   1      
+  23   1          // 25% 电量指示灯
+  24   1          P0_MD0 &= ~GPIO_P00_MODE_SEL(0x03);
+  25   1          P0_MD0 |= GPIO_P00_MODE_SEL(0x01);
+  26   1          FOUT_S00 = GPIO_FOUT_AF_FUNC;
+  27   1          P00 = 0; // 不点亮指示灯 
+  28   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     66    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

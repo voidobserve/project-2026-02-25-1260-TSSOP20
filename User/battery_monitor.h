@@ -10,7 +10,8 @@
 #define BATTERY_VOLTAGE_RANGE_MV  (BATTERY_VOLTAGE_MAX_MV - BATTERY_VOLTAGE_MIN_MV)  // 电压范围 1700mV
 
 // 电池电量等级定义
-typedef enum {
+typedef enum 
+{
     BATTERY_LEVEL_EMPTY = 0,     // 0%   电压 < 2.5V (实际不会出现)
     BATTERY_LEVEL_CRITICAL,      // 1-25%  严重低电量
     BATTERY_LEVEL_LOW,           // 26-50% 低电量
@@ -31,13 +32,13 @@ typedef enum {
 #define BATTERY_ADC_REF_VOLTAGE_MV   2000  // 内部参考电压 2.0V
 #define BATTERY_VOLTAGE_DIVIDER      5     // VDD经过1/5分压后输入ADC
 
-// 计算ADC值对应的电池电压 (mV)
+// 计算ADC值对应的电池电压 (单位：mV)
 // ADC值 -> 实际电池电压 = ADC值 * (参考电压/4096) * 分压比 * 1000
 #define ADC_TO_BATTERY_VOLTAGE_MV(adc_val) \
     (((u32)(adc_val) * BATTERY_ADC_REF_VOLTAGE_MV * BATTERY_VOLTAGE_DIVIDER) / 4096)
 
 // 计算电池电压对应的电量等级
-battery_level_t get_battery_level_by_voltage(u16 voltage_mv);
+// battery_level_t get_battery_level_by_voltage(u16 voltage_mv);
 
 // 计算电池电压对应的百分比 (0-100)
 u8 get_battery_percentage_by_voltage(u16 voltage_mv);
@@ -47,6 +48,6 @@ battery_level_t get_battery_level_by_adc(u16 adc_val);
 u8 get_battery_percentage_by_adc(u16 adc_val);
 
 // 获取电池状态描述字符串
-const char* get_battery_level_string(battery_level_t level);
+// const char* get_battery_level_string(battery_level_t level);
 
 #endif // __BATTERY_MONITOR_H__

@@ -1,20 +1,32 @@
 #include "battery_monitor.h"
-#include "my_config.h"
+#include "user_config.h"
+
 
 // 根据电压值获取电池电量等级
 battery_level_t get_battery_level_by_voltage(u16 voltage_mv)
 {
-    if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT) {
+    if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT)
+    {
         return BATTERY_LEVEL_FULL;
-    } else if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT) {
+    }
+    else if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT)
+    {
         return BATTERY_LEVEL_HIGH;
-    } else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT) {
+    }
+    else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT)
+    {
         return BATTERY_LEVEL_MEDIUM;
-    } else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT) {
+    }
+    else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT)
+    {
         return BATTERY_LEVEL_LOW;
-    } else if (voltage_mv >= BATTERY_VOLTAGE_0_PERCENT) {
+    }
+    else if (voltage_mv >= BATTERY_VOLTAGE_0_PERCENT)
+    {
         return BATTERY_LEVEL_CRITICAL;
-    } else {
+    }
+    else
+    {
         return BATTERY_LEVEL_EMPTY;
     }
 }
@@ -22,28 +34,38 @@ battery_level_t get_battery_level_by_voltage(u16 voltage_mv)
 // 根据电压值计算电池电量百分比 (0-100)
 u8 get_battery_percentage_by_voltage(u16 voltage_mv)
 {
-    if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT) {
+    if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT)
+    {
         return 100;
-    } else if (voltage_mv <= BATTERY_VOLTAGE_0_PERCENT) {
+    }
+    else if (voltage_mv <= BATTERY_VOLTAGE_0_PERCENT)
+    {
         return 0;
     }
-    
+
     // 线性插值计算百分比
-    if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT) {
+    if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT)
+    {
         // 100% - 75% 区间: 4.2V - 3.85V
-        return 75 + ((u32)(voltage_mv - BATTERY_VOLTAGE_75_PERCENT) * 25) / 
-                    (BATTERY_VOLTAGE_100_PERCENT - BATTERY_VOLTAGE_75_PERCENT);
-    } else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT) {
+        return 75 + ((u32)(voltage_mv - BATTERY_VOLTAGE_75_PERCENT) * 25) /
+                        (BATTERY_VOLTAGE_100_PERCENT - BATTERY_VOLTAGE_75_PERCENT);
+    }
+    else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT)
+    {
         // 75% - 50% 区间: 3.85V - 3.6V
-        return 50 + ((u32)(voltage_mv - BATTERY_VOLTAGE_50_PERCENT) * 25) / 
-                    (BATTERY_VOLTAGE_75_PERCENT - BATTERY_VOLTAGE_50_PERCENT);
-    } else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT) {
+        return 50 + ((u32)(voltage_mv - BATTERY_VOLTAGE_50_PERCENT) * 25) /
+                        (BATTERY_VOLTAGE_75_PERCENT - BATTERY_VOLTAGE_50_PERCENT);
+    }
+    else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT)
+    {
         // 50% - 25% 区间: 3.6V - 3.2V
-        return 25 + ((u32)(voltage_mv - BATTERY_VOLTAGE_25_PERCENT) * 25) / 
-                    (BATTERY_VOLTAGE_50_PERCENT - BATTERY_VOLTAGE_25_PERCENT);
-    } else {
+        return 25 + ((u32)(voltage_mv - BATTERY_VOLTAGE_25_PERCENT) * 25) /
+                        (BATTERY_VOLTAGE_50_PERCENT - BATTERY_VOLTAGE_25_PERCENT);
+    }
+    else
+    {
         // 25% - 0% 区间: 3.2V - 2.5V
-        return ((u32)(voltage_mv - BATTERY_VOLTAGE_0_PERCENT) * 25) / 
+        return ((u32)(voltage_mv - BATTERY_VOLTAGE_0_PERCENT) * 25) /
                (BATTERY_VOLTAGE_25_PERCENT - BATTERY_VOLTAGE_0_PERCENT);
     }
 }
@@ -63,25 +85,26 @@ u8 get_battery_percentage_by_adc(u16 adc_val)
 }
 
 // 获取电池状态描述字符串
-const char* get_battery_level_string(battery_level_t level)
-{
-    switch (level) {
-        case BATTERY_LEVEL_EMPTY:
-            return "EMPTY";
-        case BATTERY_LEVEL_CRITICAL:
-            return "CRITICAL";
-        case BATTERY_LEVEL_LOW:
-            return "LOW";
-        case BATTERY_LEVEL_MEDIUM:
-            return "MEDIUM";
-        case BATTERY_LEVEL_HIGH:
-            return "HIGH";
-        case BATTERY_LEVEL_FULL:
-            return "FULL";
-        default:
-            return "UNKNOWN";
-    }
-}
+// const char *get_battery_level_string(battery_level_t level)
+// {
+//     switch (level)
+//     {
+//     case BATTERY_LEVEL_EMPTY:
+//         return "EMPTY";
+//     case BATTERY_LEVEL_CRITICAL:
+//         return "CRITICAL";
+//     case BATTERY_LEVEL_LOW:
+//         return "LOW";
+//     case BATTERY_LEVEL_MEDIUM:
+//         return "MEDIUM";
+//     case BATTERY_LEVEL_HIGH:
+//         return "HIGH";
+//     case BATTERY_LEVEL_FULL:
+//         return "FULL";
+//     default:
+//         return "UNKNOWN";
+//     }
+// }
 
 // 电池电压划分建议说明
 /*
@@ -111,3 +134,33 @@ const char* get_battery_level_string(battery_level_t level)
    - 建议添加滞回比较防止电量显示抖动
    - 低电量时应该给出警告提示
 */
+
+
+void battery_monitor_init(void)
+{
+
+}
+
+void battery_monitor_handle(void)
+{
+    static u16 adc_val = 0;
+    u8 bat_percent = 0; // USER_TO_DO 
+
+    // 如果灯和蓝牙都不在工作，直接返回
+    if (0)
+    {
+        return;
+    }
+
+    if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
+    {
+        adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
+        adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
+
+        // printf("bat adc val == %u\n", adc_val);
+    }
+
+    // USER_TO_DO 这里需要加入滞回比较防止电量显示抖动
+    bat_percent = get_battery_percentage_by_adc(adc_val);
+
+}

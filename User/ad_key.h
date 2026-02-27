@@ -18,12 +18,7 @@
 #define AD_KEY_PULL_DOWN_VAL_2 ((u32)2200)      //
 #define AD_KEY_PULL_DOWN_VAL_3 ((u32)7500)      //
 #define AD_KEY_PULL_DOWN_VAL_4 ((u32)47 * 1000) //
-
-// #define AD_KEY_1_PULL_PD ((u32)2200)      // 按键 1 对应的下拉电阻阻值，单位：R
-// #define AD_KEY_2_PULL_PD ((u32)7500)      // 按键 2 对应的下拉电阻阻值，单位：R
-// #define AD_KEY_3_PULL_PD ((u32)47 * 1000) // 按键 3 对应的下拉电阻阻值，单位：R
-// #define AD_KEY_4_PULL_PD ((u32)0)         // 按键 4 对应的下拉电阻阻值，单位：R
-
+ 
 // 按键按下时，对应的ad值：
 #define AD_KEY_NONE_VAL ((u16)4095) // 没有按键按下，对应的ad值
 #define AD_KEY_1_PRESS_VAL ((u16)(AD_KEY_PULL_UP_VOLTAGE_VAL * AD_KEY_PULL_DOWN_VAL_1 / (AD_KEY_PULL_UP_VAL + AD_KEY_PULL_DOWN_VAL_1)))
@@ -80,11 +75,7 @@ enum AD_KEY_EVENT
     AD_KEY_EVENT_ID_4_LONG,
     AD_KEY_EVENT_ID_4_HOLD,
     AD_KEY_EVENT_ID_4_LOOSE,
-
-    AD_KEY_EVENT_ID_5_CLICK, 
-    AD_KEY_EVENT_ID_5_LONG,
-    AD_KEY_EVENT_ID_5_HOLD,
-    AD_KEY_EVENT_ID_5_LOOSE,
+ 
 };
  
 

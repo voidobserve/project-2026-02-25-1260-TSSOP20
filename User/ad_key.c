@@ -51,7 +51,7 @@ volatile struct key_driver_para ad_key_para = {
 
 // 将采集到的ad值转换成自定义的键值
 
-static u16 ad_key_val_to_ad_key_index(const u16 cur_ad_key)
+static u16 ad_key_val_to_ad_key_index(const u16 ad_key_val)
 {
     u8 i = 0;
     u16 ad_key_index = NO_KEY;
@@ -59,7 +59,7 @@ static u16 ad_key_val_to_ad_key_index(const u16 cur_ad_key)
     // ARRAY_SIZE(ad_key_scan_table) 这里是求出数组中存放的按键个数
     for (i = 0; i < ARRAY_SIZE(ad_key_scan_table); i++)
     {
-        if (cur_ad_key < ad_key_scan_table[i][1])
+        if (ad_key_val < ad_key_scan_table[i][1])
         {
             ad_key_index = ad_key_scan_table[i][0];
             break;
@@ -131,16 +131,19 @@ static u8 ad_key_get_event(const u8 key_val, const u8 key_event)
 u8 ad_key_get_key_val(void)
 {
     static volatile u16 val = AD_KEY_NONE_VAL; // 单次按键标志
+    u8 ret = NO_KEY;
 
     // 有数据更新，才获取数据
     if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
     {
         adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
-        val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
+        val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);   
+        
+        // printf("ad key val == %u\n", val);
     }
 
-    val = ad_key_val_to_ad_key_index(val); // 将采集到的ad值转换成自定义的键值
-    return val;
+    ret = ad_key_val_to_ad_key_index(val); // 将采集到的ad值转换成自定义的键值
+    return ret;
 }
 
 void ad_key_handle(void)

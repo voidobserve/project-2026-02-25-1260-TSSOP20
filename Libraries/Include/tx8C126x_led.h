@@ -14,8 +14,8 @@
   */ 
   
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __LED_H__
-#define __LED_H__
+#ifndef __TX8C126X_LED_H__
+#define __TX8C126X_LED_H__
 
 #ifdef __cplusplus
  extern "C" {
@@ -163,7 +163,7 @@
 }
 #endif
 
-#endif // __LED_H__
+#endif // __TX8C126X_LED_H__
 
 /**
   * @}

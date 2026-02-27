@@ -2,7 +2,7 @@
 #define __KEY_DRIVER_H__
 
 #include "include.h"
-#include "my_config.h"
+#include "user_config.h"
   
 #define NO_KEY (255) // 无效按键的键值
 
