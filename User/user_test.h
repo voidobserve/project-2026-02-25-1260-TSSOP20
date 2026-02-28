@@ -5,6 +5,12 @@
 #include "user_config.h"
 #if USER_DEBUG_ENABLE
 
+#define USER_DEBUG_PIN P17
+#define USER_DEBUG_PIN_SET() (USER_DEBUG_PIN = 1)
+#define USER_DEBUG_PIN_RESET() (USER_DEBUG_PIN = 0)
+#define USER_DEBUG_PIN_TOGGLE() (USER_DEBUG_PIN ^= 1)
+
+
 // 时基ID枚举定义
 enum
 {
@@ -30,17 +36,22 @@ extern timebase_config_t timebase_array[TIMEBASE_MAX];
 
 extern volatile u8 flag_debug;
 
+void user_debug_pin_init(void);
+
 // 函数声明
 void debug_time_add(void);
+
 void timebase_init(void);
-void timebaseUpdate(void);
-void timebaseEnable(timebase_id_t id, u16 interval_ms);
-void timebaseDisable(timebase_id_t id);
-u8 isTimebaseTriggered(timebase_id_t id);
-void clearTimebaseFlag(timebase_id_t id);
+void timebase_update(void);
+void timebase_enable(timebase_id_t id, u16 interval_ms);
+void timebase_disable(timebase_id_t id);
+u8 is_timebase_triggered(timebase_id_t id);
+void timebase_clear_flag(timebase_id_t id);
 
 void user_test_adc_scan(void);
 void user_test_led(void);
+
+void user_test_main(void);
 
 #endif
 

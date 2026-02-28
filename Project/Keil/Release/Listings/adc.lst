@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   ADC                                                               02/27/2026 17:14:55 PAGE 1   
+C51 COMPILER V9.60.7.0   ADC                                                               02/28/2026 14:59:52 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE ADC
@@ -62,7 +62,7 @@ line level    source
   50          /**
   51           * @brief 更新通道对应的ad值（由ad中断更新）
   52           *
-C51 COMPILER V9.60.7.0   ADC                                                               02/27/2026 17:14:55 PAGE 2   
+C51 COMPILER V9.60.7.0   ADC                                                               02/28/2026 14:59:52 PAGE 2   
 
   53           * @param adc_channel
   54           * @param adc_val
@@ -126,7 +126,7 @@ line level    source
  112   2      
  113   2          default:
  114   2              break;
-C51 COMPILER V9.60.7.0   ADC                                                               02/27/2026 17:14:55 PAGE 3   
+C51 COMPILER V9.60.7.0   ADC                                                               02/28/2026 14:59:52 PAGE 3   
 
  115   2          }
  116   1      
@@ -190,7 +190,7 @@ line level    source
  174   1      
  175   1          ADC_CFG0 |= ADC_CHAN0_EN(0x1) | // 使能通道0
  176   1                      ADC_EN(0x1);        // 使能adc
-C51 COMPILER V9.60.7.0   ADC                                                               02/27/2026 17:14:55 PAGE 4   
+C51 COMPILER V9.60.7.0   ADC                                                               02/28/2026 14:59:52 PAGE 4   
 
  177   1      }
  178          
@@ -254,7 +254,7 @@ line level    source
  236   3                  adc_update_val(ADC_CHANNEL_SEL_BAT_DET, adc_val);
  237   3              }
  238   2              else if (ADC_STATUS_SEL_SOLAR_DET == cur_adc_status)
-C51 COMPILER V9.60.7.0   ADC                                                               02/27/2026 17:14:55 PAGE 5   
+C51 COMPILER V9.60.7.0   ADC                                                               02/28/2026 14:59:52 PAGE 5   
 
  239   2              {
  240   3                  adc_update_val(ADC_CHANNEL_SEL_SOLAR_DET, adc_val);

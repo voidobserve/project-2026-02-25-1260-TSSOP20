@@ -10,7 +10,8 @@
 ".\Release\Objects\user_test.obj",
 ".\Release\Objects\led.obj",
 ".\Release\Objects\battery_monitor.obj",
-".\Release\Objects\bluetooth_ic_handle.obj" 
+".\Release\Objects\bluetooth_ic_handle.obj",
+".\Release\Objects\pwm.obj" 
 TO ".\Release\Objects\Demo" 
 PRINT(".\Release\Listings\Demo.m51") RAMSIZE(256) 
 CODE( 0X0000-0X3EEF )

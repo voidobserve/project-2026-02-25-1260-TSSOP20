@@ -9,6 +9,14 @@
 volatile u8 flag_debug = 0;
 timebase_config_t timebase_array[TIMEBASE_MAX];
 
+void user_debug_pin_init(void)
+{
+    P1_MD1 &= ~GPIO_P17_MODE_SEL(0x03); 
+    P1_MD1 |= GPIO_P17_MODE_SEL(0x01); 
+    FOUT_S17 = GPIO_FOUT_AF_FUNC; // 选择AF功能输出
+    P17 = 0;
+}
+
 void debug_time_add(void)
 {
 #if 1
@@ -37,14 +45,14 @@ void timebase_init(void)
     }
 
     // 默认配置示例
-    timebaseEnable(TIMEBASE_ADC_SCAN, 1000); // ADC扫描每1秒执行一次
-    timebaseEnable(TIMEBASE_LED_TEST, 500);  // LED测试每500ms执行一次
+    timebase_enable(TIMEBASE_ADC_SCAN, 1000); // ADC扫描每1秒执行一次
+    timebase_enable(TIMEBASE_LED_TEST, 500);  // LED测试每500ms执行一次
 }
 
 /**
  * @brief 更新时基计数器，在主循环或定时器中断中调用
  */
-void timebaseUpdate(void)
+void timebase_update(void)
 {
     u8 i;
     for (i = 0; i < TIMEBASE_MAX; i++)
@@ -66,7 +74,7 @@ void timebaseUpdate(void)
  * @param id 时基ID
  * @param interval_ms 执行间隔(毫秒)
  */
-void timebaseEnable(timebase_id_t id, u16 interval_ms)
+void timebase_enable(timebase_id_t id, u16 interval_ms)
 {
     if (id < TIMEBASE_MAX)
     {
@@ -81,7 +89,7 @@ void timebaseEnable(timebase_id_t id, u16 interval_ms)
  * @brief 禁用指定的时基
  * @param id 时基ID
  */
-void timebaseDisable(timebase_id_t id)
+void timebase_disable(timebase_id_t id)
 {
     if (id < TIMEBASE_MAX)
     {
@@ -95,7 +103,7 @@ void timebaseDisable(timebase_id_t id)
  * @param id 时基ID
  * @return 1-已触发, 0-未触发
  */
-u8 isTimebaseTriggered(timebase_id_t id)
+u8 is_timebase_triggered(timebase_id_t id)
 {
     if (id < TIMEBASE_MAX)
     {
@@ -108,7 +116,7 @@ u8 isTimebaseTriggered(timebase_id_t id)
  * @brief 清除时基触发标志
  * @param id 时基ID
  */
-void clearTimebaseFlag(timebase_id_t id)
+void timebase_clear_flag(timebase_id_t id)
 {
     if (id < TIMEBASE_MAX)
     {
@@ -141,9 +149,9 @@ void user_test_adc_scan(void)
     u16 adc_val = 0;
 
     // 使用新的时基系统
-    if (isTimebaseTriggered(TIMEBASE_ADC_SCAN))
+    if (is_timebase_triggered(TIMEBASE_ADC_SCAN))
     {
-        clearTimebaseFlag(TIMEBASE_ADC_SCAN);
+        timebase_clear_flag(TIMEBASE_ADC_SCAN);
 
         if (dir == 0)
         {
@@ -181,14 +189,28 @@ void user_test_adc_scan(void)
 void user_test_led(void)
 {
     // 使用LED测试时基
-    if (isTimebaseTriggered(TIMEBASE_LED_TEST))
+    if (is_timebase_triggered(TIMEBASE_LED_TEST))
     {
-        clearTimebaseFlag(TIMEBASE_LED_TEST);
+        timebase_clear_flag(TIMEBASE_LED_TEST);
         LED_100_PERCENT_TOGGLE();
         LED_75_PERCENT_TOGGLE();
         LED_50_PERCENT_TOGGLE();
         LED_25_PERCENT_TOGGLE();
+
+
+        // led_status_switch();
+
+        // printf("user_test_led() \n");
     }
+
+   
+}
+
+
+
+void user_test_main(void)
+{
+    user_test_led();
 }
 
 #endif

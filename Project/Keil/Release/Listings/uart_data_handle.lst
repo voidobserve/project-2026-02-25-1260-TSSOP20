@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/27/2026 18:03:14 PAGE 1   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/28/2026 14:59:52 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART_DATA_HANDLE
@@ -62,7 +62,7 @@ line level    source
   51   2              printf("Checksum error: expected 0x%02x, got 0x%02x\n",
   52   2                     (u16)check_sum, (u16)uart_receiver.buffer[6]);
   53   2      #endif
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/27/2026 18:03:14 PAGE 2   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/28/2026 14:59:52 PAGE 2   
 
   54   2      
   55   2              return 1;
@@ -126,7 +126,7 @@ line level    source
  113   2              uart_receiver.buffer[uart_receiver.index++] = byte;
  114   2              uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_CMD;
  115   2              return 0;
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/27/2026 18:03:14 PAGE 3   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/28/2026 14:59:52 PAGE 3   
 
  116   2              break;
  117   2      
@@ -190,7 +190,7 @@ line level    source
  175   1          u8 i;
  176   1          if (uart_receiver.timeout_cnt >= UART_DATA_HANDLE_TIMEOUT)
  177   1          {
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/27/2026 18:03:14 PAGE 4   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/28/2026 14:59:52 PAGE 4   
 
  178   2      #if USER_DEBUG_ENABLE
  179   2              printf("UART receive timeout, current status: %d\n", (u16)uart_receiver.status);
@@ -254,7 +254,7 @@ line level    source
  236   4                  }
  237   3      
  238   3      #endif
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/27/2026 18:03:14 PAGE 5   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/28/2026 14:59:52 PAGE 5   
 
  239   3                  break;
  240   3              }
@@ -318,7 +318,7 @@ line level    source
  298   1          uart_receiver_reset();
  299   1      }
  300          
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/27/2026 18:03:14 PAGE 6   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  02/28/2026 14:59:52 PAGE 6   
 
  301          // 根据命令，自动打包数据并发送
  302          // USER_TO_DO 

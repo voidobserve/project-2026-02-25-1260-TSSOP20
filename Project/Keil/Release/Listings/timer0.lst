@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   TIMER0                                                            02/27/2026 18:03:14 PAGE 1   
+C51 COMPILER V9.60.7.0   TIMER0                                                            02/28/2026 15:34:24 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TIMER0
@@ -15,78 +15,66 @@ line level    source
    4          #include "adc.h"
    5          #include "ad_key.h"
    6          
-   7          
-   8          #define PEROID_VAL (SYSCLK / 128 / 1000 - 1) // 周期值=系统时钟/分频/频率 - 1
-   9          
-  10          /**
-  11           * @brief 配置定时器TMR0，定时器默认关闭
-  12           */
-  13          void timer0_init(void)
-  14          {
-  15   1          __EnableIRQ(TMR0_IRQn); // 使能timer0中断
-  16   1          IE_EA = 1;              // 使能总中断 
-  17   1       
-  18   1          TMR_ALLCON = TMR0_CNT_CLR(0x1);                        // 清除计数值
-  19   1          TMR0_PRH = TMR_PERIOD_VAL_H((PEROID_VAL >> 8) & 0xFF); // 周期值
-  20   1          TMR0_PRL = TMR_PERIOD_VAL_L((PEROID_VAL >> 0) & 0xFF);
-  21   1          TMR0_CONH = TMR_PRD_PND(0x1) | TMR_PRD_IRQ_EN(0x1);                          // 计数等于周期时�
+   7          #include "led.h"
+   8          
+   9          #define PEROID_VAL (SYSCLK / 128 / 1000 - 1) // 周期值=系统时钟/分频/频率 - 1
+  10          
+  11          /**
+  12           * @brief 配置定时器TMR0，定时器默认关闭
+  13           */
+  14          void timer0_init(void)
+  15          {
+  16   1          __EnableIRQ(TMR0_IRQn); // 使能timer0中断
+  17   1          IE_EA = 1;              // 使能总中断
+  18   1      
+  19   1          TMR_ALLCON = TMR0_CNT_CLR(0x1);                        // 清除计数值
+  20   1          TMR0_PRH = TMR_PERIOD_VAL_H((PEROID_VAL >> 8) & 0xFF); // 周期值
+  21   1          TMR0_PRL = TMR_PERIOD_VAL_L((PEROID_VAL >> 0) & 0xFF);
+  22   1          TMR0_CONH = TMR_PRD_PND(0x1) | TMR_PRD_IRQ_EN(0x1);                          // 计数等于周期时�
              -��许发生中断
-  22   1          TMR0_CONL = TMR_SOURCE_SEL(0x7) | TMR_PRESCALE_SEL(0x7) | TMR_MODE_SEL(0x1); // 选择系统时钟，1
+  23   1          TMR0_CONL = TMR_SOURCE_SEL(0x7) | TMR_PRESCALE_SEL(0x7) | TMR_MODE_SEL(0x1); // 选择系统时钟，1
              -28分频，计数模式
-  23   1      }
-  24          
+  24   1      }
   25          
-  26          
-  27          // extern void fun(void);
-  28          // 定时器TMR0中断服务函数
-  29          void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
-  30          {
-  31   1          // 进入中断设置IP，不可删除
-  32   1          __IRQnIPnPush(TMR0_IRQn);
-  33   1      
-  34   1          // ---------------- 用户函数处理 -------------------
-  35   1      
-  36   1          // 周期中断
-  37   1          if (TMR0_CONH & TMR_PRD_PND(0x1))
-  38   1          {
-  39   2              TMR0_CONH |= TMR_PRD_PND(0x1); // 清除pending
-  40   2      
-  41   2              ad_key_para.cur_scan_times++;
-  42   2      
-  43   2              {
-  44   3                  static u8 cnt = 0;
-  45   3                  cnt ++;
-  46   3                  if (cnt >= 2)
-  47   3                  {
-  48   4                      cnt = 0;
-  49   4                      adc_scan();
-  50   4                  }            
-  51   3              }
-C51 COMPILER V9.60.7.0   TIMER0                                                            02/27/2026 18:03:14 PAGE 2   
+  26          // extern void fun(void);
+  27          // 定时器TMR0中断服务函数
+  28          void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
+  29          {
+  30   1          // 进入中断设置IP，不可删除
+  31   1          __IRQnIPnPush(TMR0_IRQn);
+  32   1      
+  33   1          // ---------------- 用户函数处理 -------------------
+  34   1      
+  35   1          // 周期中断
+  36   1          if (TMR0_CONH & TMR_PRD_PND(0x1))
+  37   1          {
+  38   2              TMR0_CONH |= TMR_PRD_PND(0x1); // 清除pending
+  39   2      
+  40   2      #if USER_DEBUG_ENABLE
+  41   2              timebase_update();
+  42   2      #endif
+  43   2      
+  44   2              ad_key_para.cur_scan_times++;
+  45   2      
+  46   2              adc_scan();
+  47   2       
+  48   2      
+  49   2              uart_receiver_timeout_add();
+  50   2      
+  51   2              debug_time_add();
+C51 COMPILER V9.60.7.0   TIMER0                                                            02/28/2026 15:34:24 PAGE 2   
 
-  52   2              
-  53   2      
-  54   2      
-  55   2              uart_receiver_timeout_add(); 
-  56   2      
-  57   2              debug_time_add();
-  58   2      
-  59   2      
-  60   2      
-  61   2      
-  62   2      
-  63   2      
-  64   2          }
-  65   1      
-  66   1          // 退出中断设置IP，不可删除
-  67   1          __IRQnIPnPop(TMR0_IRQn);
-  68   1      }
+  52   2          }
+  53   1      
+  54   1          // 退出中断设置IP，不可删除
+  55   1          __IRQnIPnPop(TMR0_IRQn);
+  56   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    122    ----
+   CODE SIZE        =    111    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =      1    ----
+   XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

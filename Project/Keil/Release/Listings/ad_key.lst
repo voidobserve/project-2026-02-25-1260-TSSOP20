@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 1   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/28/2026 14:59:52 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE AD_KEY
@@ -62,7 +62,7 @@ line level    source
              -�
   42              0,                  // const u8 click_delay_time; // 按键被抬起后等待连击事件延时数量
   43              0,                  // volatile u8 notify_value;    // 在延时的待发送按键值
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 2   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/28/2026 14:59:52 PAGE 2   
 
   44              KEY_TYPE_AD,        // const u8 key_type;
   45              ad_key_get_key_val, // u8 (*get_value)(void); // 用户自定义的获取键值的函数
@@ -126,7 +126,7 @@ line level    source
  102   2          }
  103   1          else
  104   1          {
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 3   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/28/2026 14:59:52 PAGE 3   
 
  105   2              return (u8)AD_KEY_EVENT_NONE;
  106   2          }
@@ -190,7 +190,7 @@ line level    source
  164   2              // ================================================================
  165   2              // key 1，对应的丝印是 上一曲
  166   2          case AD_KEY_EVENT_ID_1_CLICK:
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 4   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/28/2026 14:59:52 PAGE 4   
 
  167   2              printf("key 1 click\n");
  168   2              break;
@@ -254,7 +254,7 @@ line level    source
  226   2              printf("key 4 long\n");
  227   2              break;
  228   2      
-C51 COMPILER V9.60.7.0   AD_KEY                                                            02/27/2026 17:14:56 PAGE 5   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            02/28/2026 14:59:52 PAGE 5   
 
  229   2          case AD_KEY_EVENT_ID_4_HOLD:
  230   2              printf("key 4 hold\n");

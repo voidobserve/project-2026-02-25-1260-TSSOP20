@@ -446,6 +446,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\User\bluetooth_ic_handle.c</FilePath>
             </File>
+            <File>
+              <FileName>pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\pwm.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

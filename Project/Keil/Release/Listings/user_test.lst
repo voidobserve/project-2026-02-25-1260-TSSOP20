@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   USER_TEST                                                         02/27/2026 17:36:55 PAGE 1   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         02/28/2026 15:32:37 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE USER_TEST
@@ -20,199 +20,221 @@ line level    source
    9          volatile u8 flag_debug = 0;
   10          timebase_config_t timebase_array[TIMEBASE_MAX];
   11          
-  12          void debug_time_add(void)
+  12          void user_debug_pin_init(void)
   13          {
-  14   1      #if 1
-  15   1          static u16 cnt = 0;
-  16   1          cnt++;
-  17   1          if (cnt >= 1000)
-  18   1          {
-  19   2              cnt = 0;
-  20   2              flag_debug = 1;
-  21   2          }
-  22   1      #endif
-  23   1      }
-  24          
-  25          /**
-  26           * @brief 初始化时基管理系统
-  27           */
-  28          void timebase_init(void)
-  29          {
-  30   1          u8 i;
-  31   1          for (i = 0; i < TIMEBASE_MAX; i++)
-  32   1          {
-  33   2              timebase_array[i].interval_ms = 0;
-  34   2              timebase_array[i].counter = 0;
-  35   2              timebase_array[i].enabled = 0;
-  36   2              timebase_array[i].flag = 0;
-  37   2          }
-  38   1      
-  39   1          // 默认配置示例
-  40   1          timebaseEnable(TIMEBASE_ADC_SCAN, 1000); // ADC扫描每1秒执行一次
-  41   1          timebaseEnable(TIMEBASE_LED_TEST, 500);  // LED测试每500ms执行一次
-  42   1      }
-  43          
-  44          /**
-  45           * @brief 更新时基计数器，在主循环或定时器中断中调用
-  46           */
-  47          void timebaseUpdate(void)
-  48          {
-  49   1          u8 i;
-  50   1          for (i = 0; i < TIMEBASE_MAX; i++)
-  51   1          {
-  52   2              if (timebase_array[i].enabled)
-  53   2              {
-C51 COMPILER V9.60.7.0   USER_TEST                                                         02/27/2026 17:36:55 PAGE 2   
+  14   1          P1_MD1 &= ~GPIO_P17_MODE_SEL(0x03); 
+  15   1          P1_MD1 |= GPIO_P17_MODE_SEL(0x01); 
+  16   1          FOUT_S17 = GPIO_FOUT_AF_FUNC; // 选择AF功能输出
+  17   1          P17 = 0;
+  18   1      }
+  19          
+  20          void debug_time_add(void)
+  21          {
+  22   1      #if 1
+  23   1          static u16 cnt = 0;
+  24   1          cnt++;
+  25   1          if (cnt >= 1000)
+  26   1          {
+  27   2              cnt = 0;
+  28   2              flag_debug = 1;
+  29   2          }
+  30   1      #endif
+  31   1      }
+  32          
+  33          /**
+  34           * @brief 初始化时基管理系统
+  35           */
+  36          void timebase_init(void)
+  37          {
+  38   1          u8 i;
+  39   1          for (i = 0; i < TIMEBASE_MAX; i++)
+  40   1          {
+  41   2              timebase_array[i].interval_ms = 0;
+  42   2              timebase_array[i].counter = 0;
+  43   2              timebase_array[i].enabled = 0;
+  44   2              timebase_array[i].flag = 0;
+  45   2          }
+  46   1      
+  47   1          // 默认配置示例
+  48   1          timebase_enable(TIMEBASE_ADC_SCAN, 1000); // ADC扫描每1秒执行一次
+  49   1          timebase_enable(TIMEBASE_LED_TEST, 500);  // LED测试每500ms执行一次
+  50   1      }
+  51          
+  52          /**
+  53           * @brief 更新时基计数器，在主循环或定时器中断中调用
+C51 COMPILER V9.60.7.0   USER_TEST                                                         02/28/2026 15:32:37 PAGE 2   
 
-  54   3                  timebase_array[i].counter++;
-  55   3                  if (timebase_array[i].counter >= timebase_array[i].interval_ms)
-  56   3                  {
-  57   4                      timebase_array[i].counter = 0;
-  58   4                      timebase_array[i].flag = 1;
-  59   4                  }
-  60   3              }
-  61   2          }
-  62   1      }
-  63          
-  64          /**
-  65           * @brief 启用指定的时基
-  66           * @param id 时基ID
-  67           * @param interval_ms 执行间隔(毫秒)
-  68           */
-  69          void timebaseEnable(timebase_id_t id, u16 interval_ms)
-  70          {
-  71   1          if (id < TIMEBASE_MAX)
-  72   1          {
-  73   2              timebase_array[id].interval_ms = interval_ms;
-  74   2              timebase_array[id].counter = 0;
-  75   2              timebase_array[id].enabled = 1;
-  76   2              timebase_array[id].flag = 0;
-  77   2          }
-  78   1      }
-  79          
-  80          /**
-  81           * @brief 禁用指定的时基
-  82           * @param id 时基ID
-  83           */
-  84          void timebaseDisable(timebase_id_t id)
-  85          {
-  86   1          if (id < TIMEBASE_MAX)
-  87   1          {
-  88   2              timebase_array[id].enabled = 0;
-  89   2              timebase_array[id].flag = 0;
-  90   2          }
-  91   1      }
-  92          
-  93          /**
-  94           * @brief 检查时基是否触发
-  95           * @param id 时基ID
-  96           * @return 1-已触发, 0-未触发
-  97           */
-  98          u8 isTimebaseTriggered(timebase_id_t id)
-  99          {
- 100   1          if (id < TIMEBASE_MAX)
- 101   1          {
- 102   2              return timebase_array[id].flag;
- 103   2          }
- 104   1          return 0;
- 105   1      }
- 106          
- 107          /**
- 108           * @brief 清除时基触发标志
- 109           * @param id 时基ID
- 110           */
- 111          void clearTimebaseFlag(timebase_id_t id)
- 112          {
- 113   1          if (id < TIMEBASE_MAX)
- 114   1          {
- 115   2              timebase_array[id].flag = 0;
-C51 COMPILER V9.60.7.0   USER_TEST                                                         02/27/2026 17:36:55 PAGE 3   
+  54           */
+  55          void timebase_update(void)
+  56          {
+  57   1          u8 i;
+  58   1          for (i = 0; i < TIMEBASE_MAX; i++)
+  59   1          {
+  60   2              if (timebase_array[i].enabled)
+  61   2              {
+  62   3                  timebase_array[i].counter++;
+  63   3                  if (timebase_array[i].counter >= timebase_array[i].interval_ms)
+  64   3                  {
+  65   4                      timebase_array[i].counter = 0;
+  66   4                      timebase_array[i].flag = 1;
+  67   4                  }
+  68   3              }
+  69   2          }
+  70   1      }
+  71          
+  72          /**
+  73           * @brief 启用指定的时基
+  74           * @param id 时基ID
+  75           * @param interval_ms 执行间隔(毫秒)
+  76           */
+  77          void timebase_enable(timebase_id_t id, u16 interval_ms)
+  78          {
+  79   1          if (id < TIMEBASE_MAX)
+  80   1          {
+  81   2              timebase_array[id].interval_ms = interval_ms;
+  82   2              timebase_array[id].counter = 0;
+  83   2              timebase_array[id].enabled = 1;
+  84   2              timebase_array[id].flag = 0;
+  85   2          }
+  86   1      }
+  87          
+  88          /**
+  89           * @brief 禁用指定的时基
+  90           * @param id 时基ID
+  91           */
+  92          void timebase_disable(timebase_id_t id)
+  93          {
+  94   1          if (id < TIMEBASE_MAX)
+  95   1          {
+  96   2              timebase_array[id].enabled = 0;
+  97   2              timebase_array[id].flag = 0;
+  98   2          }
+  99   1      }
+ 100          
+ 101          /**
+ 102           * @brief 检查时基是否触发
+ 103           * @param id 时基ID
+ 104           * @return 1-已触发, 0-未触发
+ 105           */
+ 106          u8 is_timebase_triggered(timebase_id_t id)
+ 107          {
+ 108   1          if (id < TIMEBASE_MAX)
+ 109   1          {
+ 110   2              return timebase_array[id].flag;
+ 111   2          }
+ 112   1          return 0;
+ 113   1      }
+ 114          
+ 115          /**
+C51 COMPILER V9.60.7.0   USER_TEST                                                         02/28/2026 15:32:37 PAGE 3   
 
- 116   2          }
- 117   1      }
- 118          
- 119          // if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
- 120          // {
- 121          //     adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
- 122          //     adkey_val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
- 123          //     printf("adkey_val == %u\n", adkey_val);
- 124          //     delay_ms(500);
- 125          // }
+ 116           * @brief 清除时基触发标志
+ 117           * @param id 时基ID
+ 118           */
+ 119          void timebase_clear_flag(timebase_id_t id)
+ 120          {
+ 121   1          if (id < TIMEBASE_MAX)
+ 122   1          {
+ 123   2              timebase_array[id].flag = 0;
+ 124   2          }
+ 125   1      }
  126          
- 127          // printf("adkey 1 press val == %u\n", AD_KEY_1_PRESS_VAL);
- 128          // printf("adkey 2 press val == %u\n", AD_KEY_2_PRESS_VAL);
- 129          // printf("adkey 3 press val == %u\n", AD_KEY_3_PRESS_VAL);
- 130          // printf("adkey 4 press val == %u\n", AD_KEY_4_PRESS_VAL);
- 131          // printf("adkey index 1 val == %u\n", AD_KEY_INDEX_1_VAL);
- 132          // printf("adkey index 2 val == %u\n", AD_KEY_INDEX_2_VAL);
- 133          // printf("adkey index 3 val == %u\n", AD_KEY_INDEX_3_VAL);
- 134          // printf("adkey index 4 val == %u\n", AD_KEY_INDEX_4_VAL);
- 135          // delay_ms(500);
- 136          
- 137          // 测试adc的采集功能
- 138          void user_test_adc_scan(void)
- 139          {
- 140   1          static u8 dir = 0;
- 141   1          u16 adc_val = 0;
- 142   1      
- 143   1          // 使用新的时基系统
- 144   1          if (isTimebaseTriggered(TIMEBASE_ADC_SCAN))
- 145   1          {
- 146   2              clearTimebaseFlag(TIMEBASE_ADC_SCAN);
- 147   2      
- 148   2              if (dir == 0)
- 149   2              {
- 150   3                  if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
- 151   3                  {
- 152   4                      adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
- 153   4                      adc_val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
- 154   4                      printf("adkey_val == %u\n", adc_val);
- 155   4                      dir = 1;
- 156   4                  }
- 157   3              }
- 158   2              else if (dir == 1)
- 159   2              {
- 160   3                  if (adc_get_update_flag(ADC_CHANNEL_SEL_SOLAR_DET))
- 161   3                  {
- 162   4                      adc_clear_update_flag(ADC_CHANNEL_SEL_SOLAR_DET);
- 163   4                      adc_val = adc_get_val(ADC_CHANNEL_SEL_SOLAR_DET);
- 164   4                      printf("solar val == %u\n", adc_val);
- 165   4                      dir = 2;
- 166   4                  }
- 167   3              }
- 168   2              else if (dir == 2)
- 169   2              {
- 170   3                  if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
- 171   3                  {
- 172   4                      adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
- 173   4                      adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
- 174   4                      printf("bat val == %u\n", adc_val);
- 175   4                      dir = 0;
- 176   4                  }
- 177   3              }
-C51 COMPILER V9.60.7.0   USER_TEST                                                         02/27/2026 17:36:55 PAGE 4   
+ 127          // if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
+ 128          // {
+ 129          //     adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
+ 130          //     adkey_val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
+ 131          //     printf("adkey_val == %u\n", adkey_val);
+ 132          //     delay_ms(500);
+ 133          // }
+ 134          
+ 135          // printf("adkey 1 press val == %u\n", AD_KEY_1_PRESS_VAL);
+ 136          // printf("adkey 2 press val == %u\n", AD_KEY_2_PRESS_VAL);
+ 137          // printf("adkey 3 press val == %u\n", AD_KEY_3_PRESS_VAL);
+ 138          // printf("adkey 4 press val == %u\n", AD_KEY_4_PRESS_VAL);
+ 139          // printf("adkey index 1 val == %u\n", AD_KEY_INDEX_1_VAL);
+ 140          // printf("adkey index 2 val == %u\n", AD_KEY_INDEX_2_VAL);
+ 141          // printf("adkey index 3 val == %u\n", AD_KEY_INDEX_3_VAL);
+ 142          // printf("adkey index 4 val == %u\n", AD_KEY_INDEX_4_VAL);
+ 143          // delay_ms(500);
+ 144          
+ 145          // 测试adc的采集功能
+ 146          void user_test_adc_scan(void)
+ 147          {
+ 148   1          static u8 dir = 0;
+ 149   1          u16 adc_val = 0;
+ 150   1      
+ 151   1          // 使用新的时基系统
+ 152   1          if (is_timebase_triggered(TIMEBASE_ADC_SCAN))
+ 153   1          {
+ 154   2              timebase_clear_flag(TIMEBASE_ADC_SCAN);
+ 155   2      
+ 156   2              if (dir == 0)
+ 157   2              {
+ 158   3                  if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
+ 159   3                  {
+ 160   4                      adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
+ 161   4                      adc_val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
+ 162   4                      printf("adkey_val == %u\n", adc_val);
+ 163   4                      dir = 1;
+ 164   4                  }
+ 165   3              }
+ 166   2              else if (dir == 1)
+ 167   2              {
+ 168   3                  if (adc_get_update_flag(ADC_CHANNEL_SEL_SOLAR_DET))
+ 169   3                  {
+ 170   4                      adc_clear_update_flag(ADC_CHANNEL_SEL_SOLAR_DET);
+ 171   4                      adc_val = adc_get_val(ADC_CHANNEL_SEL_SOLAR_DET);
+ 172   4                      printf("solar val == %u\n", adc_val);
+ 173   4                      dir = 2;
+ 174   4                  }
+ 175   3              }
+ 176   2              else if (dir == 2)
+ 177   2              {
+C51 COMPILER V9.60.7.0   USER_TEST                                                         02/28/2026 15:32:37 PAGE 4   
 
- 178   2          }
- 179   1      }
- 180          
- 181          void user_test_led(void)
- 182          {
- 183   1          // 使用LED测试时基
- 184   1          if (isTimebaseTriggered(TIMEBASE_LED_TEST))
- 185   1          {
- 186   2              clearTimebaseFlag(TIMEBASE_LED_TEST);
- 187   2              LED_100_PERCENT_TOGGLE();
- 188   2              LED_75_PERCENT_TOGGLE();
- 189   2              LED_50_PERCENT_TOGGLE();
- 190   2              LED_25_PERCENT_TOGGLE();
- 191   2          }
- 192   1      }
- 193          
- 194          #endif
+ 178   3                  if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
+ 179   3                  {
+ 180   4                      adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
+ 181   4                      adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
+ 182   4                      printf("bat val == %u\n", adc_val);
+ 183   4                      dir = 0;
+ 184   4                  }
+ 185   3              }
+ 186   2          }
+ 187   1      }
+ 188          
+ 189          void user_test_led(void)
+ 190          {
+ 191   1          // 使用LED测试时基
+ 192   1          if (is_timebase_triggered(TIMEBASE_LED_TEST))
+ 193   1          {
+ 194   2              timebase_clear_flag(TIMEBASE_LED_TEST);
+ 195   2              LED_100_PERCENT_TOGGLE();
+ 196   2              LED_75_PERCENT_TOGGLE();
+ 197   2              LED_50_PERCENT_TOGGLE();
+ 198   2              LED_25_PERCENT_TOGGLE();
+ 199   2      
+ 200   2      
+ 201   2              // led_status_switch();
+ 202   2      
+ 203   2              // printf("user_test_led() \n");
+ 204   2          }
+ 205   1      
+ 206   1         
+ 207   1      }
+ 208          
+ 209          
+ 210          
+ 211          void user_test_main(void)
+ 212          {
+ 213   1          user_test_led();
+ 214   1      }
+ 215          
+ 216          #endif
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    499    ----
+   CODE SIZE        =    520    ----
    CONSTANT SIZE    =     49    ----
    XDATA SIZE       =     28       2
    PDATA SIZE       =   ----    ----

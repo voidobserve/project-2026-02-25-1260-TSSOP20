@@ -23,6 +23,8 @@
 #include "timer0.h"
 #include "adc.h"
 #include "led.h"
+#include "pwm.h"
+
 // #include "battery_monitor.h"  // 添加电池监测头文件
 
 #include "uart_data_handle.h"
@@ -31,14 +33,7 @@
 // 电池检测相关变量
 static u16 last_battery_adc_val = 0;
 static u8 battery_check_counter = 0;
-#define BATTERY_CHECK_INTERVAL 100  // 每100次循环检测一次电池
-
-void debug_pin_init(void)
-{
-    P1_MD1 &= ~GPIO_P17_MODE_SEL(0x03); 
-    P1_MD1 |= GPIO_P17_MODE_SEL(0x01); 
-    FOUT_S17 = GPIO_FOUT_AF_FUNC; // 选择AF功能输出
-}
+#define BATTERY_CHECK_INTERVAL 100 // 每100次循环检测一次电池
 
 #if 0
 void battery_monitor_task(void)
@@ -60,7 +55,7 @@ void battery_monitor_task(void)
                 u16 battery_voltage = ADC_TO_BATTERY_VOLTAGE_MV(current_adc_val);
                 battery_level_t battery_level = get_battery_level_by_adc(current_adc_val);
                 u8 battery_percentage = get_battery_percentage_by_adc(current_adc_val);
-                
+
 #if USER_DEBUG_ENABLE
                 printf("Battery: %d mV, %d%%, Level: %s\n", 
                        battery_voltage, 
@@ -97,27 +92,40 @@ void main(void)
     adc_init();
     led_init();
     uart0_init();
-    
+    pwm_init();
 
 #if USER_DEBUG_ENABLE
-    debug_pin_init();
+    user_debug_pin_init();
+    timebase_init();
     printf("sys reset\n");
     // printf("Battery Monitor Initialized\n");
     // printf("Voltage Range: %d-%d mV\n", BATTERY_VOLTAGE_MIN_MV, BATTERY_VOLTAGE_MAX_MV);
 #endif
 
     while (1)
-    {   
+    {
         key_driver_scan(&ad_key_para);
         ad_key_handle();
 
         uart_data_handle();
 
-        user_test_adc_scan();
-        
+        LED_YELLOW_ON();
+        LED_WHITE_ON();
+        delay_ms(500);
+
+        LED_YELLOW_OFF();
+        LED_WHITE_OFF();
+        delay_ms(500);
+
+
+
+
+#if USER_DEBUG_ENABLE
+        user_test_main();
+#endif
+
         // // 添加电池监测任务
         // battery_monitor_task();
-         
     }
 }
 

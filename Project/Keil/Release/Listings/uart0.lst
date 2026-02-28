@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   UART0                                                             02/27/2026 17:14:54 PAGE 1   
+C51 COMPILER V9.60.7.0   UART0                                                             02/28/2026 14:59:51 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART0
@@ -62,7 +62,7 @@ line level    source
   51   1          for (; i < len; i++)
   52   1          {
   53   2              uart0_sendbyte(buf[i]);
-C51 COMPILER V9.60.7.0   UART0                                                             02/27/2026 17:14:54 PAGE 2   
+C51 COMPILER V9.60.7.0   UART0                                                             02/28/2026 14:59:51 PAGE 2   
 
   54   2          }
   55   1      }
@@ -126,7 +126,7 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-C51 COMPILER V9.60.7.0   UART0                                                             02/27/2026 17:14:54 PAGE 3   
+C51 COMPILER V9.60.7.0   UART0                                                             02/28/2026 14:59:51 PAGE 3   
 
    CODE SIZE        =    205    ----
    CONSTANT SIZE    =   ----    ----
