@@ -1,5 +1,5 @@
 #include "ad_key.h"
-#include "adc.h"
+#include "user_include.h"
 
 // 存放按键对应的ad值:
 static const u16 ad_key_scan_table[][2] = {
@@ -137,8 +137,8 @@ u8 ad_key_get_key_val(void)
     if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
     {
         adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
-        val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);   
-        
+        val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
+
         // printf("ad key val == %u\n", val);
     }
 
@@ -164,15 +164,22 @@ void ad_key_handle(void)
         // ================================================================
         // key 1，对应的丝印是 上一曲
     case AD_KEY_EVENT_ID_1_CLICK:
-        printf("key 1 click\n");
+        // printf("key 1 click\n");
+        uart_data_send_cmd(UART_SEND_CMD_MUSIC_PREV);
         break;
 
     case AD_KEY_EVENT_ID_1_LONG:
         printf("key 1 long\n");
+
+        // 长按发送音量加
+        uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
         break;
 
     case AD_KEY_EVENT_ID_1_HOLD:
         printf("key 1 hold\n");
+
+        // 长按发送音量加
+        uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
         break;
 
     case AD_KEY_EVENT_ID_1_LOOSE:
@@ -183,6 +190,7 @@ void ad_key_handle(void)
         // key 2，对应的丝印是 灯开关
     case AD_KEY_EVENT_ID_2_CLICK:
         printf("key 2 click\n");
+        led_status_switch();
         break;
 
     case AD_KEY_EVENT_ID_2_LONG:
@@ -198,18 +206,26 @@ void ad_key_handle(void)
         break;
 
         // ================================================================
-        // key 3，对应的丝印是 下一曲 
+        // key 3，对应的丝印是 下一曲
 
     case AD_KEY_EVENT_ID_3_CLICK:
         printf("key 3 click\n");
+
+        uart_data_send_cmd(UART_SEND_CMD_MUSIC_NEXT);
         break;
 
     case AD_KEY_EVENT_ID_3_LONG:
         printf("key 3 long\n");
+
+        // 长按发送音量减
+        uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
         break;
 
     case AD_KEY_EVENT_ID_3_HOLD:
         printf("key 3 hold\n");
+
+        // 长按发送音量减
+        uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
         break;
 
     case AD_KEY_EVENT_ID_3_LOOSE:
@@ -217,13 +233,17 @@ void ad_key_handle(void)
         break;
 
         // ================================================================
-        // key 4，对应的丝印是 总开关 
+        // key 4，对应的丝印是 总开关
     case AD_KEY_EVENT_ID_4_CLICK:
         printf("key 4 click\n");
+
+        // 播放/暂停音乐
         break;
 
     case AD_KEY_EVENT_ID_4_LONG:
         printf("key 4 long\n");
+
+        // 打开蓝牙/关闭蓝牙
         break;
 
     case AD_KEY_EVENT_ID_4_HOLD:

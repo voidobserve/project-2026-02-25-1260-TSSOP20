@@ -8,7 +8,7 @@
 
 /*
     一帧数据构成：
-    head0,head1,0x00,cmd,data0,0x00,check sum,tail
+    head0, head1, 0x00, cmd, data0, 0x00, check sum, tail
     check sum == head0 + head1 + 0x00 + cmd + data0
 */
 #define UART_DATA_HANDLE_FORMAT_HEAD0 0xA5    // 数据格式头
@@ -18,7 +18,7 @@
 #define UART_DATA_HANDLE_FORMAT_TAIL 0xFB     // 数据尾部
 
 // 串口接收器接收的串口控制命令
-// USER_TO_DO 
+// USER_TO_DO
 enum
 {
     UART_RECV_CMD_,
@@ -28,7 +28,16 @@ typedef u8 uart_recv_cmd_t;
 // 串口发送的串口控制命令
 enum
 {
-    UART_SEND_CMD_,
+    UART_SEND_CMD_BLE_OPEN = 0x0B,           // 打开蓝牙
+    UART_SEND_CMD_BLE_CLOSE = 0x0D,          // 关闭蓝牙
+    UART_SEND_CMD_MUSIC_PLAY = 0x01,         // 播放音乐
+    UART_SEND_CMD_MUSIC_PAUSE = 0x02,        // 暂停播放
+    UART_SEND_CMD_MUSIC_PREV = 0x03,         // 上一曲
+    UART_SEND_CMD_MUSIC_NEXT = 0x04,         // 下一曲
+    UART_SEND_CMD_VOLUME_ADD = 0x07,         // 音量加
+    UART_SEND_CMD_VOLUME_SUB = 0x08,         // 音量减
+    UART_SEND_CMD_LOW_POWER_WARNING = 0x09,  // 低电量提示
+    UART_SEND_CMD_LOW_POWER_SHUTDOWN = 0x0A, // 低电量关机
 };
 typedef u8 uart_send_cmd_t;
 
@@ -65,5 +74,7 @@ u8 uart_receiver_process_checksum(void);
 u8 uart_receiver_process_byte(u8 byte);
 void uart_receiver_timeout_handler(void);
 void uart_data_handle(void);
+
+void uart_data_send_cmd(uart_send_cmd_t cmd);
 
 #endif

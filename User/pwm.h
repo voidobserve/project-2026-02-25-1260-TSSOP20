@@ -3,7 +3,7 @@
 
 #include "include.h"
 
-// USER_TO_DO 
+//  
 #define STRM0_PSC_VAL_CONFIG (8 - 1)// 由用户设置，预分频，填入的值范围：0~254，对应1~255分频
 #define STMR0_PERIOD_VAL (SYSCLK / (STRM0_PSC_VAL_CONFIG + 1) / 200)
 #define STRM0_PERIOD_30_PERCENT_VAL ((u32)STMR0_PERIOD_VAL * 30 / 100)

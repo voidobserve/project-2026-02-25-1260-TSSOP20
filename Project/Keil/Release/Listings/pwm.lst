@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   PWM                                                               02/28/2026 14:59:52 PAGE 1   
+C51 COMPILER V9.60.7.0   PWM                                                               03/11/2026 14:12:37 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE PWM
@@ -13,103 +13,123 @@ line level    source
    2          
    3          void pwm_init(void)
    4          {
-   5   1          P3_MD0 &= ~GPIO_P30_MODE_SEL(0x03);
-   6   1          P3_MD0 |= GPIO_P30_MODE_SEL(0x01); // 输出模式
-   7   1          FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT; // stmr0_pwmout
-   8   1      
-   9   1          P2_MD1 &= ~GPIO_P27_MODE_SEL(0x03);
-  10   1          P2_MD1 |= GPIO_P27_MODE_SEL(0x01); // 输出模式
-  11   1          FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT; // 选择 stmr1_pwmout
-  12   1      
-  13   1          // ==================================================================
-  14   1          // STMR0 用作 Y 黄灯输出
-  15   1          STMR_CNTCLR |= STMR_0_CNT_CLR(0x01);                        // 清空计数值
-  16   1          STMR0_PSC = STMR_PRESCALE_VAL(STRM0_PSC_VAL_CONFIG);        // 预分频（填入的值范围：0~254�
+   5   1          // P30 黄灯
+   6   1          P3_MD0 &= ~GPIO_P30_MODE_SEL(0x03);
+   7   1          P3_MD0 |= GPIO_P30_MODE_SEL(0x01); // 输出模式
+   8   1          // FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT; // stmr0_pwmout
+   9   1          P30 = 1;
+  10   1          FOUT_S30 = GPIO_FOUT_AF_FUNC; // 先不点亮灯光
+  11   1      
+  12   1          // P27 白灯
+  13   1          P2_MD1 &= ~GPIO_P27_MODE_SEL(0x03);
+  14   1          P2_MD1 |= GPIO_P27_MODE_SEL(0x01); // 输出模式
+  15   1          // FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT; // 选择 stmr1_pwmout
+  16   1          P27 = 1;
+  17   1          FOUT_S27 = GPIO_FOUT_AF_FUNC; // 先不点亮灯光
+  18   1      
+  19   1          // P01 蓝灯
+  20   1          P0_MD0 &= ~GPIO_P01_MODE_SEL(0x03);
+  21   1          P0_MD0 |= GPIO_P01_MODE_SEL(0x01); // 输出模式
+  22   1          P01 = 1;
+  23   1          FOUT_S01 = GPIO_FOUT_AF_FUNC;
+  24   1      
+  25   1          // P02 红灯
+  26   1          P0_MD0 &= ~GPIO_P02_MODE_SEL(0x03);
+  27   1          P0_MD0 |= GPIO_P02_MODE_SEL(0x01); // 输出模式
+  28   1          P02 = 1;
+  29   1          FOUT_S02 = GPIO_FOUT_AF_FUNC;
+  30   1      
+  31   1          // ==================================================================
+  32   1          // STMR0 用作 Y 黄灯输出
+  33   1          STMR_CNTCLR |= STMR_0_CNT_CLR(0x01);                        // 清空计数值
+  34   1          STMR0_PSC = STMR_PRESCALE_VAL(STRM0_PSC_VAL_CONFIG);        // 预分频（填入的值范围：0~254�
              -��对应1~255分频）
-  17   1          STMR0_PRH = STMR_PRD_VAL_H((STMR0_PERIOD_VAL >> 8) & 0xFF); // 周期值
-  18   1          STMR0_PRL = STMR_PRD_VAL_L((STMR0_PERIOD_VAL >> 0) & 0xFF);
-  19   1          STMR0_CMPAH = STMR_CMPA_VAL_H(((0) >> 8) & 0xFF); // 比较值
-  20   1          STMR0_CMPAL = STMR_CMPA_VAL_L(((0) >> 0) & 0xFF); // 比较值
-  21   1          STMR_PWMVALA = STMR_0_PWMVALA(0x00);              // STMR0 PWM输出值
-  22   1      
-  23   1          STMR_CNTMD |= STMR_0_CNT_MODE(0x1); // 连续计数模式
-  24   1          STMR_LOADEN |= STMR_0_LOAD_EN(0x1); // 自动装载使能
-  25   1          STMR_CNTCLR |= STMR_0_CNT_CLR(0x1); //
-  26   1          STMR_CNTEN |= STMR_0_CNT_EN(0x1);   // 使能
-  27   1          STMR_PWMEN |= STMR_0_PWM_EN(0x1);   // PWM输出使能
-  28   1      
-  29   1          // ==================================================================
-  30   1          // STMR1 用作 W 白灯输出
-  31   1          STMR_CNTCLR |= STMR_1_CNT_CLR(0x01);                        // 清空计数值
-  32   1          STMR1_PSC = STMR_PRESCALE_VAL(STRM1_PSC_VAL_CONFIG);        // 预分频
-  33   1          STMR1_PRH = STMR_PRD_VAL_H((STMR1_PERIOD_VAL >> 8) & 0xFF); // 周期值
-  34   1          STMR1_PRL = STMR_PRD_VAL_L((STMR1_PERIOD_VAL >> 0) & 0xFF);
-  35   1          STMR1_CMPAH = STMR_CMPA_VAL_H(((0) >> 8) & 0xFF); // 比较值 (清空比较值)
-  36   1          STMR1_CMPAL = STMR_CMPA_VAL_L(((0) >> 0) & 0xFF); // 比较值
-  37   1          STMR_PWMVALA = STMR_1_PWMVALA(0x00);              // STMR1 PWM输出值
-  38   1      
-  39   1          STMR_CNTMD |= STMR_1_CNT_MODE(0x1); // 连续计数模式
-  40   1          STMR_LOADEN |= STMR_1_LOAD_EN(0x1); // 自动装载使能
-  41   1          STMR_CNTCLR |= STMR_1_CNT_CLR(0x1); //
-  42   1          STMR_CNTEN |= STMR_1_CNT_EN(0x1);   // 使能
-  43   1          STMR_PWMEN |= STMR_1_PWM_EN(0x1);   // PWM输出使能
-  44   1      }
-  45          
-  46          // 设置通道0的占空比
-  47          void pwm_set_channel_0_duty(u16 channel_duty)
-  48          {
-  49   1          STMR0_CMPAH = STMR_CMPA_VAL_H(((channel_duty) >> 8) & 0xFF); // 比较值
-  50   1          STMR0_CMPAL = STMR_CMPA_VAL_L(((channel_duty) >> 0) & 0xFF); // 比较值
-  51   1          STMR_LOADEN |= STMR_0_LOAD_EN(0x1);                          // 自动装载使能
-  52   1      }
-C51 COMPILER V9.60.7.0   PWM                                                               02/28/2026 14:59:52 PAGE 2   
+  35   1          STMR0_PRH = STMR_PRD_VAL_H((STMR0_PERIOD_VAL >> 8) & 0xFF); // 周期值
+  36   1          STMR0_PRL = STMR_PRD_VAL_L((STMR0_PERIOD_VAL >> 0) & 0xFF);
+  37   1          STMR0_CMPAH = STMR_CMPA_VAL_H(((0) >> 8) & 0xFF); // 比较值
+  38   1          STMR0_CMPAL = STMR_CMPA_VAL_L(((0) >> 0) & 0xFF); // 比较值
+  39   1          STMR_PWMVALA = STMR_0_PWMVALA(0x00);              // STMR0 PWM输出值
+  40   1      
+  41   1          STMR_CNTMD |= STMR_0_CNT_MODE(0x1); // 连续计数模式
+  42   1          STMR_LOADEN |= STMR_0_LOAD_EN(0x1); // 自动装载使能
+  43   1          STMR_CNTCLR |= STMR_0_CNT_CLR(0x1); //
+  44   1          STMR_CNTEN |= STMR_0_CNT_EN(0x1);   // 使能
+  45   1          STMR_PWMEN |= STMR_0_PWM_EN(0x1);   // PWM输出使能
+  46   1      
+  47   1          // ==================================================================
+  48   1          // STMR1 用作 W 白灯输出
+  49   1          STMR_CNTCLR |= STMR_1_CNT_CLR(0x01);                        // 清空计数值
+  50   1          STMR1_PSC = STMR_PRESCALE_VAL(STRM1_PSC_VAL_CONFIG);        // 预分频
+  51   1          STMR1_PRH = STMR_PRD_VAL_H((STMR1_PERIOD_VAL >> 8) & 0xFF); // 周期值
+  52   1          STMR1_PRL = STMR_PRD_VAL_L((STMR1_PERIOD_VAL >> 0) & 0xFF);
+C51 COMPILER V9.60.7.0   PWM                                                               03/11/2026 14:12:37 PAGE 2   
 
-  53          
-  54          // 设置通道1的占空比
-  55          void pwm_set_channel_1_duty(u16 channel_duty)
-  56          {
-  57   1          STMR1_CMPAH = STMR_CMPA_VAL_H(((channel_duty) >> 8) & 0xFF); // 比较值
-  58   1          STMR1_CMPAL = STMR_CMPA_VAL_L(((channel_duty) >> 0) & 0xFF); // 比较值
-  59   1          STMR_LOADEN |= STMR_1_LOAD_EN(0x1);                          // 自动装载使能
-  60   1      }
-  61          
-  62          /**
-  63           * @brief 获取第一路PWM的运行状态
-  64           *
-  65           * @return u8 0--pwm关闭，1--pwm开启
-  66           */
-  67          u8 pwm_get_channel_0_status(void)
-  68          {
-  69   1          if (STMR_PWMEN & 0x01) // 如果pwm0使能
-  70   1          {
-  71   2              return 1;
-  72   2          }
-  73   1          else // 如果pwm0未使能
-  74   1          {
-  75   2              return 0;
-  76   2          }
-  77   1      }
-  78          
-  79          /**
-  80           * @brief 获取第二路PWM的运行状态
-  81           *
-  82           * @return u8 0--pwm关闭，1--pwm开启
-  83           */
-  84          u8 pwm_get_channel_1_status(void)
-  85          {
-  86   1          if (STMR_PWMEN & (0x01 << 1)) // 如果pwm1使能
-  87   1          {
-  88   2              return 1;
-  89   2          }
-  90   1          else // 如果 pwm 未使能
-  91   1          {
-  92   2              return 0;
-  93   2          }
-  94   1      }
+  53   1          STMR1_CMPAH = STMR_CMPA_VAL_H(((0) >> 8) & 0xFF); // 比较值 (清空比较值)
+  54   1          STMR1_CMPAL = STMR_CMPA_VAL_L(((0) >> 0) & 0xFF); // 比较值
+  55   1          STMR_PWMVALA = STMR_1_PWMVALA(0x00);              // STMR1 PWM输出值
+  56   1      
+  57   1          STMR_CNTMD |= STMR_1_CNT_MODE(0x1); // 连续计数模式
+  58   1          STMR_LOADEN |= STMR_1_LOAD_EN(0x1); // 自动装载使能
+  59   1          STMR_CNTCLR |= STMR_1_CNT_CLR(0x1); //
+  60   1          STMR_CNTEN |= STMR_1_CNT_EN(0x1);   // 使能
+  61   1          STMR_PWMEN |= STMR_1_PWM_EN(0x1);   // PWM输出使能
+  62   1      }
+  63          
+  64          // 设置通道0的占空比
+  65          void pwm_set_channel_0_duty(u16 channel_duty)
+  66          {
+  67   1          STMR0_CMPAH = STMR_CMPA_VAL_H(((channel_duty) >> 8) & 0xFF); // 比较值
+  68   1          STMR0_CMPAL = STMR_CMPA_VAL_L(((channel_duty) >> 0) & 0xFF); // 比较值
+  69   1          STMR_LOADEN |= STMR_0_LOAD_EN(0x1);                          // 自动装载使能
+  70   1      }
+  71          
+  72          // 设置通道1的占空比
+  73          void pwm_set_channel_1_duty(u16 channel_duty)
+  74          {
+  75   1          STMR1_CMPAH = STMR_CMPA_VAL_H(((channel_duty) >> 8) & 0xFF); // 比较值
+  76   1          STMR1_CMPAL = STMR_CMPA_VAL_L(((channel_duty) >> 0) & 0xFF); // 比较值
+  77   1          STMR_LOADEN |= STMR_1_LOAD_EN(0x1);                          // 自动装载使能
+  78   1      }
+  79          
+  80          /**
+  81           * @brief 获取第一路PWM的运行状态
+  82           *
+  83           * @return u8 0--pwm关闭，1--pwm开启
+  84           */
+  85          u8 pwm_get_channel_0_status(void)
+  86          {
+  87   1          if (STMR_PWMEN & 0x01) // 如果pwm0使能
+  88   1          {
+  89   2              return 1;
+  90   2          }
+  91   1          else // 如果pwm0未使能
+  92   1          {
+  93   2              return 0;
+  94   2          }
+  95   1      }
+  96          
+  97          /**
+  98           * @brief 获取第二路PWM的运行状态
+  99           *
+ 100           * @return u8 0--pwm关闭，1--pwm开启
+ 101           */
+ 102          u8 pwm_get_channel_1_status(void)
+ 103          {
+ 104   1          if (STMR_PWMEN & (0x01 << 1)) // 如果pwm1使能
+ 105   1          {
+ 106   2              return 1;
+ 107   2          }
+ 108   1          else // 如果 pwm 未使能
+ 109   1          {
+ 110   2              return 0;
+ 111   2          }
+ 112   1      }
 
+
+C51 COMPILER V9.60.7.0   PWM                                                               03/11/2026 14:12:37 PAGE 3   
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    201    ----
+   CODE SIZE        =    233    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

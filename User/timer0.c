@@ -9,7 +9,7 @@
 #define PEROID_VAL (SYSCLK / 128 / 1000 - 1) // 周期值=系统时钟/分频/频率 - 1
 
 /**
- * @brief 配置定时器TMR0，定时器默认关闭
+ * @brief 配置定时器 TMR 0
  */
 void timer0_init(void)
 {
@@ -42,13 +42,10 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
 #endif
 
         ad_key_para.cur_scan_times++;
-
         adc_scan();
- 
 
         uart_receiver_timeout_add();
-
-        debug_time_add();
+        led_red_blue_flash_1ms_isr();
     }
 
     // 退出中断设置IP，不可删除

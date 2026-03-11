@@ -39,8 +39,8 @@
 
 #define AD_KEY_SCAN_CIRCLE_TIMES (10)
 #define AD_KEY_FILTER_TIMES (3) // 触摸按键消抖次数 
-#define AD_KEY_LONG_PRESS_TIME_THRESHOLD_MS (500) // 长按时间阈值（单位：ms）
-#define AD_KEY_HOLD_PRESS_TIME_THRESHOLD_MS (150) // 长按持续(不松手)的时间阈值(单位：ms)，每隔 xx 时间认为有一次长按持续事件
+#define AD_KEY_LONG_PRESS_TIME_THRESHOLD_MS (1500) // 长按时间阈值（单位：ms）
+#define AD_KEY_HOLD_PRESS_TIME_THRESHOLD_MS (300) // 长按持续(不松手)的时间阈值(单位：ms)，每隔 xx 时间认为有一次长按持续事件
 
 // 定义按键的索引
 enum

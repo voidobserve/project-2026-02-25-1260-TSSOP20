@@ -12,7 +12,7 @@
 #define LED_PIN_25_PERCENT P00
 
 #define LED_100_PERCENT_ON() (LED_PIN_100_PERCENT = 1)
-#define LED_100_PERCENT_OFF() (LED_PIN_100_PERCNET = 0)
+#define LED_100_PERCENT_OFF() (LED_PIN_100_PERCENT = 0)
 #define LED_100_PERCENT_TOGGLE() (LED_PIN_100_PERCENT ^= 1)
 
 #define LED_75_PERCENT_ON() (LED_PIN_75_PERCENT = 1)
@@ -30,11 +30,33 @@
 // #define LED_YELLOW_SET_PWM_DUTY(channel_duty) pwm_set_channel_0_duty(channel_duty)
 // #define LED_WHITE_SET_PWM_DUTY(channel_duty) pwm_set_channel_1_duty(channel_duty)
 
-#define LED_YELLOW_ON() pwm_set_channel_0_duty(STRM0_PERIOD_30_PERCENT_VAL)
-#define LED_YELLOW_OFF() pwm_set_channel_0_duty(STMR0_PERIOD_0_PERCENT_VAL)
+#define LED_YELLOW_ON()                                      \
+    do                                                       \
+    {                                                        \
+        pwm_set_channel_0_duty(STRM0_PERIOD_30_PERCENT_VAL); \
+        FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;                   \
+    } while (0)
 
-#define LED_WHITE_ON() pwm_set_channel_1_duty(STRM1_PERIOD_30_PERCENT_VAL)
-#define LED_WHITE_OFF() pwm_set_channel_1_duty(STMR1_PERIOD_0_PERCENT_VAL)
+#define LED_YELLOW_OFF()              \
+    do                                \
+    {                                 \
+        P30 = 1;                      \
+        FOUT_S30 = GPIO_FOUT_AF_FUNC; \
+    } while (0)
+
+#define LED_WHITE_ON()                                       \
+    do                                                       \
+    {                                                        \
+        pwm_set_channel_1_duty(STRM1_PERIOD_30_PERCENT_VAL); \
+        FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;                   \
+    } while (0)
+
+#define LED_WHITE_OFF()               \
+    do                                \
+    {                                 \
+        P27 = 1;                      \
+        FOUT_S27 = GPIO_FOUT_AF_FUNC; \
+    } while (0)
 
 #define YELLOW_SLOW_START_TIME ((u32)30 * 1000)
 // 缓启动期间，每次调节占空比的时间：（每次调节1单位的周期值，调节时间至少要大于等于1ms）
@@ -67,13 +89,13 @@ typedef struct
     u16 cnt; // 调节时间计数
 } led_ctl_t;
 
+extern volatile led_ctl_t led_ctl;
+
 void led_init(void);
 
 void led_ctl_init(void);
 void led_status_switch(void);
 
-// void led_slow_start_isr(void);
-
-
+void led_red_blue_flash_1ms_isr(void);
 
 #endif

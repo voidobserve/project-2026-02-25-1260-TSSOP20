@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   02/28/2026 14:59:52 PAGE 1   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   03/11/2026 18:17:13 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BATTERY_MONITOR
@@ -10,179 +10,202 @@ COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\..\User\battery_monitor.c LAR
 line level    source
 
    1          #include "battery_monitor.h"
-   2          #include "user_config.h"
+   2          #include "user_include.h"
    3          
-   4          
-   5          // 根据电压值获取电池电量等级
-   6          battery_level_t get_battery_level_by_voltage(u16 voltage_mv)
-   7          {
-   8   1          if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT)
-   9   1          {
-  10   2              return BATTERY_LEVEL_FULL;
-  11   2          }
-  12   1          else if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT)
-  13   1          {
-  14   2              return BATTERY_LEVEL_HIGH;
-  15   2          }
-  16   1          else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT)
-  17   1          {
-  18   2              return BATTERY_LEVEL_MEDIUM;
-  19   2          }
-  20   1          else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT)
-  21   1          {
-  22   2              return BATTERY_LEVEL_LOW;
-  23   2          }
-  24   1          else if (voltage_mv >= BATTERY_VOLTAGE_0_PERCENT)
-  25   1          {
-  26   2              return BATTERY_LEVEL_CRITICAL;
-  27   2          }
-  28   1          else
-  29   1          {
-  30   2              return BATTERY_LEVEL_EMPTY;
-  31   2          }
-  32   1      }
-  33          
-  34          // 根据电压值计算电池电量百分比 (0-100)
-  35          u8 get_battery_percentage_by_voltage(u16 voltage_mv)
-  36          {
-  37   1          if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT)
-  38   1          {
-  39   2              return 100;
-  40   2          }
-  41   1          else if (voltage_mv <= BATTERY_VOLTAGE_0_PERCENT)
-  42   1          {
-  43   2              return 0;
-  44   2          }
-  45   1      
-  46   1          // 线性插值计算百分比
-  47   1          if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT)
-  48   1          {
-  49   2              // 100% - 75% 区间: 4.2V - 3.85V
-  50   2              return 75 + ((u32)(voltage_mv - BATTERY_VOLTAGE_75_PERCENT) * 25) /
-  51   2                              (BATTERY_VOLTAGE_100_PERCENT - BATTERY_VOLTAGE_75_PERCENT);
-  52   2          }
-  53   1          else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT)
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   02/28/2026 14:59:52 PAGE 2   
+   4          // 根据电压值获取电池电量等级
+   5          // battery_level_t get_battery_level_by_voltage(u16 voltage_mv)
+   6          // {
+   7          //     if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT)
+   8          //     {
+   9          //         return BATTERY_LEVEL_FULL;
+  10          //     }
+  11          //     else if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT)
+  12          //     {
+  13          //         return BATTERY_LEVEL_HIGH;
+  14          //     }
+  15          //     else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT)
+  16          //     {
+  17          //         return BATTERY_LEVEL_MEDIUM;
+  18          //     }
+  19          //     else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT)
+  20          //     {
+  21          //         return BATTERY_LEVEL_LOW;
+  22          //     }
+  23          //     else if (voltage_mv >= BATTERY_VOLTAGE_0_PERCENT)
+  24          //     {
+  25          //         return BATTERY_LEVEL_CRITICAL;
+  26          //     }
+  27          //     else
+  28          //     {
+  29          //         return BATTERY_LEVEL_EMPTY;
+  30          //     }
+  31          // }
+  32          
+  33          // 根据电压值计算电池电量百分比 (0-100)
+  34          u8 get_battery_percentage_by_voltage(u16 voltage_mv)
+  35          {
+  36   1          if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT)
+  37   1          {
+  38   2              return 100;
+  39   2          }
+  40   1          else if (voltage_mv <= BATTERY_VOLTAGE_0_PERCENT)
+  41   1          {
+  42   2              return 0;
+  43   2          }
+  44   1      
+  45   1          // 线性插值计算百分比
+  46   1          if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT)
+  47   1          {
+  48   2              // 100% - 75% 区间: 4.2V - 3.85V
+  49   2              return 75 + ((u32)(voltage_mv - BATTERY_VOLTAGE_75_PERCENT) * 25) /
+  50   2                              (BATTERY_VOLTAGE_100_PERCENT - BATTERY_VOLTAGE_75_PERCENT);
+  51   2          }
+  52   1          else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT)
+  53   1          {
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   03/11/2026 18:17:13 PAGE 2   
 
-  54   1          {
-  55   2              // 75% - 50% 区间: 3.85V - 3.6V
-  56   2              return 50 + ((u32)(voltage_mv - BATTERY_VOLTAGE_50_PERCENT) * 25) /
-  57   2                              (BATTERY_VOLTAGE_75_PERCENT - BATTERY_VOLTAGE_50_PERCENT);
-  58   2          }
-  59   1          else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT)
-  60   1          {
-  61   2              // 50% - 25% 区间: 3.6V - 3.2V
-  62   2              return 25 + ((u32)(voltage_mv - BATTERY_VOLTAGE_25_PERCENT) * 25) /
-  63   2                              (BATTERY_VOLTAGE_50_PERCENT - BATTERY_VOLTAGE_25_PERCENT);
-  64   2          }
-  65   1          else
-  66   1          {
-  67   2              // 25% - 0% 区间: 3.2V - 2.5V
-  68   2              return ((u32)(voltage_mv - BATTERY_VOLTAGE_0_PERCENT) * 25) /
-  69   2                     (BATTERY_VOLTAGE_25_PERCENT - BATTERY_VOLTAGE_0_PERCENT);
-  70   2          }
-  71   1      }
-  72          
-  73          // 根据ADC值获取电池电量等级
-  74          battery_level_t get_battery_level_by_adc(u16 adc_val)
-  75          {
-  76   1          u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
-  77   1          return get_battery_level_by_voltage(voltage_mv);
-  78   1      }
-  79          
-  80          // 根据ADC值计算电池电量百分比
-  81          u8 get_battery_percentage_by_adc(u16 adc_val)
-  82          {
-  83   1          u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
+  54   2              // 75% - 50% 区间: 3.85V - 3.6V
+  55   2              return 50 + ((u32)(voltage_mv - BATTERY_VOLTAGE_50_PERCENT) * 25) /
+  56   2                              (BATTERY_VOLTAGE_75_PERCENT - BATTERY_VOLTAGE_50_PERCENT);
+  57   2          }
+  58   1          else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT)
+  59   1          {
+  60   2              // 50% - 25% 区间: 3.6V - 3.2V
+  61   2              return 25 + ((u32)(voltage_mv - BATTERY_VOLTAGE_25_PERCENT) * 25) /
+  62   2                              (BATTERY_VOLTAGE_50_PERCENT - BATTERY_VOLTAGE_25_PERCENT);
+  63   2          }
+  64   1          else
+  65   1          {
+  66   2              // 25% - 0% 区间: 3.2V - 2.5V
+  67   2              return ((u32)(voltage_mv - BATTERY_VOLTAGE_0_PERCENT) * 25) /
+  68   2                     (BATTERY_VOLTAGE_25_PERCENT - BATTERY_VOLTAGE_0_PERCENT);
+  69   2          }
+  70   1      }
+  71          
+  72          // // 根据ADC值获取电池电量等级
+  73          // battery_level_t get_battery_level_by_adc(u16 adc_val)
+  74          // {
+  75          //     u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
+  76          //     return get_battery_level_by_voltage(voltage_mv);
+  77          // }
+  78          
+  79          // 根据ADC值计算电池电量百分比
+  80          u8 get_battery_percentage_by_adc(u16 adc_val)
+  81          {
+  82   1          u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
+  83   1          // printf("voltage_mv == %u\n", voltage_mv); // 打印转换好的电压值
   84   1          return get_battery_percentage_by_voltage(voltage_mv);
   85   1      }
   86          
-  87          // 获取电池状态描述字符串
-  88          // const char *get_battery_level_string(battery_level_t level)
-  89          // {
-  90          //     switch (level)
-  91          //     {
-  92          //     case BATTERY_LEVEL_EMPTY:
-  93          //         return "EMPTY";
-  94          //     case BATTERY_LEVEL_CRITICAL:
-  95          //         return "CRITICAL";
-  96          //     case BATTERY_LEVEL_LOW:
-  97          //         return "LOW";
-  98          //     case BATTERY_LEVEL_MEDIUM:
-  99          //         return "MEDIUM";
- 100          //     case BATTERY_LEVEL_HIGH:
- 101          //         return "HIGH";
- 102          //     case BATTERY_LEVEL_FULL:
- 103          //         return "FULL";
- 104          //     default:
- 105          //         return "UNKNOWN";
- 106          //     }
- 107          // }
- 108          
- 109          // 电池电压划分建议说明
- 110          /*
- 111          电池电压范围：2.5V - 4.2V 的划分方案：
- 112          
- 113          1. 电压区间划分（考虑锂电池特性）：
- 114             - 100% (满电):    4.20V
- 115             - 75% (高电量):   3.85V
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   02/28/2026 14:59:52 PAGE 3   
+  87          // 电池电压划分建议说明
+  88          /*
+  89          电池电压范围：2.5V - 4.2V 的划分方案：
+  90          
+  91          1. 电压区间划分（考虑锂电池特性）：
+  92             - 100% (满电):    4.20V
+  93             - 75% (高电量):   3.85V
+  94             - 50% (中电量):   3.60V
+  95             - 25% (低电量):   3.20V
+  96             - 0%  (耗尽):     2.50V
+  97          
+  98          2. 划分依据：
+  99             - 锂电池放电曲线特性：电压下降不是完全线性的
+ 100             - 实际使用经验：大部分使用时间集中在3.2V-4.2V之间
+ 101             - 安全考虑：避免过度放电损坏电池
+ 102          
+ 103          3. ADC值对应关系（使用内部2.0V参考电压，1/5分压）：
+ 104             - 4.20V → ADC值约 2048
+ 105             - 3.85V → ADC值约 1876
+ 106             - 3.60V → ADC值约 1755
+ 107             - 3.20V → ADC值约 1560
+ 108             - 2.50V → ADC值约 1221
+ 109          
+ 110          4. 使用建议：
+ 111             - 可以根据实际电池型号调整这些电压值
+ 112             - 建议添加滞回比较防止电量显示抖动
+ 113             - 低电量时应该给出警告提示
+ 114          */
+ 115          
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   03/11/2026 18:17:13 PAGE 3   
 
- 116             - 50% (中电量):   3.60V
- 117             - 25% (低电量):   3.20V
- 118             - 0%  (耗尽):     2.50V
+ 116          void battery_monitor_init(void)
+ 117          {
+ 118   1      }
  119          
- 120          2. 划分依据：
- 121             - 锂电池放电曲线特性：电压下降不是完全线性的
- 122             - 实际使用经验：大部分使用时间集中在3.2V-4.2V之间
- 123             - 安全考虑：避免过度放电损坏电池
- 124          
- 125          3. ADC值对应关系（使用内部2.0V参考电压，1/5分压）：
- 126             - 4.20V → ADC值约 2048
- 127             - 3.85V → ADC值约 1876
- 128             - 3.60V → ADC值约 1755
- 129             - 3.20V → ADC值约 1560
- 130             - 2.50V → ADC值约 1221
- 131          
- 132          4. 使用建议：
- 133             - 可以根据实际电池型号调整这些电压值
- 134             - 建议添加滞回比较防止电量显示抖动
- 135             - 低电量时应该给出警告提示
- 136          */
- 137          
- 138          
- 139          void battery_monitor_init(void)
- 140          {
- 141   1      
- 142   1      }
- 143          
- 144          void battery_monitor_handle(void)
- 145          {
- 146   1          static u16 adc_val = 0;
- 147   1          u8 bat_percent = 0; // USER_TO_DO 
- 148   1      
- 149   1          // 如果灯和蓝牙都不在工作，直接返回
- 150   1          if (0)
- 151   1          {
- 152   2              return;
- 153   2          }
+ 120          void battery_monitor_handle(void)
+ 121          {
+ 122   1          static u16 adc_val = 0;
+ 123   1          u8 bat_percent = 0; // 电池电量百分比
+ 124   1      
+ 125   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
+ 126   1          {
+ 127   2              adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
+ 128   2              adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
+ 129   2      
+ 130   2              // printf("bat adc val == %u\n", adc_val);
+ 131   2          }
+ 132   1      
+ 133   1          // USER_TO_DO
+ 134   1          /*
+ 135   1              充电时、放电时、太阳能一侧的电压比电池电压还大时，才进行电池电量�
+             -�示
+ 136   1          */
+ 137   1          if (
+ 138   1              (led_ctl.status == LED_STATUS_OFF) &&
+ 139   1              (ble_ic_status == BLUETOOTH_IC_STATUS_IDLE) &&
+ 140   1              (is_in_charging == 0))
+ 141   1          {
+ 142   2              // 不需要电量显示的场合，把电量指示灯全部关闭
+ 143   2              LED_25_PERCENT_OFF();
+ 144   2              LED_50_PERCENT_OFF();
+ 145   2              LED_75_PERCENT_OFF();
+ 146   2              LED_100_PERCENT_OFF();
+ 147   2              return;
+ 148   2          }
+ 149   1      
+ 150   1          // USER_TO_DO 这里需要加入滞回比较防止电量显示抖动
+ 151   1          // 根据ad值直接获取电池电量百分比
+ 152   1          bat_percent = get_battery_percentage_by_adc(adc_val);
+ 153   1          // printf("bat_percnent == %u\n", (u16)bat_percent);
  154   1      
- 155   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
+ 155   1          if (bat_percent >= 25)
  156   1          {
- 157   2              adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
- 158   2              adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
- 159   2      
- 160   2              // printf("bat adc val == %u\n", adc_val);
- 161   2          }
- 162   1      
- 163   1          // USER_TO_DO 这里需要加入滞回比较防止电量显示抖动
- 164   1          bat_percent = get_battery_percentage_by_adc(adc_val);
- 165   1      
- 166   1      }
+ 157   2              LED_25_PERCENT_ON();
+ 158   2          }
+ 159   1      
+ 160   1          if (bat_percent >= 50)
+ 161   1          {
+ 162   2              LED_50_PERCENT_ON();
+ 163   2          }
+ 164   1          else
+ 165   1          {
+ 166   2              LED_50_PERCENT_OFF();
+ 167   2          }
+ 168   1      
+ 169   1          if (bat_percent >= 75)
+ 170   1          {
+ 171   2              LED_75_PERCENT_ON();
+ 172   2          }
+ 173   1          else
+ 174   1          {
+ 175   2              LED_75_PERCENT_OFF();
+ 176   2          }
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   03/11/2026 18:17:13 PAGE 4   
+
+ 177   1      
+ 178   1          if (bat_percent >= 100)
+ 179   1          {
+ 180   2              LED_100_PERCENT_ON();
+ 181   2          }
+ 182   1          else
+ 183   1          {
+ 184   2              LED_100_PERCENT_OFF();
+ 185   2          }
+ 186   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    326    ----
+   CODE SIZE        =    327    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =      2       3
    PDATA SIZE       =   ----    ----
@@ -190,8 +213,6 @@ MODULE INFORMATION:   STATIC OVERLAYABLE
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
-
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   02/28/2026 14:59:52 PAGE 4   
 
 
 C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

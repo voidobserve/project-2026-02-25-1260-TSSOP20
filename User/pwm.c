@@ -2,13 +2,31 @@
 
 void pwm_init(void)
 {
+    // P30 黄灯
     P3_MD0 &= ~GPIO_P30_MODE_SEL(0x03);
     P3_MD0 |= GPIO_P30_MODE_SEL(0x01); // 输出模式
-    FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT; // stmr0_pwmout
+    // FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT; // stmr0_pwmout
+    P30 = 1;
+    FOUT_S30 = GPIO_FOUT_AF_FUNC; // 先不点亮灯光
 
+    // P27 白灯
     P2_MD1 &= ~GPIO_P27_MODE_SEL(0x03);
     P2_MD1 |= GPIO_P27_MODE_SEL(0x01); // 输出模式
-    FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT; // 选择 stmr1_pwmout
+    // FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT; // 选择 stmr1_pwmout
+    P27 = 1;
+    FOUT_S27 = GPIO_FOUT_AF_FUNC; // 先不点亮灯光
+
+    // P01 蓝灯
+    P0_MD0 &= ~GPIO_P01_MODE_SEL(0x03);
+    P0_MD0 |= GPIO_P01_MODE_SEL(0x01); // 输出模式
+    P01 = 1;
+    FOUT_S01 = GPIO_FOUT_AF_FUNC;
+
+    // P02 红灯
+    P0_MD0 &= ~GPIO_P02_MODE_SEL(0x03);
+    P0_MD0 |= GPIO_P02_MODE_SEL(0x01); // 输出模式
+    P02 = 1;
+    FOUT_S02 = GPIO_FOUT_AF_FUNC;
 
     // ==================================================================
     // STMR0 用作 Y 黄灯输出

@@ -451,6 +451,16 @@
               <FileType>1</FileType>
               <FilePath>..\..\User\pwm.c</FilePath>
             </File>
+            <File>
+              <FileName>charge_det.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\charge_det.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\timer1.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

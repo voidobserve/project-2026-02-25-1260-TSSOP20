@@ -1,57 +1,57 @@
-[02-28 15:34:31]Log start
-[02-28 15:34:31]Serial init start!
-[02-28 15:34:31]Serial close ok!
-[02-28 15:34:31]Serial init start!
-[02-28 15:34:31]Download driver ok!
-[02-28 15:34:31]uart_txm8c1200_set_driver:0x0
-[02-28 15:34:31]user uart set driver ok!
-[02-28 15:34:31]TXLink ready ok!
-[02-28 15:34:31]TXLink init ok!
-[02-28 15:34:31]Serial close ok!
-[02-28 15:34:31]load_debug_init_api chip id:1261
-[02-28 15:34:31]sys_info_init! 
-[02-28 15:34:31]AG_Init: 0x30a
-[02-28 15:34:31]AG_Init: 0x30b
-[02-28 15:34:31]AG_Init: 0x30f
-[02-28 15:34:31]AG_Init: 0x310
-[02-28 15:34:31]AG_Init: 0x311
-[02-28 15:34:31]AG_Init: 0x312
-[02-28 15:34:31]AG_Init: 0x100
-[02-28 15:34:31]InitMem: 0x0
-[02-28 15:34:31]Serial init start!
-[02-28 15:34:31]chip_init_api
-[02-28 15:34:31]TXLink chip init ok!
-[02-28 15:34:31]AG_Init: 0x201
-[02-28 15:34:31]AG_Init: 0x202
-[02-28 15:34:31]AG_Init: 0x203
-[02-28 15:34:31]AG_Init: 0x204
-[02-28 15:34:31]AG_Init: 0x205
-[02-28 15:34:31]AG_Init: 0x206
-[02-28 15:34:31]AG_Init: 0x207
-[02-28 15:34:31]AG_Init: 0x313
-[02-28 15:34:31]Serial init start!
-[02-28 15:34:31]uart_txm8c1200_check_dev_id:
-[02-28 15:34:31]uart_txm8c1200_check_crc_bin check failed 2:
-[02-28 15:34:31]uart_txm8c1200_check_dev_id ok:
-[02-28 15:34:31]EraseFlash: 0x0
-[02-28 15:34:31]TXLink chip erase ok!
-[02-28 15:34:31]AG_Init: 0x314
-[02-28 15:34:31]FlashLoad: 0x0
-[02-28 15:34:31]InitProgress: Loading...
-[02-28 15:34:31]WriteToFlash: 0xff000000
-[02-28 15:34:32]WriteToFlash: 0xff000800
-[02-28 15:34:32]WriteToFlash: 0xff001000
-[02-28 15:34:33]WriteToFlash: 0xff001800
-[02-28 15:34:33]InitProgress: Verifying...
-[02-28 15:34:33]VerifyFlash nAdr: 0xff000000
-[02-28 15:34:33]VerifyFlash nAdr: 0xff000800
-[02-28 15:34:33]VerifyFlash nAdr: 0xff001000
-[02-28 15:34:33]VerifyFlash nAdr: 0xff001800
-[02-28 15:34:33]chip_reset_api
-[02-28 15:34:33]Serial close ok!
-[02-28 15:34:33]AG_Init: 0x40c
-[02-28 15:34:33]CloseAllDlg: 0x0
-[02-28 15:34:33]StopTarget: 0x0
-[02-28 15:34:33]FreeCache: 0x0
-[02-28 15:34:33]StopTarget: 0x0
-[02-28 15:34:33]FreeCache: 0x0
+[03-11 18:26:25]Log start
+[03-11 18:26:25]Serial init start!
+[03-11 18:26:25]Serial close ok!
+[03-11 18:26:26]Serial init start!
+[03-11 18:26:26]Download driver ok!
+[03-11 18:26:26]uart_txm8c1200_set_driver:0x0
+[03-11 18:26:26]user uart set driver ok!
+[03-11 18:26:26]TXLink ready ok!
+[03-11 18:26:26]TXLink init ok!
+[03-11 18:26:26]Serial close ok!
+[03-11 18:26:26]load_debug_init_api chip id:1260
+[03-11 18:26:26]sys_info_init! 
+[03-11 18:26:26]AG_Init: 0x30a
+[03-11 18:26:26]AG_Init: 0x30b
+[03-11 18:26:26]AG_Init: 0x30f
+[03-11 18:26:26]AG_Init: 0x310
+[03-11 18:26:26]AG_Init: 0x311
+[03-11 18:26:26]AG_Init: 0x312
+[03-11 18:26:26]AG_Init: 0x100
+[03-11 18:26:26]InitMem: 0x0
+[03-11 18:26:26]Serial init start!
+[03-11 18:26:26]chip_init_api
+[03-11 18:26:26]TXLink chip init ok!
+[03-11 18:26:26]AG_Init: 0x201
+[03-11 18:26:26]AG_Init: 0x202
+[03-11 18:26:26]AG_Init: 0x203
+[03-11 18:26:26]AG_Init: 0x204
+[03-11 18:26:26]AG_Init: 0x205
+[03-11 18:26:26]AG_Init: 0x206
+[03-11 18:26:26]AG_Init: 0x207
+[03-11 18:26:26]AG_Init: 0x313
+[03-11 18:26:26]Serial init start!
+[03-11 18:26:26]uart_txm8c1200_check_dev_id:
+[03-11 18:26:26]uart_txm8c1200_check_crc_bin check failed 2:
+[03-11 18:26:26]uart_txm8c1200_check_dev_id ok:
+[03-11 18:26:26]EraseFlash: 0x0
+[03-11 18:26:26]TXLink chip erase ok!
+[03-11 18:26:26]AG_Init: 0x314
+[03-11 18:26:26]FlashLoad: 0x0
+[03-11 18:26:26]InitProgress: Loading...
+[03-11 18:26:26]WriteToFlash: 0xff000000
+[03-11 18:26:27]WriteToFlash: 0xff000800
+[03-11 18:26:27]WriteToFlash: 0xff001000
+[03-11 18:26:28]WriteToFlash: 0xff001800
+[03-11 18:26:28]InitProgress: Verifying...
+[03-11 18:26:28]VerifyFlash nAdr: 0xff000000
+[03-11 18:26:28]VerifyFlash nAdr: 0xff000800
+[03-11 18:26:28]VerifyFlash nAdr: 0xff001000
+[03-11 18:26:28]VerifyFlash nAdr: 0xff001800
+[03-11 18:26:28]chip_reset_api
+[03-11 18:26:28]Serial close ok!
+[03-11 18:26:28]AG_Init: 0x40c
+[03-11 18:26:28]CloseAllDlg: 0x0
+[03-11 18:26:28]StopTarget: 0x0
+[03-11 18:26:28]FreeCache: 0x0
+[03-11 18:26:28]StopTarget: 0x0
+[03-11 18:26:28]FreeCache: 0x0

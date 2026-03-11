@@ -1,35 +1,34 @@
 #include "battery_monitor.h"
-#include "user_config.h"
-
+#include "user_include.h"
 
 // 根据电压值获取电池电量等级
-battery_level_t get_battery_level_by_voltage(u16 voltage_mv)
-{
-    if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT)
-    {
-        return BATTERY_LEVEL_FULL;
-    }
-    else if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT)
-    {
-        return BATTERY_LEVEL_HIGH;
-    }
-    else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT)
-    {
-        return BATTERY_LEVEL_MEDIUM;
-    }
-    else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT)
-    {
-        return BATTERY_LEVEL_LOW;
-    }
-    else if (voltage_mv >= BATTERY_VOLTAGE_0_PERCENT)
-    {
-        return BATTERY_LEVEL_CRITICAL;
-    }
-    else
-    {
-        return BATTERY_LEVEL_EMPTY;
-    }
-}
+// battery_level_t get_battery_level_by_voltage(u16 voltage_mv)
+// {
+//     if (voltage_mv >= BATTERY_VOLTAGE_100_PERCENT)
+//     {
+//         return BATTERY_LEVEL_FULL;
+//     }
+//     else if (voltage_mv >= BATTERY_VOLTAGE_75_PERCENT)
+//     {
+//         return BATTERY_LEVEL_HIGH;
+//     }
+//     else if (voltage_mv >= BATTERY_VOLTAGE_50_PERCENT)
+//     {
+//         return BATTERY_LEVEL_MEDIUM;
+//     }
+//     else if (voltage_mv >= BATTERY_VOLTAGE_25_PERCENT)
+//     {
+//         return BATTERY_LEVEL_LOW;
+//     }
+//     else if (voltage_mv >= BATTERY_VOLTAGE_0_PERCENT)
+//     {
+//         return BATTERY_LEVEL_CRITICAL;
+//     }
+//     else
+//     {
+//         return BATTERY_LEVEL_EMPTY;
+//     }
+// }
 
 // 根据电压值计算电池电量百分比 (0-100)
 u8 get_battery_percentage_by_voltage(u16 voltage_mv)
@@ -70,41 +69,20 @@ u8 get_battery_percentage_by_voltage(u16 voltage_mv)
     }
 }
 
-// 根据ADC值获取电池电量等级
-battery_level_t get_battery_level_by_adc(u16 adc_val)
-{
-    u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
-    return get_battery_level_by_voltage(voltage_mv);
-}
+// // 根据ADC值获取电池电量等级
+// battery_level_t get_battery_level_by_adc(u16 adc_val)
+// {
+//     u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
+//     return get_battery_level_by_voltage(voltage_mv);
+// }
 
 // 根据ADC值计算电池电量百分比
 u8 get_battery_percentage_by_adc(u16 adc_val)
 {
     u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
+    // printf("voltage_mv == %u\n", voltage_mv); // 打印转换好的电压值
     return get_battery_percentage_by_voltage(voltage_mv);
 }
-
-// 获取电池状态描述字符串
-// const char *get_battery_level_string(battery_level_t level)
-// {
-//     switch (level)
-//     {
-//     case BATTERY_LEVEL_EMPTY:
-//         return "EMPTY";
-//     case BATTERY_LEVEL_CRITICAL:
-//         return "CRITICAL";
-//     case BATTERY_LEVEL_LOW:
-//         return "LOW";
-//     case BATTERY_LEVEL_MEDIUM:
-//         return "MEDIUM";
-//     case BATTERY_LEVEL_HIGH:
-//         return "HIGH";
-//     case BATTERY_LEVEL_FULL:
-//         return "FULL";
-//     default:
-//         return "UNKNOWN";
-//     }
-// }
 
 // 电池电压划分建议说明
 /*
@@ -135,22 +113,14 @@ u8 get_battery_percentage_by_adc(u16 adc_val)
    - 低电量时应该给出警告提示
 */
 
-
 void battery_monitor_init(void)
 {
-
 }
 
 void battery_monitor_handle(void)
 {
     static u16 adc_val = 0;
-    u8 bat_percent = 0; // USER_TO_DO 
-
-    // 如果灯和蓝牙都不在工作，直接返回
-    if (0)
-    {
-        return;
-    }
+    u8 bat_percent = 0; // 电池电量百分比
 
     if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
     {
@@ -160,7 +130,57 @@ void battery_monitor_handle(void)
         // printf("bat adc val == %u\n", adc_val);
     }
 
-    // USER_TO_DO 这里需要加入滞回比较防止电量显示抖动
-    bat_percent = get_battery_percentage_by_adc(adc_val);
+    // USER_TO_DO
+    /*
+        充电时、放电时、太阳能一侧的电压比电池电压还大时，才进行电池电量显示
+    */
+    if (
+        (led_ctl.status == LED_STATUS_OFF) &&
+        (ble_ic_status == BLUETOOTH_IC_STATUS_IDLE) &&
+        (is_in_charging == 0))
+    {
+        // 不需要电量显示的场合，把电量指示灯全部关闭
+        LED_25_PERCENT_OFF();
+        LED_50_PERCENT_OFF();
+        LED_75_PERCENT_OFF();
+        LED_100_PERCENT_OFF();
+        return;
+    }
 
+    // USER_TO_DO 这里需要加入滞回比较防止电量显示抖动
+    // 根据ad值直接获取电池电量百分比
+    bat_percent = get_battery_percentage_by_adc(adc_val);
+    // printf("bat_percnent == %u\n", (u16)bat_percent);
+
+    if (bat_percent >= 25)
+    {
+        LED_25_PERCENT_ON();
+    }
+
+    if (bat_percent >= 50)
+    {
+        LED_50_PERCENT_ON();
+    }
+    else
+    {
+        LED_50_PERCENT_OFF();
+    }
+
+    if (bat_percent >= 75)
+    {
+        LED_75_PERCENT_ON();
+    }
+    else
+    {
+        LED_75_PERCENT_OFF();
+    }
+
+    if (bat_percent >= 100)
+    {
+        LED_100_PERCENT_ON();
+    }
+    else
+    {
+        LED_100_PERCENT_OFF();
+    }
 }

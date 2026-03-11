@@ -32,7 +32,7 @@ typedef struct
 } timebase_config_t;
 
 // 全局时基数组
-extern timebase_config_t timebase_array[TIMEBASE_MAX];
+extern volatile timebase_config_t timebase_array[TIMEBASE_MAX];
 
 extern volatile u8 flag_debug;
 

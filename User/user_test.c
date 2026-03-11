@@ -1,13 +1,14 @@
 #include "user_test.h"
 #include <stdio.h>
+#include "user_include.h"
 
-#include "adc.h"
-#include "led.h"
+// #include "adc.h"
+// #include "led.h"
 
 #if USER_DEBUG_ENABLE
 
-volatile u8 flag_debug = 0;
-timebase_config_t timebase_array[TIMEBASE_MAX];
+// volatile u8 flag_debug = 0;
+volatile timebase_config_t timebase_array[TIMEBASE_MAX];
 
 void user_debug_pin_init(void)
 {
@@ -17,18 +18,18 @@ void user_debug_pin_init(void)
     P17 = 0;
 }
 
-void debug_time_add(void)
-{
-#if 1
-    static u16 cnt = 0;
-    cnt++;
-    if (cnt >= 1000)
-    {
-        cnt = 0;
-        flag_debug = 1;
-    }
-#endif
-}
+// void debug_time_add(void)
+// {
+// #if 1
+//     static u16 cnt = 0;
+//     cnt++;
+//     if (cnt >= 1000)
+//     {
+//         cnt = 0;
+//         flag_debug = 1;
+//     }
+// #endif
+// }
 
 /**
  * @brief 初始化时基管理系统
@@ -148,10 +149,13 @@ void user_test_adc_scan(void)
     static u8 dir = 0;
     u16 adc_val = 0;
 
+
     // 使用新的时基系统
     if (is_timebase_triggered(TIMEBASE_ADC_SCAN))
     {
         timebase_clear_flag(TIMEBASE_ADC_SCAN);
+
+        // printf("adc_test_scan\n");
 
         if (dir == 0)
         {
@@ -210,7 +214,8 @@ void user_test_led(void)
 
 void user_test_main(void)
 {
-    user_test_led();
+    // user_test_led();
+    user_test_adc_scan();
 }
 
 #endif

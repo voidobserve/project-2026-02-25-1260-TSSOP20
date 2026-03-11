@@ -179,12 +179,12 @@ void uart_receiver_timeout_handler(void)
         printf("UART receive timeout, current status: %d\n", (u16)uart_receiver.status);
 
         // 打印当前缓冲区内容
-        printf("Buffer content: \n");
-        for (i = 0; i < uart_receiver.index; i++)
-        {
-            printf("0x%02x ", (u16)uart_receiver.buffer[i]);
-        }
-        printf("\n");
+        // printf("Buffer content: \n");
+        // for (i = 0; i < uart_receiver.index; i++)
+        // {
+        //     printf("0x%02x ", (u16)uart_receiver.buffer[i]);
+        // }
+        // printf("\n");
 #endif
 
         // 重置接收器
@@ -230,10 +230,10 @@ void uart_data_handle(void)
             //     printf("0 == uart0_rxbuffer_get_count()\n");
             // }
 
-            if (uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
-            {
-                printf("recv complete \n");
-            }
+            // if (uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
+            // {
+            //     printf("recv complete \n");
+            // }
 
 #endif
             break;
@@ -250,10 +250,10 @@ void uart_data_handle(void)
         {
 #if USER_DEBUG_ENABLE
             // 处理失败
-            printf("Byte processing failed\n");
-            printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
-            printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
-            printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
+            // printf("Byte processing failed\n");
+            // printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
+            // printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
+            // printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
 #endif
             uart_receiver_reset();
         }
@@ -279,7 +279,7 @@ void uart_data_handle(void)
     printf("================================^\n");
 #endif
 
-    switch (uart_receiver.buffer[3])
+    switch (uart_receiver.buffer[4])
     { // CMD字段在索引3位置
 #if USER_DEBUG_ENABLE
     case 0x01:
@@ -289,7 +289,7 @@ void uart_data_handle(void)
         printf("Processing command 0x02\n");
         break;
     default:
-        printf("Unknown command: 0x%02x\n", (u16)uart_receiver.buffer[3]);
+        printf("Unknown command: 0x%02x\n", (u16)uart_receiver.buffer[4]);
         break;
 #endif
     }
@@ -299,16 +299,33 @@ void uart_data_handle(void)
 }
 
 // 根据命令，自动打包数据并发送
-// USER_TO_DO 
+// USER_TO_DO
+// 串口数据发送
 void uart_data_send_cmd(uart_send_cmd_t cmd)
 {
-    switch (cmd)
-    {
-    // case constant expression:
-    //     /* code */
+    // switch (cmd)
+    // {
+    // // case constant expression:
+    // //     /* code */
+    // //     break;
+
+    // default:
     //     break;
-    
-    default:
-        break;
-    }
+    // }
+
+    u8 buf[] = {
+        UART_DATA_HANDLE_FORMAT_HEAD0,
+        UART_DATA_HANDLE_FORMAT_HEAD1,
+        UART_DATA_HANDLE_FORMAT_FIX_VAL0,
+        0x80,
+        0xFF, // cmd
+        UART_DATA_HANDLE_FORMAT_FIX_VAL1,
+        0xFF, // check_sum
+        UART_DATA_HANDLE_FORMAT_TAIL,
+    };
+
+    buf[4] = cmd;                                        // cmd
+    buf[6] = buf[0] + buf[1] + buf[2] + buf[3] + buf[4]; // check_sum
+
+    uart0_sendbuf(buf, ARRAY_SIZE(buf));
 }
