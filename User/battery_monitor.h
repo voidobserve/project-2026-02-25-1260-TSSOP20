@@ -5,9 +5,9 @@
 #include "adc.h"
 
 // 电池电压范围：2.5V - 4.2V
-#define BATTERY_VOLTAGE_MIN_MV    2500    // 最低电压 2.5V
-#define BATTERY_VOLTAGE_MAX_MV    4200    // 最高电压 4.2V
-#define BATTERY_VOLTAGE_RANGE_MV  (BATTERY_VOLTAGE_MAX_MV - BATTERY_VOLTAGE_MIN_MV)  // 电压范围 1700mV
+// #define BATTERY_VOLTAGE_MIN_MV    2500    // 最低电压 2.5V
+// #define BATTERY_VOLTAGE_MAX_MV    4200    // 最高电压 4.2V
+// #define BATTERY_VOLTAGE_RANGE_MV  (BATTERY_VOLTAGE_MAX_MV - BATTERY_VOLTAGE_MIN_MV)  // 电压范围 1700mV
 
 // // 电池电量等级定义
 // typedef enum 
@@ -22,11 +22,17 @@
 
 // 电池电量百分比划分 (基于电压的线性映射)
 // 由于锂电池放电曲线非线性，这里采用分段线性近似
-#define BATTERY_VOLTAGE_100_PERCENT  4200  // 100% 对应 4.2V
-#define BATTERY_VOLTAGE_75_PERCENT   3850  // 75%  对应 3.85V
-#define BATTERY_VOLTAGE_50_PERCENT   3600  // 50%  对应 3.6V
-#define BATTERY_VOLTAGE_25_PERCENT   3200  // 25%  对应 3.2V
-#define BATTERY_VOLTAGE_0_PERCENT    2500  // 0%   对应 2.5V
+// #define BATTERY_VOLTAGE_100_PERCENT  4200  // 100% 对应 4.2V
+// #define BATTERY_VOLTAGE_75_PERCENT   3850  // 75%  对应 3.85V
+// #define BATTERY_VOLTAGE_50_PERCENT   3600  // 50%  对应 3.6V
+// #define BATTERY_VOLTAGE_25_PERCENT   3200  // 25%  对应 3.2V
+// #define BATTERY_VOLTAGE_0_PERCENT    2500  // 0%   对应 2.5V
+
+#define BATTERY_VOLTAGE_100_PERCENT  4180  // 100% 对应  
+#define BATTERY_VOLTAGE_75_PERCENT   4000  // 75%  对应  
+#define BATTERY_VOLTAGE_50_PERCENT   3850  // 50%  对应  
+#define BATTERY_VOLTAGE_25_PERCENT   3600  // 25%  对应  
+#define BATTERY_VOLTAGE_0_PERCENT    3300  // 0%   对应  
 
 // ADC相关参数 (电池检测使用内部2.0V参考电压，VDD 1/5分压)
 #define BATTERY_ADC_REF_VOLTAGE_MV   2000  // 内部参考电压 2.0V

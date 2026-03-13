@@ -1,10 +1,6 @@
 #include "timer0.h"
 #include "user_config.h"
-#include "uart_data_handle.h"
-#include "adc.h"
-#include "ad_key.h"
-
-#include "led.h"
+#include "user_include.h"
 
 #define PEROID_VAL (SYSCLK / 128 / 1000 - 1) // 周期值=系统时钟/分频/频率 - 1
 
@@ -38,7 +34,7 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
         TMR0_CONH |= TMR_PRD_PND(0x1); // 清除pending
 
 #if USER_DEBUG_ENABLE
-        timebase_update();
+        // timebase_update();
 #endif
 
         ad_key_para.cur_scan_times++;
@@ -46,6 +42,8 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
 
         uart_receiver_timeout_add();
         led_red_blue_flash_1ms_isr();
+
+        // delay_exec_update();
     }
 
     // 退出中断设置IP，不可删除

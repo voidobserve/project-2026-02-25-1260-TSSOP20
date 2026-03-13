@@ -18,10 +18,13 @@
 #define UART_DATA_HANDLE_FORMAT_TAIL 0xFB     // 数据尾部
 
 // 串口接收器接收的串口控制命令
-// USER_TO_DO
 enum
 {
-    UART_RECV_CMD_,
+    UART_RECV_CMD_BLE_MUSIC_PLAYING = 0x01,    // 蓝牙音乐播放中
+    UART_RECV_CMD_BLE_MUSIC_PAUSING = 0x02,    // 蓝牙音乐暂停中
+    UART_RECV_CMD_BLE_MUSIC_CONNECTED = 0x04,  // 蓝牙已连接
+    UART_RECV_CMD_BLE_MUSIC_DISCONNECT = 0x05, // 蓝牙已断开
+    UART_RECV_CMD_BLE_AMP_OFF = 0x08,          // 蓝牙已关闭功放
 };
 typedef u8 uart_recv_cmd_t;
 

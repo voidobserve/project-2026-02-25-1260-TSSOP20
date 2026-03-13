@@ -68,12 +68,7 @@ void led_status_switch(void)
         P02 = 1;
         break;
     }
-}
-
-// 根据led状态，执行对应的操作
-void led_status_handle(void)
-{
-}
+} 
 
 // 红灯、蓝灯闪烁的动画效果，由定时器调用
 void led_red_blue_flash_1ms_isr(void)

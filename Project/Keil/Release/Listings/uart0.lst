@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   UART0                                                             03/11/2026 15:30:28 PAGE 1   
+C51 COMPILER V9.60.7.0   UART0                                                             03/12/2026 14:36:47 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART0
@@ -15,15 +15,15 @@ line level    source
    4          volatile uart_rx_buffer_t uart0_rx_buffer = {0};
    5          
    6          #if USER_DEBUG_ENABLE
-   7          // 重写puchar()函数
-   8          char putchar(char c)
-   9          {
-  10   1          while (!(UART0_STA & UART_TX_DONE(0x01)))
-  11   1              ;
-  12   1          UART0_DATA = c;
-  13   1          return c;
-  14   1      }
-  15          #endif
+              // 重写puchar()函数
+              char putchar(char c)
+              {
+                  while (!(UART0_STA & UART_TX_DONE(0x01)))
+                      ;
+                  UART0_DATA = c;
+                  return c;
+              }
+              #endif
   16          
   17          void uart0_init(void)
   18          {
@@ -62,7 +62,7 @@ line level    source
   51   1          for (; i < len; i++)
   52   1          {
   53   2              uart0_sendbyte(buf[i]);
-C51 COMPILER V9.60.7.0   UART0                                                             03/11/2026 15:30:28 PAGE 2   
+C51 COMPILER V9.60.7.0   UART0                                                             03/12/2026 14:36:47 PAGE 2   
 
   54   2          }
   55   1      }
@@ -126,9 +126,9 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-C51 COMPILER V9.60.7.0   UART0                                                             03/11/2026 15:30:28 PAGE 3   
+C51 COMPILER V9.60.7.0   UART0                                                             03/12/2026 14:36:47 PAGE 3   
 
-   CODE SIZE        =    205    ----
+   CODE SIZE        =    197    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =    131       3
    PDATA SIZE       =   ----    ----

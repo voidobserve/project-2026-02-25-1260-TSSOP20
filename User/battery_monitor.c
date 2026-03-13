@@ -1,6 +1,10 @@
 #include "battery_monitor.h"
 #include "user_include.h"
 
+// USER_TO_DO 关机之后需要清空这个标志位：
+volatile u8 is_send_low_battery = 0; // 是否发送过低电压的提示
+volatile u8 is_low_battery = 0;      // 是否处于低电量状态
+
 // 根据电压值获取电池电量等级
 // battery_level_t get_battery_level_by_voltage(u16 voltage_mv)
 // {
@@ -134,10 +138,10 @@ void battery_monitor_handle(void)
     /*
         充电时、放电时、太阳能一侧的电压比电池电压还大时，才进行电池电量显示
     */
-    if (
-        (led_ctl.status == LED_STATUS_OFF) &&
-        (ble_ic_status == BLUETOOTH_IC_STATUS_IDLE) &&
-        (is_in_charging == 0))
+    if ((led_ctl.status == LED_STATUS_OFF) &&
+        (ble_ic.is_working == 0) &&
+        (is_in_charging_by_charger == 0) &&
+        (is_in_charging_by_solar_panel == 0))
     {
         // 不需要电量显示的场合，把电量指示灯全部关闭
         LED_25_PERCENT_OFF();
@@ -151,6 +155,43 @@ void battery_monitor_handle(void)
     // 根据ad值直接获取电池电量百分比
     bat_percent = get_battery_percentage_by_adc(adc_val);
     // printf("bat_percnent == %u\n", (u16)bat_percent);
+
+    if (bat_percent <= 0)
+    {
+        // 低电量关机
+
+        // 给蓝牙ic发送低电量关机
+        uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
+
+        // 关闭电量指示灯
+        LED_25_PERCENT_OFF();
+        LED_50_PERCENT_OFF();
+        LED_75_PERCENT_OFF();
+        LED_100_PERCENT_OFF();
+
+        // 关闭驱动的灯光
+        led_ctl.status = LED_STATUS_OFF;
+        LED_WHITE_OFF();
+        LED_YELLOW_OFF();
+        P02 = 1;
+        P01 = 1;
+
+        is_send_low_battery = 0;
+        is_low_battery = 1;
+        // 之后在串口等待蓝牙ic回复已经关闭功放的数据，再关闭蓝牙
+        return;
+    }
+    else if (bat_percent <= 25 && is_send_low_battery == 0)
+    {
+        // 低电量，并且没有发送低电量的提示
+        uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
+        is_send_low_battery = 1;
+        is_low_battery = 1;
+    }
+    else if (bat_percent >= 30)
+    {
+        is_send_low_battery = 0;
+    }
 
     if (bat_percent >= 25)
     {

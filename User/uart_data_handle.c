@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "user_include.h"
+
 // 接收器
 static volatile uart_receiver_t uart_receiver;
 
@@ -250,10 +252,10 @@ void uart_data_handle(void)
         {
 #if USER_DEBUG_ENABLE
             // 处理失败
-            // printf("Byte processing failed\n");
-            // printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
-            // printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
-            // printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
+            printf("Byte processing failed\n");
+            printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
+            printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
+            printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
 #endif
             uart_receiver_reset();
         }
@@ -279,19 +281,33 @@ void uart_data_handle(void)
     printf("================================^\n");
 #endif
 
-    switch (uart_receiver.buffer[4])
-    { // CMD字段在索引3位置
-#if USER_DEBUG_ENABLE
-    case 0x01:
-        printf("Processing command 0x01\n");
+    //
+    switch ((uart_recv_cmd_t)uart_receiver.buffer[4])
+    {
+        // case 0x01:
+        //     printf("Processing command 0x01\n");
+        //     break;
+        // case 0x02:
+        //     printf("Processing command 0x02\n");
+        //     break;
+
+    case UART_RECV_CMD_BLE_MUSIC_PLAYING:
+        // printf("recv music playing\n");
+        ble_ic.music_status = BLUETOOTH_IC_STATUS_PLAYING_MUSIC;
         break;
-    case 0x02:
-        printf("Processing command 0x02\n");
+    case UART_RECV_CMD_BLE_MUSIC_PAUSING:
+        // printf("recv music pause\n");
+        ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
         break;
+    case UART_RECV_CMD_BLE_AMP_OFF:
+        // printf("recv amp off\n");
+        BLE_IC_POWER_KEY_PIN = 1;
+        ble_ic.is_working = 0;
+        break;
+
     default:
-        printf("Unknown command: 0x%02x\n", (u16)uart_receiver.buffer[4]);
+        // printf("Unknown command: 0x%02x\n", (u16)uart_receiver.buffer[4]);
         break;
-#endif
     }
 
     // 重置接收器，准备下一次接收
@@ -299,20 +315,9 @@ void uart_data_handle(void)
 }
 
 // 根据命令，自动打包数据并发送
-// USER_TO_DO
 // 串口数据发送
 void uart_data_send_cmd(uart_send_cmd_t cmd)
 {
-    // switch (cmd)
-    // {
-    // // case constant expression:
-    // //     /* code */
-    // //     break;
-
-    // default:
-    //     break;
-    // }
-
     u8 buf[] = {
         UART_DATA_HANDLE_FORMAT_HEAD0,
         UART_DATA_HANDLE_FORMAT_HEAD1,

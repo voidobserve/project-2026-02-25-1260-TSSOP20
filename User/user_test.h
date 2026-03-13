@@ -34,7 +34,9 @@ typedef struct
 // 全局时基数组
 extern volatile timebase_config_t timebase_array[TIMEBASE_MAX];
 
-extern volatile u8 flag_debug;
+extern volatile u16 user_debug_val_u16;
+
+// extern volatile u8 flag_debug;
 
 void user_debug_pin_init(void);
 

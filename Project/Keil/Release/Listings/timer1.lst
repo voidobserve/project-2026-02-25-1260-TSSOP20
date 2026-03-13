@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   TIMER1                                                            03/11/2026 18:17:13 PAGE 1   
+C51 COMPILER V9.60.7.0   TIMER1                                                            03/12/2026 14:37:52 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TIMER1
@@ -42,14 +42,15 @@ line level    source
   31   1          // 周期中断
   32   1          if (TMR1_CONH & TMR_PRD_PND(0x1))
   33   1          {
-  34   2              TMR1_CONH |= TMR_PRD_PND(0x1); // 清除pending
-  35   2              // USER_DEBUG_PIN_TOGGLE();
-  36   2              detect_1khz_signal_100us(); // 新增：每100us调用一次1KHz信号检测函数
-  37   2          }
-  38   1      
-  39   1          // 退出中断设置IP，不可删除
-  40   1          __IRQnIPnPop(TMR1_IRQn);
-  41   1      }
+  34   2              TMR1_CONH |= TMR_PRD_PND(0x1); // 清除pending 
+  35   2      
+  36   2              
+  37   2              detect_1khz_signal_100us(); // 新增：每100us调用一次1KHz信号检测函数
+  38   2          }
+  39   1      
+  40   1          // 退出中断设置IP，不可删除
+  41   1          __IRQnIPnPop(TMR1_IRQn);
+  42   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
@@ -61,6 +62,8 @@ MODULE INFORMATION:   STATIC OVERLAYABLE
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
+
+C51 COMPILER V9.60.7.0   TIMER1                                                            03/12/2026 14:37:52 PAGE 2   
 
 
 C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

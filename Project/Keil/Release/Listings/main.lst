@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              03/11/2026 18:26:24 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              03/12/2026 14:37:51 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -43,79 +43,155 @@ line level    source
   32          
   33          #include "user_include.h"
   34          
-  35          void main(void)
-  36          {
-  37   1          // 看门狗默认打开, 复位时间2s
-  38   1          WDT_KEY = WDT_KEY_VAL(0xDD); // 关闭看门狗 (如需配置看门狗请查看"WDT\WDT_Reset"示例)
-  39   1      
-  40   1          system_init();
-  41   1      
-  42   1          // 关闭HCK和HDA的调试功能
-  43   1          WDT_KEY = 0x55;  // 解除写保护
-  44   1          IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除�
-             -��射）
-  45   1          WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
-  46   1      
-  47   1          timer0_init();
-  48   1          timer1_init();
-  49   1          adc_pin_init();
-  50   1          adc_init();
-  51   1          led_init();
-  52   1          uart0_init();
-C51 COMPILER V9.60.7.0   MAIN                                                              03/11/2026 18:26:24 PAGE 2   
+  35          #if 0
+              volatile delay_exec_block_t delay_exec_array[DELAY_EXEC_MAX];
+              
+              void delay_exec_init(void)
+              {
+                  u8 i;
+                  for (i = 0; i < DELAY_EXEC_MAX; i++)
+                  {
+                      delay_exec_array[i].cur_cnt = 0;
+                      delay_exec_array[i].dest_cnt = 0;
+                      delay_exec_array[i].is_pending = 0;
+                      delay_exec_array[i].is_enable = 0;
+                  }
+              }
+              
+              void delay_exec_set(delay_exec_task_id_t task_id, u8 interval_ms)
+              {
+                  delay_exec_array[task_id].cur_cnt = 0;
+                  delay_exec_array[task_id].dest_cnt = interval_ms;
+C51 COMPILER V9.60.7.0   MAIN                                                              03/12/2026 14:37:51 PAGE 2   
 
-  53   1          pwm_init();
-  54   1      
-  55   1          led_ctl_init();
-  56   1          charge_det_init();
-  57   1      
-  58   1      #if USER_DEBUG_ENABLE
-  59   1          user_debug_pin_init();
-  60   1          timebase_init();
-  61   1          printf("sys reset\n");
-  62   1          // printf("Battery Monitor Initialized\n");
-  63   1          // printf("Voltage Range: %d-%d mV\n", BATTERY_VOLTAGE_MIN_MV, BATTERY_VOLTAGE_MAX_MV);
-  64   1      #endif
-  65   1      
-  66   1          while (1)
-  67   1          {
-  68   2              key_driver_scan(&ad_key_para);
-  69   2              ad_key_handle();
-  70   2      
-  71   2              uart_data_handle();
-  72   2      
-  73   2              battery_monitor_handle();
-  74   2              charge_det();
-  75   2      
-  76   2      
-  77   2              // if (is_in_charging)
-  78   2              // {
-  79   2              //     printf("is in charging\n");
-  80   2              // }
-  81   2              // delay_ms(1000);
-  82   2      
-  83   2      
-  84   2      
-  85   2      #if USER_DEBUG_ENABLE
-  86   2              // user_test_main();
-  87   2      #endif
-  88   2          }
-  89   1      }
-  90          
-  91          /**
-  92           * @}
-  93           */
-  94          
-  95          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
+                  delay_exec_array[task_id].is_pending = 0;
+                  delay_exec_array[task_id].is_enable = 1;
+              }
+              
+              void delay_exec_reset(delay_exec_task_id_t task_id)
+              {
+                  delay_exec_array[task_id].is_enable = 0;
+                  delay_exec_array[task_id].cur_cnt = 0;
+                  delay_exec_array[task_id].dest_cnt = 0;
+                  delay_exec_array[task_id].is_pending = 0;
+              }
+              
+              // 更新延时执行任务的当前时间计数
+              void delay_exec_update(void)
+              {
+                  u8 i;
+                  for (i = 0; i < DELAY_EXEC_MAX; i++)
+                  {
+                      if (delay_exec_array[i].is_enable)
+                      {
+                          delay_exec_array[i].cur_cnt++;
+                          if (delay_exec_array[i].cur_cnt >= delay_exec_array[i].dest_cnt)
+                          {
+                              delay_exec_array[i].cur_cnt = 0;
+                              delay_exec_array[i].is_pending = 1;
+                          }
+                      }
+                  }
+              }
+              
+              u8 delay_exec_is_pending(delay_exec_task_id_t task_id)
+              {
+                  return delay_exec_array[task_id].is_pending;
+              }
+              
+              void delay_exec_handle(void)
+              {
+                  if (delay_exec_is_pending(DELAY_EXEC_BLE_OFF))
+                  {
+                      // delay_exec_reset(DELAY_EXEC_BLE_OFF);
+              
+                      delay_exec_array[DELAY_EXEC_BLE_OFF].is_pending = 0;
+              
+                      // 关闭蓝牙
+                      USER_DEBUG_PIN_TOGGLE();
+                  }
+              }
+              #endif
+ 102          
+ 103          void main(void)
+ 104          {
+ 105   1          // 看门狗默认打开, 复位时间2s
+ 106   1          WDT_KEY = WDT_KEY_VAL(0xDD); // 关闭看门狗 (如需配置看门狗请查看"WDT\WDT_Reset"示例)
+ 107   1      
+ 108   1          system_init();
+ 109   1      
+ 110   1          // 关闭HCK和HDA的调试功能
+ 111   1          WDT_KEY = 0x55;  // 解除写保护
+ 112   1          IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除�
+             -��射）
+ 113   1          WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
+ 114   1      
+C51 COMPILER V9.60.7.0   MAIN                                                              03/12/2026 14:37:51 PAGE 3   
+
+ 115   1          adc_pin_init();
+ 116   1          adc_init();
+ 117   1          led_init();
+ 118   1          uart0_init();
+ 119   1          pwm_init();
+ 120   1          bluetooth_ic_handle_init();
+ 121   1      
+ 122   1          led_ctl_init();
+ 123   1          charge_det_init();
+ 124   1          // delay_exec_init();
+ 125   1      
+ 126   1          // 需要等外设都准备好，再跑时间
+ 127   1          timer0_init();
+ 128   1          timer1_init();
+ 129   1      
+ 130   1      #if USER_DEBUG_ENABLE
+                  user_debug_pin_init();
+                  timebase_init();
+                  printf("sys reset\n");
+              #endif
+ 135   1      
+ 136   1          delay_ms(1); // 等待系统稳定
+ 137   1      
+ 138   1          while (1)
+ 139   1          {
+ 140   2              key_driver_scan(&ad_key_para);
+ 141   2              ad_key_handle();
+ 142   2      
+ 143   2              uart_data_handle();
+ 144   2      
+ 145   2              battery_monitor_handle();
+ 146   2              charge_det();
+ 147   2      
+ 148   2              // delay_exec_handle();
+ 149   2              // printf("user_debug_val_u16 == %u\n", user_debug_val_u16);
+ 150   2      
+ 151   2              // if (is_in_charging_by_charger)
+ 152   2              // {
+ 153   2              //     printf("is in charging\n");
+ 154   2              // }
+ 155   2              // delay_ms(1000);
+ 156   2      
+ 157   2      #if USER_DEBUG_ENABLE
+                      // user_test_main();
+              #endif
+ 160   2          }
+ 161   1      }
+ 162          
+ 163          /**
+ 164           * @}
+ 165           */
+ 166          
+ 167          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     84    ----
-   CONSTANT SIZE    =     11    ----
+   CODE SIZE        =     79    ----
+   CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
+C51 COMPILER V9.60.7.0   MAIN                                                              03/12/2026 14:37:51 PAGE 4   
+
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.
 

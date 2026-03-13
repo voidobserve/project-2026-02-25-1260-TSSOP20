@@ -1,57 +1,55 @@
-[03-11 18:26:25]Log start
-[03-11 18:26:25]Serial init start!
-[03-11 18:26:25]Serial close ok!
-[03-11 18:26:26]Serial init start!
-[03-11 18:26:26]Download driver ok!
-[03-11 18:26:26]uart_txm8c1200_set_driver:0x0
-[03-11 18:26:26]user uart set driver ok!
-[03-11 18:26:26]TXLink ready ok!
-[03-11 18:26:26]TXLink init ok!
-[03-11 18:26:26]Serial close ok!
-[03-11 18:26:26]load_debug_init_api chip id:1260
-[03-11 18:26:26]sys_info_init! 
-[03-11 18:26:26]AG_Init: 0x30a
-[03-11 18:26:26]AG_Init: 0x30b
-[03-11 18:26:26]AG_Init: 0x30f
-[03-11 18:26:26]AG_Init: 0x310
-[03-11 18:26:26]AG_Init: 0x311
-[03-11 18:26:26]AG_Init: 0x312
-[03-11 18:26:26]AG_Init: 0x100
-[03-11 18:26:26]InitMem: 0x0
-[03-11 18:26:26]Serial init start!
-[03-11 18:26:26]chip_init_api
-[03-11 18:26:26]TXLink chip init ok!
-[03-11 18:26:26]AG_Init: 0x201
-[03-11 18:26:26]AG_Init: 0x202
-[03-11 18:26:26]AG_Init: 0x203
-[03-11 18:26:26]AG_Init: 0x204
-[03-11 18:26:26]AG_Init: 0x205
-[03-11 18:26:26]AG_Init: 0x206
-[03-11 18:26:26]AG_Init: 0x207
-[03-11 18:26:26]AG_Init: 0x313
-[03-11 18:26:26]Serial init start!
-[03-11 18:26:26]uart_txm8c1200_check_dev_id:
-[03-11 18:26:26]uart_txm8c1200_check_crc_bin check failed 2:
-[03-11 18:26:26]uart_txm8c1200_check_dev_id ok:
-[03-11 18:26:26]EraseFlash: 0x0
-[03-11 18:26:26]TXLink chip erase ok!
-[03-11 18:26:26]AG_Init: 0x314
-[03-11 18:26:26]FlashLoad: 0x0
-[03-11 18:26:26]InitProgress: Loading...
-[03-11 18:26:26]WriteToFlash: 0xff000000
-[03-11 18:26:27]WriteToFlash: 0xff000800
-[03-11 18:26:27]WriteToFlash: 0xff001000
-[03-11 18:26:28]WriteToFlash: 0xff001800
-[03-11 18:26:28]InitProgress: Verifying...
-[03-11 18:26:28]VerifyFlash nAdr: 0xff000000
-[03-11 18:26:28]VerifyFlash nAdr: 0xff000800
-[03-11 18:26:28]VerifyFlash nAdr: 0xff001000
-[03-11 18:26:28]VerifyFlash nAdr: 0xff001800
-[03-11 18:26:28]chip_reset_api
-[03-11 18:26:28]Serial close ok!
-[03-11 18:26:28]AG_Init: 0x40c
-[03-11 18:26:28]CloseAllDlg: 0x0
-[03-11 18:26:28]StopTarget: 0x0
-[03-11 18:26:28]FreeCache: 0x0
-[03-11 18:26:28]StopTarget: 0x0
-[03-11 18:26:28]FreeCache: 0x0
+[03-12 14:41:37]Log start
+[03-12 14:41:37]Serial init start!
+[03-12 14:41:37]Serial close ok!
+[03-12 14:41:37]Serial init start!
+[03-12 14:41:37]Download driver ok!
+[03-12 14:41:37]uart_txm8c1200_set_driver:0x0
+[03-12 14:41:37]user uart set driver ok!
+[03-12 14:41:37]TXLink ready ok!
+[03-12 14:41:37]TXLink init ok!
+[03-12 14:41:37]Serial close ok!
+[03-12 14:41:37]load_debug_init_api chip id:1260
+[03-12 14:41:37]sys_info_init! 
+[03-12 14:41:37]AG_Init: 0x30a
+[03-12 14:41:37]AG_Init: 0x30b
+[03-12 14:41:37]AG_Init: 0x30f
+[03-12 14:41:37]AG_Init: 0x310
+[03-12 14:41:37]AG_Init: 0x311
+[03-12 14:41:37]AG_Init: 0x312
+[03-12 14:41:37]AG_Init: 0x100
+[03-12 14:41:37]InitMem: 0x0
+[03-12 14:41:37]Serial init start!
+[03-12 14:41:37]chip_init_api
+[03-12 14:41:37]TXLink chip init ok!
+[03-12 14:41:37]AG_Init: 0x201
+[03-12 14:41:37]AG_Init: 0x202
+[03-12 14:41:37]AG_Init: 0x203
+[03-12 14:41:37]AG_Init: 0x204
+[03-12 14:41:37]AG_Init: 0x205
+[03-12 14:41:37]AG_Init: 0x206
+[03-12 14:41:37]AG_Init: 0x207
+[03-12 14:41:37]AG_Init: 0x313
+[03-12 14:41:37]Serial init start!
+[03-12 14:41:37]uart_txm8c1200_check_dev_id:
+[03-12 14:41:37]uart_txm8c1200_check_crc_bin check failed 2:
+[03-12 14:41:37]uart_txm8c1200_check_dev_id ok:
+[03-12 14:41:37]EraseFlash: 0x0
+[03-12 14:41:37]TXLink chip erase ok!
+[03-12 14:41:37]AG_Init: 0x314
+[03-12 14:41:37]FlashLoad: 0x0
+[03-12 14:41:37]InitProgress: Loading...
+[03-12 14:41:37]WriteToFlash: 0xff000000
+[03-12 14:41:38]WriteToFlash: 0xff000800
+[03-12 14:41:38]WriteToFlash: 0xff001000
+[03-12 14:41:39]InitProgress: Verifying...
+[03-12 14:41:39]VerifyFlash nAdr: 0xff000000
+[03-12 14:41:39]VerifyFlash nAdr: 0xff000800
+[03-12 14:41:39]VerifyFlash nAdr: 0xff001000
+[03-12 14:41:39]chip_reset_api
+[03-12 14:41:39]Serial close ok!
+[03-12 14:41:39]AG_Init: 0x40c
+[03-12 14:41:39]CloseAllDlg: 0x0
+[03-12 14:41:39]StopTarget: 0x0
+[03-12 14:41:39]FreeCache: 0x0
+[03-12 14:41:39]StopTarget: 0x0
+[03-12 14:41:39]FreeCache: 0x0

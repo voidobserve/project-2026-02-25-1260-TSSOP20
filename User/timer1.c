@@ -31,8 +31,9 @@ void TIMR1_IRQHandler(void) interrupt TMR1_IRQn
     // 周期中断
     if (TMR1_CONH & TMR_PRD_PND(0x1))
     {
-        TMR1_CONH |= TMR_PRD_PND(0x1); // 清除pending
-        // USER_DEBUG_PIN_TOGGLE();
+        TMR1_CONH |= TMR_PRD_PND(0x1); // 清除pending 
+
+        
         detect_1khz_signal_100us(); // 新增：每100us调用一次1KHz信号检测函数
     }
 

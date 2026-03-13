@@ -155,6 +155,13 @@ void ad_key_handle(void)
         return;
     }
 
+    // USER_TO_DO 需要注意低电量不执行操作
+    // 低电量，函数直接返回
+    // if (is_low_battery)
+    // {
+    //     return;
+    // }
+
     ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
     ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
     ad_key_para.latest_key_event = KEY_EVENT_NONE;
@@ -164,94 +171,146 @@ void ad_key_handle(void)
         // ================================================================
         // key 1，对应的丝印是 上一曲
     case AD_KEY_EVENT_ID_1_CLICK:
-        // printf("key 1 click\n");
+#if USER_DEBUG_ENABLE
+        printf("key 1 click\n");
+#endif
         uart_data_send_cmd(UART_SEND_CMD_MUSIC_PREV);
         break;
 
     case AD_KEY_EVENT_ID_1_LONG:
+#if USER_DEBUG_ENABLE
         printf("key 1 long\n");
+#endif
 
         // 长按发送音量加
         uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
         break;
 
     case AD_KEY_EVENT_ID_1_HOLD:
+#if USER_DEBUG_ENABLE
         printf("key 1 hold\n");
+#endif
 
         // 长按发送音量加
         uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
         break;
 
     case AD_KEY_EVENT_ID_1_LOOSE:
+#if USER_DEBUG_ENABLE
         printf("key 1 loose\n");
+#endif
         break;
 
         // ================================================================
         // key 2，对应的丝印是 灯开关
     case AD_KEY_EVENT_ID_2_CLICK:
+#if USER_DEBUG_ENABLE
         printf("key 2 click\n");
+#endif
         led_status_switch();
         break;
 
     case AD_KEY_EVENT_ID_2_LONG:
+#if USER_DEBUG_ENABLE
         printf("key 2 long\n");
+#endif
         break;
 
     case AD_KEY_EVENT_ID_2_HOLD:
+#if USER_DEBUG_ENABLE
         printf("key 2 hold\n");
+#endif
         break;
 
     case AD_KEY_EVENT_ID_2_LOOSE:
+#if USER_DEBUG_ENABLE
         printf("key 2 loose\n");
+#endif
         break;
 
         // ================================================================
         // key 3，对应的丝印是 下一曲
 
     case AD_KEY_EVENT_ID_3_CLICK:
+#if USER_DEBUG_ENABLE
         printf("key 3 click\n");
+#endif
 
         uart_data_send_cmd(UART_SEND_CMD_MUSIC_NEXT);
         break;
 
     case AD_KEY_EVENT_ID_3_LONG:
+#if USER_DEBUG_ENABLE
         printf("key 3 long\n");
+#endif
 
         // 长按发送音量减
         uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
         break;
 
     case AD_KEY_EVENT_ID_3_HOLD:
+#if USER_DEBUG_ENABLE
         printf("key 3 hold\n");
+#endif
 
         // 长按发送音量减
         uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
         break;
 
     case AD_KEY_EVENT_ID_3_LOOSE:
+#if USER_DEBUG_ENABLE
         printf("key 3 loose\n");
+#endif
         break;
 
         // ================================================================
         // key 4，对应的丝印是 总开关
     case AD_KEY_EVENT_ID_4_CLICK:
+#if USER_DEBUG_ENABLE
         printf("key 4 click\n");
+#endif
 
         // 播放/暂停音乐
+        if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PLAYING_MUSIC)
+        {
+            uart_data_send_cmd(UART_SEND_CMD_MUSIC_PAUSE);
+        }
+        else if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PAUSE_MUSIC)
+        {
+            uart_data_send_cmd(UART_SEND_CMD_MUSIC_PLAY);
+        }
         break;
 
     case AD_KEY_EVENT_ID_4_LONG:
+#if USER_DEBUG_ENABLE
         printf("key 4 long\n");
+#endif
 
         // 打开蓝牙/关闭蓝牙
+        if (ble_ic.is_working)
+        {
+            uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
+            // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关闭蓝牙的操作
+        }
+        else
+        {
+            BLE_IC_POWER_KEY_PIN = 0;
+            delay_ms(30); // 等待蓝牙开机完毕
+            uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
+            ble_ic.is_working = 1;
+        }
         break;
 
     case AD_KEY_EVENT_ID_4_HOLD:
+#if USER_DEBUG_ENABLE
         printf("key 4 hold\n");
+#endif
         break;
 
     case AD_KEY_EVENT_ID_4_LOOSE:
+#if USER_DEBUG_ENABLE
         printf("key 4 loose\n");
+#endif
         break;
 
     default:

@@ -7,6 +7,8 @@
 
 #if USER_DEBUG_ENABLE
 
+volatile u16 user_debug_val_u16 = 0; // 测试时使用的全局变量，用来在中断获取数值，在主函数打印
+
 // volatile u8 flag_debug = 0;
 volatile timebase_config_t timebase_array[TIMEBASE_MAX];
 

@@ -1,16 +1,9 @@
 #include "charge_det.h"
 #include "user_include.h"
 
-volatile u8 charge_det_sta; // 检测充电的状态
-volatile u8 is_in_charging = 0;
-
-// 新增变量用于检测1KHz信号
-static u16 signal_high_duration = 0;       // 高电平持续时间计数
-static u16 signal_low_duration = 0;        // 低电平持续时间计数
-static u8 detection_state = 0;             // 检测状态：0-初始状态，1-检测到高电平，2-检测到低电平
-static u16 toggle_count_in_period = 0;     // 一个预期的1KHz周期内的翻转次数
-static u16 measurement_period_counter = 0; // 测量周期计数器
-static u8 detected_signal_pattern = 0;     // 标记是否检测到1KHz信号模式
+// volatile u8 charge_det_sta; // 检测充电的状态
+volatile u8 is_in_charging_by_solar_panel = 0; // 是否正在通过太阳能充电
+volatile u8 is_in_charging_by_charger = 0;     // 是否正在通过充电器充电
 
 void charge_det_init(void)
 {
@@ -60,7 +53,7 @@ void charge_ic_sacn_100us_isr(void)
         if (toggle_cnt >= 8)
         {
             toggle_cnt = 0;
-            is_in_charging = 1;
+            // is_in_charging = 1;
         }
     }
 }
@@ -69,6 +62,16 @@ void charge_ic_sacn_100us_isr(void)
 // 每100微秒调用一次，用来检测P21引脚上的1KHz信号
 void detect_1khz_signal_100us(void)
 {
+    // 新增变量用于检测1KHz信号
+    static u16 signal_high_duration = 0; // 高电平持续时间计数
+    static u16 signal_low_duration = 0;  // 低电平持续时间计数
+
+    static u8 detection_state = 0; // 检测状态：0-初始状态，1-检测到高电平，2-检测到低电平
+
+    static u16 toggle_count_in_period = 0;     // 一个预期的1KHz周期内的翻转次数
+    static u16 measurement_period_counter = 0; // 测量周期计数器
+    static u8 detected_signal_pattern = 0;     // 标记是否检测到1KHz信号模式
+
     static u8 last_pin_state = 0;
     u8 current_pin_state = P21;
     u8 pin_changed = (current_pin_state != last_pin_state);
@@ -85,7 +88,7 @@ void detect_1khz_signal_100us(void)
         toggle_count_in_period = 0;
         measurement_period_counter = 0;
         detected_signal_pattern = 0;
-        is_in_charging = 0;
+        is_in_charging_by_charger = 0;
         last_pin_state = current_pin_state;
         return;
     }
@@ -95,15 +98,16 @@ void detect_1khz_signal_100us(void)
 
     switch (detection_state)
     {
-    case 0: // 初始状态，等待进入高电平
-        if (current_pin_state == 1)
-        {                        // 检测到高电平
+    case 0:                         // 初始状态，等待进入高电平
+        if (current_pin_state == 1) // 检测到高电平
+        {
             detection_state = 1; // 进入高电平检测状态
             signal_high_duration = 1;
             signal_low_duration = 0;
         }
-        else
+        else // 检测到低电平
         {
+            detection_state = 2; // 进入低电平检测状态
             signal_high_duration = 0;
             signal_low_duration = 1;
         }
@@ -111,8 +115,12 @@ void detect_1khz_signal_100us(void)
 
     case 1: // 检测高电平持续时间
         if (current_pin_state == 1)
-        { // 仍在高电平
-            signal_high_duration++;
+        {                                     // 仍在高电平
+            if (signal_high_duration < 65535) // 避免计数溢出s
+            {
+                signal_high_duration++;
+            }
+
             signal_low_duration = 0;
         }
         else
@@ -120,9 +128,10 @@ void detect_1khz_signal_100us(void)
             detection_state = 2;
             signal_low_duration = 1;
 
-            // 检查高电平持续时间是否接近1KHz的半周期（即0.5ms = 5000*0.5/100 = 25个100us周期）
-            // 允许一定误差范围，比如20到30个100us周期之间
-            if (signal_high_duration >= 20 && signal_high_duration <= 30)
+            // 检查高电平持续时间是否接近1KHz的半个周期（即0.5ms == 500us = 5个100us周期）
+            // 允许一定误差范围，比如3 ~ 5 个 100us 周期之间
+            // user_debug_val_u16 = signal_high_duration; // 获取得到的计数值（测试时使用）
+            if (signal_high_duration >= 3 && signal_high_duration <= 5)
             {
                 toggle_count_in_period++; // 半周期匹配1KHz信号
             }
@@ -141,25 +150,29 @@ void detect_1khz_signal_100us(void)
             detection_state = 1;
             signal_high_duration = 1;
 
-            // 检查低电平持续时间是否接近1KHz的半周期
-            if (signal_low_duration >= 20 && signal_low_duration <= 30)
+            // user_debug_val_u16 = signal_low_duration; // 获取得到的计数值（测试时使用）
+
+            // 检查低电平持续时间是否接近1KHz的半个周期
+            if (signal_low_duration >= 3 && signal_low_duration <= 5)
             {
                 toggle_count_in_period++; // 半周期匹配1KHz信号
             }
+
             signal_low_duration = 0;
         }
         break;
     }
 
-    // 如果在一个大约1ms的时间窗口内检测到足够多的1KHz半周期信号
-    // 1ms大约是10个100us周期，所以如果检测到了8次或以上的半周期信号，就认为是1KHz信号
-    if (measurement_period_counter >= 10)
-    { // 大约1ms
+    if (measurement_period_counter >= 100) // 100：100 * 100us
+    {
         measurement_period_counter = 0;
 
-        // 如果在1ms内检测到了足够的1KHz信号半周期，则确认是1KHz信号
-        if (toggle_count_in_period >= 8)
-        { // 至少检测到4个完整周期的1KHz信号
+        // 如果 10 ms内检测到了足够的1KHz信号半周期，则确认是1KHz信号
+
+        // user_debug_val_u16 = toggle_count_in_period; // 获取得到的计数值（测试时使用）
+
+        if (toggle_count_in_period >= 16)
+        { // 在这段时间内，至少检测到   多少次翻转
             detected_signal_pattern = 1;
         }
         else
@@ -172,16 +185,16 @@ void detect_1khz_signal_100us(void)
     if (detected_signal_pattern)
     {
         consecutive_detection_count++;
-        if (consecutive_detection_count >= 10)
-        { // 连续10ms检测到1KHz信号
-            is_in_charging = 1;
-            consecutive_detection_count = 10; // 限制最大值，防止溢出
+        if (consecutive_detection_count >= 100)
+        { // 连续  ms检测到1KHz信号
+            is_in_charging_by_charger = 1;
+            consecutive_detection_count = 100; // 限制最大值，防止溢出
         }
     }
     else
     {
         consecutive_detection_count = 0;
-        is_in_charging = 0;
+        is_in_charging_by_charger = 0;
     }
 
     last_pin_state = current_pin_state;
@@ -205,12 +218,12 @@ void charge_det(void)
     */
     voltage_mv = (u32)adc_val * 2 * 2400 / 4096;
     // printf("voltage_mv == %u\n", voltage_mv);
-    // if (voltage_mv >= 4500) // 大于 4.5V，认为是正在给电池充电
-    // {
-    //     is_in_charging = 1;
-    // }
-    // else
-    // {
-    //     is_in_charging = 0;
-    // }
+    if (voltage_mv >= 4500) // 大于 4.5V，认为是正在给电池充电
+    {
+        is_in_charging_by_solar_panel = 1;
+    }
+    else
+    {
+        is_in_charging_by_solar_panel = 0;
+    }
 }

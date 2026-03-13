@@ -3,7 +3,8 @@
 
 #include "include.h"
 
-extern volatile u8 is_in_charging;
+extern volatile u8 is_in_charging_by_solar_panel;
+extern volatile u8 is_in_charging_by_charger;
 
 void charge_det_init(void);
 void charge_det(void);

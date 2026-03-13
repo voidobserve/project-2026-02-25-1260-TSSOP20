@@ -32,6 +32,74 @@
 
 #include "user_include.h"
 
+#if 0
+volatile delay_exec_block_t delay_exec_array[DELAY_EXEC_MAX];
+
+void delay_exec_init(void)
+{
+    u8 i;
+    for (i = 0; i < DELAY_EXEC_MAX; i++)
+    {
+        delay_exec_array[i].cur_cnt = 0;
+        delay_exec_array[i].dest_cnt = 0;
+        delay_exec_array[i].is_pending = 0;
+        delay_exec_array[i].is_enable = 0;
+    }
+}
+
+void delay_exec_set(delay_exec_task_id_t task_id, u8 interval_ms)
+{
+    delay_exec_array[task_id].cur_cnt = 0;
+    delay_exec_array[task_id].dest_cnt = interval_ms;
+    delay_exec_array[task_id].is_pending = 0;
+    delay_exec_array[task_id].is_enable = 1;
+}
+
+void delay_exec_reset(delay_exec_task_id_t task_id)
+{
+    delay_exec_array[task_id].is_enable = 0;
+    delay_exec_array[task_id].cur_cnt = 0;
+    delay_exec_array[task_id].dest_cnt = 0;
+    delay_exec_array[task_id].is_pending = 0;
+}
+
+// 更新延时执行任务的当前时间计数
+void delay_exec_update(void)
+{
+    u8 i;
+    for (i = 0; i < DELAY_EXEC_MAX; i++)
+    {
+        if (delay_exec_array[i].is_enable)
+        {
+            delay_exec_array[i].cur_cnt++;
+            if (delay_exec_array[i].cur_cnt >= delay_exec_array[i].dest_cnt)
+            {
+                delay_exec_array[i].cur_cnt = 0;
+                delay_exec_array[i].is_pending = 1;
+            }
+        }
+    }
+}
+
+u8 delay_exec_is_pending(delay_exec_task_id_t task_id)
+{
+    return delay_exec_array[task_id].is_pending;
+}
+
+void delay_exec_handle(void)
+{
+    if (delay_exec_is_pending(DELAY_EXEC_BLE_OFF))
+    {
+        // delay_exec_reset(DELAY_EXEC_BLE_OFF);
+
+        delay_exec_array[DELAY_EXEC_BLE_OFF].is_pending = 0;
+
+        // 关闭蓝牙
+        USER_DEBUG_PIN_TOGGLE();
+    }
+}
+#endif
+
 void main(void)
 {
     // 看门狗默认打开, 复位时间2s
@@ -44,24 +112,28 @@ void main(void)
     IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除映射）
     WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
 
-    timer0_init();
-    timer1_init();
     adc_pin_init();
     adc_init();
     led_init();
     uart0_init();
     pwm_init();
+    bluetooth_ic_handle_init();
 
     led_ctl_init();
     charge_det_init();
+    // delay_exec_init();
+
+    // 需要等外设都准备好，再跑时间
+    timer0_init();
+    timer1_init();
 
 #if USER_DEBUG_ENABLE
     user_debug_pin_init();
     timebase_init();
     printf("sys reset\n");
-    // printf("Battery Monitor Initialized\n");
-    // printf("Voltage Range: %d-%d mV\n", BATTERY_VOLTAGE_MIN_MV, BATTERY_VOLTAGE_MAX_MV);
 #endif
+
+    delay_ms(1); // 等待系统稳定
 
     while (1)
     {
@@ -73,14 +145,14 @@ void main(void)
         battery_monitor_handle();
         charge_det();
 
+        // delay_exec_handle();
+        // printf("user_debug_val_u16 == %u\n", user_debug_val_u16);
 
-        // if (is_in_charging)
+        // if (is_in_charging_by_charger)
         // {
         //     printf("is in charging\n");
         // }
         // delay_ms(1000);
-
-
 
 #if USER_DEBUG_ENABLE
         // user_test_main();
