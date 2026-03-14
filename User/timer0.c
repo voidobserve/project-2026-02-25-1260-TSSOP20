@@ -43,6 +43,9 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
         uart_receiver_timeout_add();
         led_red_blue_flash_1ms_isr();
 
+        is_battery_monitor_time_comes = 1;
+        refresh_battery_level_timer_callback();
+        send_low_battery_timer_callback();
         // delay_exec_update();
     }
 

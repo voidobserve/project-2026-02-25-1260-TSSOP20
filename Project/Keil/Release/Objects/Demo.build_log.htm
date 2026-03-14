@@ -26,11 +26,23 @@ Project File Date:  03/11/2026
 
 <h2>Output:</h2>
 Build target 'Target 1'
+compiling main.c...
+compiling timer0.c...
+compiling uart_data_handle.c...
+..\..\User\uart_data_handle.c(177): warning C280: 'i': unreferenced local variable
+..\..\User\uart_data_handle.c(199): warning C280: 'i': unreferenced local variable
+compiling ad_key.c...
+compiling user_test.c...
+compiling battery_monitor.c...
+compiling charge_det.c...
+compiling timer1.c...
 linking...
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?C_INITSEG
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?LED_SLOW_START_ISR?LED
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?BAT_PERCENT_GET?BATTERY_MONITOR
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?BATTERY_MONITOR_INIT?BATTERY_MONITOR
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
@@ -39,10 +51,10 @@ linking...
     SEGMENT: ?PR?PWM_GET_CHANNEL_1_STATUS?PWM
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?CHARGE_IC_SACN_100US_ISR?CHARGE_DET
-Program Size: data=9.3 xdata=273 code=5443
+Program Size: data=9.3 xdata=489 code=6232
 creating hex file from ".\Release\Objects\Demo"...
-".\Release\Objects\Demo" - 0 Error(s), 6 Warning(s).
-Build Time Elapsed:  00:00:00
+".\Release\Objects\Demo" - 0 Error(s), 9 Warning(s).
+Build Time Elapsed:  00:00:01
 </pre>
 </body>
 </html>

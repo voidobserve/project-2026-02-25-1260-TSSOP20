@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   USER_TEST                                                         03/12/2026 14:37:51 PAGE 1   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         03/14/2026 17:14:24 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE USER_TEST
@@ -62,7 +62,7 @@ line level    source
                   // 默认配置示例
                   timebase_enable(TIMEBASE_ADC_SCAN, 1000); // ADC扫描每1秒执行一次
                   timebase_enable(TIMEBASE_LED_TEST, 500);  // LED测试每500ms执行一次
-C51 COMPILER V9.60.7.0   USER_TEST                                                         03/12/2026 14:37:51 PAGE 2   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         03/14/2026 17:14:24 PAGE 2   
 
               }
               
@@ -126,7 +126,7 @@ line level    source
                   {
                       return timebase_array[id].flag;
                   }
-C51 COMPILER V9.60.7.0   USER_TEST                                                         03/12/2026 14:37:51 PAGE 3   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         03/14/2026 17:14:24 PAGE 3   
 
                   return 0;
               }
@@ -190,7 +190,7 @@ line level    source
                           if (adc_get_update_flag(ADC_CHANNEL_SEL_SOLAR_DET))
                           {
                               adc_clear_update_flag(ADC_CHANNEL_SEL_SOLAR_DET);
-C51 COMPILER V9.60.7.0   USER_TEST                                                         03/12/2026 14:37:51 PAGE 4   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         03/14/2026 17:14:24 PAGE 4   
 
                               adc_val = adc_get_val(ADC_CHANNEL_SEL_SOLAR_DET);
                               printf("solar val == %u\n", adc_val);

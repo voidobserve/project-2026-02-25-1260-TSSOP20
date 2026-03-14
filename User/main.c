@@ -142,7 +142,12 @@ void main(void)
 
         uart_data_handle();
 
-        battery_monitor_handle();
+        if (is_battery_monitor_time_comes)
+        {
+            battery_monitor_handle();
+            is_battery_monitor_time_comes = 0;
+        }
+        
         charge_det();
 
         // delay_exec_handle();

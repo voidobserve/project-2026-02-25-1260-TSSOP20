@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   PWM                                                               03/11/2026 14:12:37 PAGE 1   
+C51 COMPILER V9.60.7.0   PWM                                                               03/14/2026 11:54:54 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE PWM
@@ -62,7 +62,7 @@ line level    source
   50   1          STMR1_PSC = STMR_PRESCALE_VAL(STRM1_PSC_VAL_CONFIG);        // 预分频
   51   1          STMR1_PRH = STMR_PRD_VAL_H((STMR1_PERIOD_VAL >> 8) & 0xFF); // 周期值
   52   1          STMR1_PRL = STMR_PRD_VAL_L((STMR1_PERIOD_VAL >> 0) & 0xFF);
-C51 COMPILER V9.60.7.0   PWM                                                               03/11/2026 14:12:37 PAGE 2   
+C51 COMPILER V9.60.7.0   PWM                                                               03/14/2026 11:54:54 PAGE 2   
 
   53   1          STMR1_CMPAH = STMR_CMPA_VAL_H(((0) >> 8) & 0xFF); // 比较值 (清空比较值)
   54   1          STMR1_CMPAL = STMR_CMPA_VAL_L(((0) >> 0) & 0xFF); // 比较值
@@ -126,7 +126,7 @@ line level    source
  112   1      }
 
 
-C51 COMPILER V9.60.7.0   PWM                                                               03/11/2026 14:12:37 PAGE 3   
+C51 COMPILER V9.60.7.0   PWM                                                               03/14/2026 11:54:54 PAGE 3   
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =    233    ----

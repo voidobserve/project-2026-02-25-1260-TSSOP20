@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/12/2026 14:37:52 PAGE 1   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/14/2026 17:14:25 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE CHARGE_DET
@@ -62,7 +62,7 @@ line level    source
   51   2                  1KHz 的信号，在一个扫描周期内
   52   2              */
   53   2              if (toggle_cnt >= 8)
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/12/2026 14:37:52 PAGE 2   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/14/2026 17:14:25 PAGE 2   
 
   54   2              {
   55   3                  toggle_cnt = 0;
@@ -126,7 +126,7 @@ line level    source
  112   3                  signal_low_duration = 1;
  113   3              }
  114   2              break;
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/12/2026 14:37:52 PAGE 3   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/14/2026 17:14:25 PAGE 3   
 
  115   2      
  116   2          case 1: // 检测高电平持续时间
@@ -190,7 +190,7 @@ line level    source
  173   2      
  174   2              if (toggle_count_in_period >= 16)
  175   2              { // 在这段时间内，至少检测到   多少次翻转
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/12/2026 14:37:52 PAGE 4   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/14/2026 17:14:25 PAGE 4   
 
  176   3                  detected_signal_pattern = 1;
  177   3              }
@@ -254,7 +254,7 @@ MODULE INFORMATION:   STATIC OVERLAYABLE
    XDATA SIZE       =     21       4
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/12/2026 14:37:52 PAGE 5   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        03/14/2026 17:14:25 PAGE 5   
 
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----

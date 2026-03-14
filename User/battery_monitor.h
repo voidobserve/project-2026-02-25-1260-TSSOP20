@@ -46,6 +46,13 @@
 // 计算电池电压对应的电量等级
 // battery_level_t get_battery_level_by_voltage(u16 voltage_mv);
 
+extern volatile u8 is_battery_monitor_time_comes; // 控制函数调用周期的变量
+
+extern volatile u8 stable_bat_percent;
+
+void send_low_battery_timer_callback(void);
+void refresh_battery_level_timer_callback(void);
+
 // 计算电池电压对应的百分比 (0-100)
 u8 get_battery_percentage_by_voltage(u16 voltage_mv);
 

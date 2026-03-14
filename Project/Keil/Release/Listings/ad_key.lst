@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   AD_KEY                                                            03/12/2026 14:37:51 PAGE 1   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            03/14/2026 17:14:24 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE AD_KEY
@@ -62,7 +62,7 @@ line level    source
              -�
   42              0,                  // const u8 click_delay_time; // 按键被抬起后等待连击事件延时数量
   43              0,                  // volatile u8 notify_value;    // 在延时的待发送按键值
-C51 COMPILER V9.60.7.0   AD_KEY                                                            03/12/2026 14:37:51 PAGE 2   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            03/14/2026 17:14:24 PAGE 2   
 
   44              KEY_TYPE_AD,        // const u8 key_type;
   45              ad_key_get_key_val, // u8 (*get_value)(void); // 用户自定义的获取键值的函数
@@ -126,7 +126,7 @@ line level    source
  102   2          }
  103   1          else
  104   1          {
-C51 COMPILER V9.60.7.0   AD_KEY                                                            03/12/2026 14:37:51 PAGE 3   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            03/14/2026 17:14:24 PAGE 3   
 
  105   2              return (u8)AD_KEY_EVENT_NONE;
  106   2          }
@@ -183,177 +183,186 @@ line level    source
  157   1      
  158   1          // USER_TO_DO 需要注意低电量不执行操作
  159   1          // 低电量，函数直接返回
- 160   1          // if (is_low_battery)
- 161   1          // {
- 162   1          //     return;
- 163   1          // }
- 164   1      
- 165   1          ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
- 166   1          ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
-C51 COMPILER V9.60.7.0   AD_KEY                                                            03/12/2026 14:37:51 PAGE 4   
+ 160   1          if ((led_ctl.status == LED_STATUS_OFF) &&
+ 161   1              (ble_ic.is_working == 0) &&
+ 162   1              (is_in_charging_by_charger == 0) &&
+ 163   1              (is_in_charging_by_solar_panel == 0))
+ 164   1          {
+ 165   2              // u8 bat_percent = slip_avg_get_filtered_val();
+ 166   2      
+C51 COMPILER V9.60.7.0   AD_KEY                                                            03/14/2026 17:14:24 PAGE 4   
 
- 167   1          ad_key_para.latest_key_event = KEY_EVENT_NONE;
- 168   1      
- 169   1          switch (ad_key_event)
- 170   1          {
- 171   2              // ================================================================
- 172   2              // key 1，对应的丝印是 上一曲
- 173   2          case AD_KEY_EVENT_ID_1_CLICK:
- 174   2      #if USER_DEBUG_ENABLE
+ 167   2              // 低电量，函数直接返回
+ 168   2              if (stable_bat_percent < 10)
+ 169   2              {
+ 170   3                  return;
+ 171   3              }
+ 172   2          }
+ 173   1      
+ 174   1          ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
+ 175   1          ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
+ 176   1          ad_key_para.latest_key_event = KEY_EVENT_NONE;
+ 177   1      
+ 178   1          switch (ad_key_event)
+ 179   1          {
+ 180   2              // ================================================================
+ 181   2              // key 1，对应的丝印是 上一曲
+ 182   2          case AD_KEY_EVENT_ID_1_CLICK:
+ 183   2      #if USER_DEBUG_ENABLE
                       printf("key 1 click\n");
               #endif
- 177   2              uart_data_send_cmd(UART_SEND_CMD_MUSIC_PREV);
- 178   2              break;
- 179   2      
- 180   2          case AD_KEY_EVENT_ID_1_LONG:
- 181   2      #if USER_DEBUG_ENABLE
-                      printf("key 1 long\n");
-              #endif
- 184   2      
- 185   2              // 长按发送音量加
- 186   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
+ 186   2              uart_data_send_cmd(UART_SEND_CMD_MUSIC_PREV);
  187   2              break;
  188   2      
- 189   2          case AD_KEY_EVENT_ID_1_HOLD:
+ 189   2          case AD_KEY_EVENT_ID_1_LONG:
  190   2      #if USER_DEBUG_ENABLE
-                      printf("key 1 hold\n");
+                      printf("key 1 long\n");
               #endif
  193   2      
  194   2              // 长按发送音量加
  195   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
  196   2              break;
  197   2      
- 198   2          case AD_KEY_EVENT_ID_1_LOOSE:
+ 198   2          case AD_KEY_EVENT_ID_1_HOLD:
  199   2      #if USER_DEBUG_ENABLE
+                      printf("key 1 hold\n");
+              #endif
+ 202   2      
+ 203   2              // 长按发送音量加
+ 204   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
+ 205   2              break;
+ 206   2      
+ 207   2          case AD_KEY_EVENT_ID_1_LOOSE:
+ 208   2      #if USER_DEBUG_ENABLE
                       printf("key 1 loose\n");
               #endif
- 202   2              break;
- 203   2      
- 204   2              // ================================================================
- 205   2              // key 2，对应的丝印是 灯开关
- 206   2          case AD_KEY_EVENT_ID_2_CLICK:
- 207   2      #if USER_DEBUG_ENABLE
-                      printf("key 2 click\n");
-              #endif
- 210   2              led_status_switch();
  211   2              break;
  212   2      
- 213   2          case AD_KEY_EVENT_ID_2_LONG:
- 214   2      #if USER_DEBUG_ENABLE
+ 213   2              // ================================================================
+ 214   2              // key 2，对应的丝印是 灯开关
+ 215   2          case AD_KEY_EVENT_ID_2_CLICK:
+ 216   2      #if USER_DEBUG_ENABLE
+                      printf("key 2 click\n");
+              #endif
+ 219   2              led_status_switch();
+ 220   2              break;
+ 221   2      
+ 222   2          case AD_KEY_EVENT_ID_2_LONG:
+ 223   2      #if USER_DEBUG_ENABLE
                       printf("key 2 long\n");
               #endif
- 217   2              break;
- 218   2      
- 219   2          case AD_KEY_EVENT_ID_2_HOLD:
- 220   2      #if USER_DEBUG_ENABLE
+ 226   2              break;
+ 227   2      
+ 228   2          case AD_KEY_EVENT_ID_2_HOLD:
+C51 COMPILER V9.60.7.0   AD_KEY                                                            03/14/2026 17:14:24 PAGE 5   
+
+ 229   2      #if USER_DEBUG_ENABLE
                       printf("key 2 hold\n");
               #endif
- 223   2              break;
- 224   2      
- 225   2          case AD_KEY_EVENT_ID_2_LOOSE:
- 226   2      #if USER_DEBUG_ENABLE
+ 232   2              break;
+ 233   2      
+ 234   2          case AD_KEY_EVENT_ID_2_LOOSE:
+ 235   2      #if USER_DEBUG_ENABLE
                       printf("key 2 loose\n");
               #endif
-C51 COMPILER V9.60.7.0   AD_KEY                                                            03/12/2026 14:37:51 PAGE 5   
-
- 229   2              break;
- 230   2      
- 231   2              // ================================================================
- 232   2              // key 3，对应的丝印是 下一曲
- 233   2      
- 234   2          case AD_KEY_EVENT_ID_3_CLICK:
- 235   2      #if USER_DEBUG_ENABLE
+ 238   2              break;
+ 239   2      
+ 240   2              // ================================================================
+ 241   2              // key 3，对应的丝印是 下一曲
+ 242   2      
+ 243   2          case AD_KEY_EVENT_ID_3_CLICK:
+ 244   2      #if USER_DEBUG_ENABLE
                       printf("key 3 click\n");
               #endif
- 238   2      
- 239   2              uart_data_send_cmd(UART_SEND_CMD_MUSIC_NEXT);
- 240   2              break;
- 241   2      
- 242   2          case AD_KEY_EVENT_ID_3_LONG:
- 243   2      #if USER_DEBUG_ENABLE
-                      printf("key 3 long\n");
-              #endif
- 246   2      
- 247   2              // 长按发送音量减
- 248   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
+ 247   2      
+ 248   2              uart_data_send_cmd(UART_SEND_CMD_MUSIC_NEXT);
  249   2              break;
  250   2      
- 251   2          case AD_KEY_EVENT_ID_3_HOLD:
+ 251   2          case AD_KEY_EVENT_ID_3_LONG:
  252   2      #if USER_DEBUG_ENABLE
-                      printf("key 3 hold\n");
+                      printf("key 3 long\n");
               #endif
  255   2      
  256   2              // 长按发送音量减
  257   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
  258   2              break;
  259   2      
- 260   2          case AD_KEY_EVENT_ID_3_LOOSE:
+ 260   2          case AD_KEY_EVENT_ID_3_HOLD:
  261   2      #if USER_DEBUG_ENABLE
+                      printf("key 3 hold\n");
+              #endif
+ 264   2      
+ 265   2              // 长按发送音量减
+ 266   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
+ 267   2              break;
+ 268   2      
+ 269   2          case AD_KEY_EVENT_ID_3_LOOSE:
+ 270   2      #if USER_DEBUG_ENABLE
                       printf("key 3 loose\n");
               #endif
- 264   2              break;
- 265   2      
- 266   2              // ================================================================
- 267   2              // key 4，对应的丝印是 总开关
- 268   2          case AD_KEY_EVENT_ID_4_CLICK:
- 269   2      #if USER_DEBUG_ENABLE
+ 273   2              break;
+ 274   2      
+ 275   2              // ================================================================
+ 276   2              // key 4，对应的丝印是 总开关
+ 277   2          case AD_KEY_EVENT_ID_4_CLICK:
+ 278   2      #if USER_DEBUG_ENABLE
                       printf("key 4 click\n");
               #endif
- 272   2      
- 273   2              // 播放/暂停音乐
- 274   2              if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PLAYING_MUSIC)
- 275   2              {
- 276   3                  uart_data_send_cmd(UART_SEND_CMD_MUSIC_PAUSE);
- 277   3              }
- 278   2              else if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PAUSE_MUSIC)
- 279   2              {
- 280   3                  uart_data_send_cmd(UART_SEND_CMD_MUSIC_PLAY);
- 281   3              }
- 282   2              break;
- 283   2      
- 284   2          case AD_KEY_EVENT_ID_4_LONG:
- 285   2      #if USER_DEBUG_ENABLE
+ 281   2      
+ 282   2              // 播放/暂停音乐
+ 283   2              if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PLAYING_MUSIC)
+ 284   2              {
+ 285   3                  uart_data_send_cmd(UART_SEND_CMD_MUSIC_PAUSE);
+ 286   3              }
+ 287   2              else if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PAUSE_MUSIC)
+ 288   2              {
+ 289   3                  uart_data_send_cmd(UART_SEND_CMD_MUSIC_PLAY);
+ 290   3              }
+C51 COMPILER V9.60.7.0   AD_KEY                                                            03/14/2026 17:14:24 PAGE 6   
+
+ 291   2              break;
+ 292   2      
+ 293   2          case AD_KEY_EVENT_ID_4_LONG:
+ 294   2      #if USER_DEBUG_ENABLE
                       printf("key 4 long\n");
               #endif
- 288   2      
- 289   2              // 打开蓝牙/关闭蓝牙
- 290   2              if (ble_ic.is_working)
-C51 COMPILER V9.60.7.0   AD_KEY                                                            03/12/2026 14:37:51 PAGE 6   
-
- 291   2              {
- 292   3                  uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
- 293   3                  // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关闭�
+ 297   2      
+ 298   2              // 打开蓝牙/关闭蓝牙
+ 299   2              if (ble_ic.is_working)
+ 300   2              {
+ 301   3                  uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
+ 302   3                  // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关闭�
              -��牙的操作
- 294   3              }
- 295   2              else
- 296   2              {
- 297   3                  BLE_IC_POWER_KEY_PIN = 0;
- 298   3                  delay_ms(30); // 等待蓝牙开机完毕
- 299   3                  uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
- 300   3                  ble_ic.is_working = 1;
- 301   3              }
- 302   2              break;
- 303   2      
- 304   2          case AD_KEY_EVENT_ID_4_HOLD:
- 305   2      #if USER_DEBUG_ENABLE
+ 303   3              }
+ 304   2              else
+ 305   2              {
+ 306   3                  BLE_IC_POWER_KEY_PIN = 0;
+ 307   3                  delay_ms(30); // 等待蓝牙开机完毕
+ 308   3                  uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
+ 309   3                  ble_ic.is_working = 1;
+ 310   3              }
+ 311   2              break;
+ 312   2      
+ 313   2          case AD_KEY_EVENT_ID_4_HOLD:
+ 314   2      #if USER_DEBUG_ENABLE
                       printf("key 4 hold\n");
               #endif
- 308   2              break;
- 309   2      
- 310   2          case AD_KEY_EVENT_ID_4_LOOSE:
- 311   2      #if USER_DEBUG_ENABLE
+ 317   2              break;
+ 318   2      
+ 319   2          case AD_KEY_EVENT_ID_4_LOOSE:
+ 320   2      #if USER_DEBUG_ENABLE
                       printf("key 4 loose\n");
               #endif
- 314   2              break;
- 315   2      
- 316   2          default:
- 317   2              break;
- 318   2          }
- 319   1      }
+ 323   2              break;
+ 324   2      
+ 325   2          default:
+ 326   2              break;
+ 327   2          }
+ 328   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    356    ----
+   CODE SIZE        =    395    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     57       3
    PDATA SIZE       =   ----    ----
