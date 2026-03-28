@@ -50,7 +50,6 @@ volatile struct key_driver_para ad_key_para = {
 };
 
 // 将采集到的ad值转换成自定义的键值
-
 static u16 ad_key_val_to_ad_key_index(const u16 ad_key_val)
 {
     u8 i = 0;
@@ -157,19 +156,18 @@ void ad_key_handle(void)
 
     // USER_TO_DO 需要注意低电量不执行操作
     // 低电量，函数直接返回
-    if ((led_ctl.status == LED_STATUS_OFF) &&
-        (ble_ic.is_working == 0) &&
-        (is_in_charging_by_charger == 0) &&
-        (is_in_charging_by_solar_panel == 0))
-    {
-        // u8 bat_percent = slip_avg_get_filtered_val();
-
-        // 低电量，函数直接返回
-        if (stable_bat_percent < 10)
-        {
-            return;
-        }
-    }
+    // if ((led_ctl.status == LED_STATUS_OFF) &&
+    //     (ble_ic.is_working == 0) &&
+    //     (is_in_charging_by_charger == 0) &&
+    //     (is_in_charging_by_solar_panel == 0))
+    // {
+    //     // u8 bat_percent = slip_avg_get_filtered_val(); 
+    //     // 低电量，函数直接返回
+    //     if (stable_bat_percent < 10)
+    //     {
+    //         return;
+    //     }
+    // }
 
     ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
     ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;

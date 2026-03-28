@@ -27,44 +27,24 @@
 #define LED_25_PERCENT_OFF() (LED_PIN_25_PERCENT = 0)
 #define LED_25_PERCENT_TOGGLE() (LED_PIN_25_PERCENT ^= 1)
 
+#define LED_RED_PIN P02
+#define LED_RED_ON() (LED_RED_PIN = 0)
+#define LED_RED_OFF() (LED_RED_PIN = 1)
+
+#define LED_BLUE_PIN P01
+#define LED_BLUE_ON() (LED_BLUE_PIN = 0)
+#define LED_BLUE_OFF() (LED_BLUE_PIN = 1)
+
 // #define LED_YELLOW_SET_PWM_DUTY(channel_duty) pwm_set_channel_0_duty(channel_duty)
 // #define LED_WHITE_SET_PWM_DUTY(channel_duty) pwm_set_channel_1_duty(channel_duty)
 
-#define LED_YELLOW_ON()                                      \
-    do                                                       \
-    {                                                        \
-        pwm_set_channel_0_duty(STRM0_PERIOD_30_PERCENT_VAL); \
-        FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;                   \
-    } while (0)
+/*
+    缓慢调整黄灯和白灯的亮度，由定时器调用
+*/
+#define PWM_DUTY_SLOW_ADJUST_TIME ((u32)300 * 1000) // 黄灯和白灯的pwm占空比缓慢调节时间，单位：ms
 
-#define LED_YELLOW_OFF()              \
-    do                                \
-    {                                 \
-        P30 = 1;                      \
-        FOUT_S30 = GPIO_FOUT_AF_FUNC; \
-    } while (0)
-
-#define LED_WHITE_ON()                                       \
-    do                                                       \
-    {                                                        \
-        pwm_set_channel_1_duty(STRM1_PERIOD_30_PERCENT_VAL); \
-        FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;                   \
-    } while (0)
-
-#define LED_WHITE_OFF()               \
-    do                                \
-    {                                 \
-        P27 = 1;                      \
-        FOUT_S27 = GPIO_FOUT_AF_FUNC; \
-    } while (0)
-
-#define YELLOW_SLOW_START_TIME ((u32)30 * 1000)
-// 缓启动期间，每次调节占空比的时间：（每次调节1单位的周期值，调节时间至少要大于等于1ms）
-// #if (YELLOW_SLOW_START_TIME < STRM0_PERIOD_30_PERCENT_VAL)
-// #define YELLOW_SLOW_START_ADJUST_TIME (STRM0_PERIOD_30_PERCENT_VAL / YELLOW_SLOW_START_TIME)
-// #else
-#define YELLOW_SLOW_START_ADJUST_TIME (YELLOW_SLOW_START_TIME / STRM0_PERIOD_30_PERCENT_VAL)
-// #endif
+// 占空比值小于调节时间，每 xx ms调节1单位的占空比值
+#define PWM_DUTY_SLOW_ADJUST_UNIT ((u32)PWM_DUTY_SLOW_ADJUST_TIME / PWM_DUTY_VAL_PERCENT_X(30))
 
 /*
     灯光状态：
@@ -78,15 +58,22 @@ enum
     LED_STATUS_WHITE_YELLOW,
     LED_STATUS_RED_BLUE_FLASH,
 };
+typedef u8 led_status_t;
 
 typedef struct
 {
-    u8 status; // 状态
+    led_status_t status; // 状态
 
-    u16 cur_period_val;
-    u16 dest_period_val;
+    // 用于控制黄灯和白灯的pwm占空比：
+    u8 is_slowly_adjust_end; // 灯光缓慢调节是否结束
+    u8 adjust_time_cnt;      // 灯光缓慢调节的时间计数（用来控制每隔 xx ms调节1单位的占空比值）
+    u16 cur_pwm_duty_val;    // 当前的PWM占空比数值
 
-    u16 cnt; // 调节时间计数
+    u32 working_time; // 灯光工作时间（根据这个时间来给黄灯、白灯缓慢降亮度）
+
+    // 用于控制红灯和蓝灯闪烁的动画：
+    u32 red_blue_flash_time_cnt; // 红灯、蓝灯闪烁的时间计数
+
 } led_ctl_t;
 
 extern volatile led_ctl_t led_ctl;
@@ -95,7 +82,9 @@ void led_init(void);
 
 void led_ctl_init(void);
 void led_status_switch(void);
+void led_status_set(led_status_t status);
 
 void led_red_blue_flash_1ms_isr(void);
+void led_slow_adjust_isr(void);
 
 #endif

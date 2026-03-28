@@ -309,7 +309,7 @@
           </Target51Misc>
           <C51>
             <RegisterColoring>0</RegisterColoring>
-            <VariablesInOrder>0</VariablesInOrder>
+            <VariablesInOrder>1</VariablesInOrder>
             <IntegerPromotion>1</IntegerPromotion>
             <uAregs>0</uAregs>
             <UseInterruptVector>1</UseInterruptVector>
@@ -324,7 +324,7 @@
               <MiscControls>interval(3)</MiscControls>
               <Define></Define>
               <Undefine></Undefine>
-              <IncludePath>..\..\Libraries\Include;..\..\User</IncludePath>
+              <IncludePath>..\..\Libraries\Include;..\..\User;..\..\driver_on_chip</IncludePath>
             </VariousControls>
           </C51>
           <Ax51>
@@ -389,6 +389,36 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>driver_on_chip</GroupName>
+          <Files>
+            <File>
+              <FileName>adc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_on_chip\adc.c</FilePath>
+            </File>
+            <File>
+              <FileName>pwm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_on_chip\pwm.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer0.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_on_chip\timer0.c</FilePath>
+            </File>
+            <File>
+              <FileName>timer1.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_on_chip\timer1.c</FilePath>
+            </File>
+            <File>
+              <FileName>uart0.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\driver_on_chip\uart0.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>User</GroupName>
           <Files>
             <File>
@@ -397,24 +427,9 @@
               <FilePath>..\..\User\main.c</FilePath>
             </File>
             <File>
-              <FileName>uart0.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\User\uart0.c</FilePath>
-            </File>
-            <File>
-              <FileName>timer0.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\User\timer0.c</FilePath>
-            </File>
-            <File>
               <FileName>uart_data_handle.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\User\uart_data_handle.c</FilePath>
-            </File>
-            <File>
-              <FileName>adc.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\User\adc.c</FilePath>
             </File>
             <File>
               <FileName>key_driver.c</FileName>
@@ -447,19 +462,9 @@
               <FilePath>..\..\User\bluetooth_ic_handle.c</FilePath>
             </File>
             <File>
-              <FileName>pwm.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\User\pwm.c</FilePath>
-            </File>
-            <File>
               <FileName>charge_det.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\User\charge_det.c</FilePath>
-            </File>
-            <File>
-              <FileName>timer1.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\User\timer1.c</FilePath>
             </File>
           </Files>
         </Group>

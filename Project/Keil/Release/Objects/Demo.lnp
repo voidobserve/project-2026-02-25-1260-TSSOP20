@@ -1,19 +1,19 @@
 ".\Release\Objects\STARTUP.obj",
 ".\Release\Objects\system.obj",
-".\Release\Objects\main.obj",
-".\Release\Objects\uart0.obj",
-".\Release\Objects\timer0.obj",
-".\Release\Objects\uart_data_handle.obj",
 ".\Release\Objects\adc.obj",
+".\Release\Objects\pwm.obj",
+".\Release\Objects\timer0.obj",
+".\Release\Objects\timer1.obj",
+".\Release\Objects\uart0.obj",
+".\Release\Objects\main.obj",
+".\Release\Objects\uart_data_handle.obj",
 ".\Release\Objects\key_driver.obj",
 ".\Release\Objects\ad_key.obj",
 ".\Release\Objects\user_test.obj",
 ".\Release\Objects\led.obj",
 ".\Release\Objects\battery_monitor.obj",
 ".\Release\Objects\bluetooth_ic_handle.obj",
-".\Release\Objects\pwm.obj",
-".\Release\Objects\charge_det.obj",
-".\Release\Objects\timer1.obj" 
+".\Release\Objects\charge_det.obj" 
 TO ".\Release\Objects\Demo" 
 PRINT(".\Release\Listings\Demo.m51") RAMSIZE(256) 
 CODE( 0X0000-0X3EEF )

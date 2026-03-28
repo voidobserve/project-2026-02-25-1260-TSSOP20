@@ -25,7 +25,7 @@
 #include "typedef.h"
 #include "tx8C126x.h"
 #include "system.h"
-#include "intrins.h"
+#include "intrins.h" // 在这里引入一个不存在的文件，不让vscode再提示下面这些头文件有错误
 #include "tx8C126x_adc.h"
 #include "tx8C126x_cmp.h"
 #include "tx8C126x_crc.h"

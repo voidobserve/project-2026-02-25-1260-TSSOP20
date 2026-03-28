@@ -20,11 +20,10 @@ volatile u8 is_battery_monitor_time_comes = 0; // 控制函数调用周期的变
     每个 xx S，强制刷新电池电量百分比
 */
 #define BATTERY_LEVEL_REFRESH_FORCE_INTERVAL ((u32)60 * 1000)
-volatile u8 is_refresh_battery_level = 0;    // 是否要强制刷新电池电量百分比
+// volatile u8 is_refresh_battery_level = 0;    // 是否要强制刷新电池电量百分比
 volatile u8 is_battery_level_add_enable = 0; // 是否允许电量百分比增加（只有在充电时才允许电池电量百分比增加，防止电量百分比跳动）
 
 volatile u8 stable_bat_percent = 0; // 稳定的电量百分比（经滞回处理）
-
 
 volatile u8 is_send_low_battery_enable = 0;
 
@@ -32,23 +31,23 @@ void send_low_battery_timer_callback(void)
 {
     static u32 cnt = 0;
     cnt++;
-    if (cnt >= (u32) 30 * 1000)
+    if (cnt >= (u32)30 * 1000)
     {
         is_send_low_battery_enable = 1;
         cnt = 0;
     }
 }
 
-void refresh_battery_level_timer_callback(void)
-{
-    static u32 cnt = 0;
-    cnt++;
-    if (cnt >= BATTERY_LEVEL_REFRESH_FORCE_INTERVAL)
-    {
-        is_refresh_battery_level = 1;
-        cnt = 0;
-    }
-}
+// void refresh_battery_level_timer_callback(void)
+// {
+//     // static u32 cnt = 0;
+//     // cnt++;
+//     // if (cnt >= BATTERY_LEVEL_REFRESH_FORCE_INTERVAL)
+//     // {
+//     //     is_refresh_battery_level = 1;
+//     //     cnt = 0;
+//     // }
+// }
 
 void slip_avg_buff_init(u8 val)
 {
@@ -162,17 +161,34 @@ static u8 get_battery_percentage_with_hysteresis(u8 raw_percent)
 //     return get_battery_level_by_voltage(voltage_mv);
 // }
 
+// 根据ad值，转换成对应的电池电压值
+u16 get_battery_voltage_by_adc(u16 adc_val)
+{
+    u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
+    // printf("voltage_mv == %u\n", voltage_mv); // 打印转换好的电压值（发现实际打印的电压比万用表量出的电压大了0.13V）
+    if (voltage_mv > 130)
+    {
+        voltage_mv -= 130; // 这里做电压补偿（减去0.13V）
+    }
+    // printf("voltage_mv == %u\n", voltage_mv); //
+}
+
 // 根据ADC值计算电池电量百分比
 u8 get_battery_percentage_by_adc(u16 adc_val)
 {
     u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
-    // printf("voltage_mv == %u\n", voltage_mv); // 打印转换好的电压值
-
-    if (ble_ic.is_working != 0 || led_ctl.status != LED_STATUS_OFF)
+    // printf("voltage_mv == %u\n", voltage_mv); // 打印转换好的电压值（发现实际打印的电压比万用表量出的电压大了0.13V）
+    if (voltage_mv > 130)
     {
-        // 蓝牙ic开着，或者灯亮着，加0.3V作为补偿
-        voltage_mv += 300;
+        voltage_mv -= 130; // 这里做电压补偿（减去0.13V）
     }
+    // printf("voltage_mv == %u\n", voltage_mv); //
+
+    // if (ble_ic.is_working != 0 || led_ctl.status != LED_STATUS_OFF)
+    // {
+    //     // 蓝牙ic开着，或者灯亮着，加0.3V作为补偿
+    //     voltage_mv += 300;
+    // }
 
     return get_battery_percentage_by_voltage(voltage_mv);
 }
@@ -210,10 +226,19 @@ void battery_monitor_init(void)
 {
 }
 
+void battery_monitor_update_isr(void)
+{
+}
+
 void battery_monitor_handle(void)
 {
     static u16 adc_val = 0;
     static u8 is_initialized = 0;
+    static u8 voltage_mv = 0;
+
+    static u8 max_voltage_mv = 0; // 存放一段时间内采集到的最大电压值
+    u8 cur_voltage_mv = 0;        // 存放当前采集到的电压值
+
     u8 bat_percent = 0; // 电池电量百分比
 
     // 获取AD值
@@ -222,30 +247,36 @@ void battery_monitor_handle(void)
         adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
         adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
         // printf("bat adc val == %u\n", adc_val);
+        cur_voltage_mv = get_battery_voltage_by_adc(adc_val);
+
+        if (0 == voltage_mv)
+        {
+            // 如果还没有采集过电池电压，直接将第一次采集到的ad值转换成电池电压
+            voltage_mv = cur_voltage_mv
+        }
+
+        // USER_TO_DO 采集一段时间的电压值，取其中最大的值作为电池电压
     }
+
+#if 0
+
 
     // 获取原始电量百分比
-    bat_percent = get_battery_percentage_by_adc(adc_val);
+    // bat_percent = get_battery_percentage_by_adc(adc_val); // USER_TO_DO 需要改成连续检测2S及以上，直接拿最大的电压值作为电池电压
     // printf("bat_percnent == %u\n", (u16)bat_percent);
 
-    if (0 == is_initialized)
-    {
-        slip_avg_buff_init(bat_percent);
-        is_initialized = 1;
-    }
-
-    slip_avg_buff_put(bat_percent);
-    bat_percent = slip_avg_get_filtered_val();
+    // slip_avg_buff_put(bat_percent);
+    // bat_percent = slip_avg_get_filtered_val();
     // printf("bat_percent = %u\n", (u16)bat_percent);
 
     // 使用滞回比较算法处理电量百分比，防止显示抖动
-    stable_bat_percent = get_battery_percentage_with_hysteresis(bat_percent);
+    // stable_bat_percent = get_battery_percentage_with_hysteresis(bat_percent);
 
-    if (is_refresh_battery_level)
-    {
-        stable_bat_percent = slip_avg_get_filtered_val();
-        is_refresh_battery_level = 0;
-    }
+    // if (is_refresh_battery_level)
+    // {
+    //     stable_bat_percent = slip_avg_get_filtered_val();
+    //     is_refresh_battery_level = 0;
+    // }
 
     // printf("stable_bat_percent = %u\n", (u16)stable_bat_percent);
 
@@ -298,8 +329,8 @@ void battery_monitor_handle(void)
 
         // 关闭驱动的灯光
         led_ctl.status = LED_STATUS_OFF;
-        LED_WHITE_OFF();
-        LED_YELLOW_OFF();
+        // LED_WHITE_OFF();
+        // LED_YELLOW_OFF();
         P02 = 1;
         P01 = 1;
 
@@ -345,4 +376,5 @@ void battery_monitor_handle(void)
     {
         LED_100_PERCENT_OFF();
     }
+#endif
 }

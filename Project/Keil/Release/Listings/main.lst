@@ -1,11 +1,11 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              03/14/2026 17:14:24 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              03/28/2026 16:24:35 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
 OBJECT MODULE PLACED IN .\Release\Objects\main.obj
-COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\..\User\main.c LARGE OPTIMIZE(9,SIZE) BROWSE INTVECTOR(0X000C) INCDIR
-                    -(..\..\Libraries\Include;..\..\User) INTERVAL(3) DEBUG OBJECTEXTEND PRINT(.\Release\Listings\main.lst) OBJECT(.\Release\
-                    -Objects\main.obj)
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\..\User\main.c LARGE OPTIMIZE(9,SIZE) BROWSE ORDER INTVECTOR(0X000C) 
+                    -INCDIR(..\..\Libraries\Include;..\..\User;..\..\driver_on_chip) INTERVAL(3) DEBUG OBJECTEXTEND PRINT(.\Release\Listings\
+                    -main.lst) OBJECT(.\Release\Objects\main.obj)
 
 line level    source
 
@@ -62,7 +62,7 @@ line level    source
               {
                   delay_exec_array[task_id].cur_cnt = 0;
                   delay_exec_array[task_id].dest_cnt = interval_ms;
-C51 COMPILER V9.60.7.0   MAIN                                                              03/14/2026 17:14:24 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              03/28/2026 16:24:35 PAGE 2   
 
                   delay_exec_array[task_id].is_pending = 0;
                   delay_exec_array[task_id].is_enable = 1;
@@ -126,7 +126,7 @@ line level    source
              -��射）
  113   1          WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
  114   1      
-C51 COMPILER V9.60.7.0   MAIN                                                              03/14/2026 17:14:24 PAGE 3   
+C51 COMPILER V9.60.7.0   MAIN                                                              03/28/2026 16:24:35 PAGE 3   
 
  115   1          adc_pin_init();
  116   1          adc_init();
@@ -151,47 +151,51 @@ line level    source
  135   1      
  136   1          delay_ms(1); // 等待系统稳定
  137   1      
- 138   1          while (1)
- 139   1          {
- 140   2              key_driver_scan(&ad_key_para);
- 141   2              ad_key_handle();
- 142   2      
- 143   2              uart_data_handle();
- 144   2      
- 145   2              if (is_battery_monitor_time_comes)
- 146   2              {
- 147   3                  battery_monitor_handle();
- 148   3                  is_battery_monitor_time_comes = 0;
- 149   3              }
- 150   2              
- 151   2              charge_det();
- 152   2      
- 153   2              // delay_exec_handle();
- 154   2              // printf("user_debug_val_u16 == %u\n", user_debug_val_u16);
+ 138   1          // led_ctl.status = LED_STATUS_WHITE_YELLOW;
+ 139   1          // led_ctl.cur_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(0);
+ 140   1          // led_ctl.working_time = 0;
+ 141   1          // pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
+ 142   1          // pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
+ 143   1          // FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
+ 144   1          // FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
+ 145   1      
+ 146   1          // led_ctl.status = LED_STATUS_RED_BLUE_FLASH;
+ 147   1      
+ 148   1      
+ 149   1          while (1)
+ 150   1          {
+ 151   2              key_driver_scan(&ad_key_para);
+ 152   2              ad_key_handle();
+ 153   2      
+ 154   2              // uart_data_handle();
  155   2      
- 156   2              // if (is_in_charging_by_charger)
- 157   2              // {
- 158   2              //     printf("is in charging\n");
- 159   2              // }
- 160   2              // delay_ms(1000);
- 161   2      
- 162   2      #if USER_DEBUG_ENABLE
+ 156   2              if (is_battery_monitor_time_comes)
+ 157   2              {
+ 158   3                  battery_monitor_handle();
+ 159   3                  is_battery_monitor_time_comes = 0;
+ 160   3              }
+ 161   2              
+ 162   2              // charge_det();
+ 163   2      
+ 164   2          
+ 165   2        
+ 166   2      #if USER_DEBUG_ENABLE
                       // user_test_main();
               #endif
- 165   2          }
- 166   1      }
- 167          
- 168          /**
- 169           * @}
- 170           */
+ 169   2          }
+ 170   1      }
  171          
- 172          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
+ 172          /**
+ 173           * @}
+ 174           */
+ 175          
+ 176          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
+C51 COMPILER V9.60.7.0   MAIN                                                              03/28/2026 16:24:35 PAGE 4   
+
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     90    ----
-C51 COMPILER V9.60.7.0   MAIN                                                              03/14/2026 17:14:24 PAGE 4   
-
+   CODE SIZE        =     84    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

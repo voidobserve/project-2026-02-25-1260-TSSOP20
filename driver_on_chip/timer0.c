@@ -37,15 +37,18 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
         // timebase_update();
 #endif
 
-        ad_key_para.cur_scan_times++;
+        ad_key_para.cur_scan_times++; // 满足一定时间后，会在 key_driver_scan 中清零
         adc_scan();
 
         uart_receiver_timeout_add();
         led_red_blue_flash_1ms_isr();
 
         is_battery_monitor_time_comes = 1;
-        refresh_battery_level_timer_callback();
         send_low_battery_timer_callback();
+
+
+        led_slow_adjust_isr();
+
         // delay_exec_update();
     }
 

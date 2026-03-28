@@ -4,51 +4,34 @@
 #include "include.h"
 #include "adc.h"
 
-// 电池电压范围：2.5V - 4.2V
-// #define BATTERY_VOLTAGE_MIN_MV    2500    // 最低电压 2.5V
-// #define BATTERY_VOLTAGE_MAX_MV    4200    // 最高电压 4.2V
-// #define BATTERY_VOLTAGE_RANGE_MV  (BATTERY_VOLTAGE_MAX_MV - BATTERY_VOLTAGE_MIN_MV)  // 电压范围 1700mV
-
-// // 电池电量等级定义
-// typedef enum 
-// {
-//     BATTERY_LEVEL_EMPTY = 0,     // 0%   电压 < 2.5V (实际不会出现)
-//     BATTERY_LEVEL_CRITICAL,      // 1-25%  严重低电量
-//     BATTERY_LEVEL_LOW,           // 26-50% 低电量
-//     BATTERY_LEVEL_MEDIUM,        // 51-75% 中等电量
-//     BATTERY_LEVEL_HIGH,          // 76-100% 高电量
-//     BATTERY_LEVEL_FULL           // 100%   电压 = 4.2V
-// } battery_level_t;
-
-// 电池电量百分比划分 (基于电压的线性映射)
-// 由于锂电池放电曲线非线性，这里采用分段线性近似
-// #define BATTERY_VOLTAGE_100_PERCENT  4200  // 100% 对应 4.2V
-// #define BATTERY_VOLTAGE_75_PERCENT   3850  // 75%  对应 3.85V
-// #define BATTERY_VOLTAGE_50_PERCENT   3600  // 50%  对应 3.6V
-// #define BATTERY_VOLTAGE_25_PERCENT   3200  // 25%  对应 3.2V
-// #define BATTERY_VOLTAGE_0_PERCENT    2500  // 0%   对应 2.5V
-
-#define BATTERY_VOLTAGE_100_PERCENT  4180  // 100% 对应  
-#define BATTERY_VOLTAGE_75_PERCENT   4000  // 75%  对应  
-#define BATTERY_VOLTAGE_50_PERCENT   3850  // 50%  对应  
-#define BATTERY_VOLTAGE_25_PERCENT   3600  // 25%  对应  
-#define BATTERY_VOLTAGE_0_PERCENT    3300  // 0%   对应  
+// USER_TO_DO: 可能不使用下面这些宏
+#define BATTERY_VOLTAGE_100_PERCENT 4180 // 100% 对应
+#define BATTERY_VOLTAGE_75_PERCENT 4000  // 75%  对应
+#define BATTERY_VOLTAGE_50_PERCENT 3850  // 50%  对应
+#define BATTERY_VOLTAGE_25_PERCENT 3600  // 25%  对应
+#define BATTERY_VOLTAGE_0_PERCENT 3300   // 0%   对应
 
 // ADC相关参数 (电池检测使用内部2.0V参考电压，VDD 1/5分压)
-#define BATTERY_ADC_REF_VOLTAGE_MV   2000  // 内部参考电压 2.0V
-#define BATTERY_VOLTAGE_DIVIDER      5     // VDD经过1/5分压后输入ADC
+#define BATTERY_ADC_REF_VOLTAGE_MV 2000 // 内部参考电压 2.0V
+#define BATTERY_VOLTAGE_DIVIDER 5       // VDD经过1/5分压后输入ADC
 
 // 计算ADC值对应的电池电压 (单位：mV)
 // ADC值 -> 实际电池电压 = ADC值 * (参考电压/4096) * 分压比 * 1000
 #define ADC_TO_BATTERY_VOLTAGE_MV(adc_val) \
     (((u32)(adc_val) * BATTERY_ADC_REF_VOLTAGE_MV * BATTERY_VOLTAGE_DIVIDER) / 4096)
 
-// 计算电池电压对应的电量等级
-// battery_level_t get_battery_level_by_voltage(u16 voltage_mv);
+// 检测电池电压的周期，单位：ms
+#define BATTERY_MONITOR_TIME_PERIOD ((u16)2000)
 
 extern volatile u8 is_battery_monitor_time_comes; // 控制函数调用周期的变量
 
 extern volatile u8 stable_bat_percent;
+
+typedef struct
+{
+    u8 battery_percent;
+
+} battery_monitor_t;
 
 void send_low_battery_timer_callback(void);
 void refresh_battery_level_timer_callback(void);

@@ -21,39 +21,45 @@ Target DLL:      TXLink_keil_C51.dll V1.00
 Dialog DLL:      TP51.DLL V2.60.1.0
  
 <h2>Project:</h2>
-D:\A_WorkSt\Aworkst\J--¾§±¦ÌÚ\2026-02-25-¾§±¦ÌÚ-À¶ÑÀµØÌ¯µÆ-1260-TSSOP20\code\project-2026-02-25-1260-TSSOP20\Project\Keil\Project.uvproj
-Project File Date:  03/11/2026
+D:\A_WorkSt\Aworkst\99-ÏîÄ¿\J--¾§±¦ÌÚ\2026-02-25-¾§±¦ÌÚ-À¶ÑÀµØÌ¯µÆ-1260-TSSOP20\code\project-2026-02-25-1260-TSSOP20\Project\Keil\Project.uvproj
+Project File Date:  03/27/2026
 
 <h2>Output:</h2>
 Build target 'Target 1'
-compiling main.c...
 compiling timer0.c...
+compiling timer1.c...
+compiling main.c...
 compiling uart_data_handle.c...
-..\..\User\uart_data_handle.c(177): warning C280: 'i': unreferenced local variable
-..\..\User\uart_data_handle.c(199): warning C280: 'i': unreferenced local variable
 compiling ad_key.c...
 compiling user_test.c...
+compiling led.c...
 compiling battery_monitor.c...
+..\..\User\battery_monitor.c(220): warning C280: 'is_initialized': unreferenced local variable
 compiling charge_det.c...
-compiling timer1.c...
 linking...
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?C_INITSEG
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?LED_SLOW_START_ISR?LED
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?BAT_PERCENT_GET?BATTERY_MONITOR
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?BATTERY_MONITOR_INIT?BATTERY_MONITOR
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?PWM_GET_CHANNEL_0_STATUS?PWM
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?PWM_GET_CHANNEL_1_STATUS?PWM
 *** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?UART_DATA_HANDLE?UART_DATA_HANDLE
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SLIP_AVG_BUFF_INIT?BATTERY_MONITOR
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_SLIP_AVG_BUFF_PUT?BATTERY_MONITOR
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?BAT_PERCENT_GET?BATTERY_MONITOR
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?_GET_BATTERY_PERCENTAGE_WITH_HYSTERESIS?BATTERY_MONITOR
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?BATTERY_MONITOR_INIT?BATTERY_MONITOR
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
     SEGMENT: ?PR?CHARGE_IC_SACN_100US_ISR?CHARGE_DET
-Program Size: data=9.3 xdata=489 code=6232
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?CHARGE_DET?CHARGE_DET
+Program Size: data=9.3 xdata=492 code=6362
 creating hex file from ".\Release\Objects\Demo"...
-".\Release\Objects\Demo" - 0 Error(s), 9 Warning(s).
+".\Release\Objects\Demo" - 0 Error(s), 11 Warning(s).
 Build Time Elapsed:  00:00:01
 </pre>
 </body>
