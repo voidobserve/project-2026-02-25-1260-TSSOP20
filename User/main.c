@@ -133,24 +133,14 @@ void main(void)
     printf("sys reset\n");
 #endif
 
-    delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍）
-
-    // led_ctl.status = LED_STATUS_WHITE_YELLOW;
-    // led_ctl.cur_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(0);
-    // led_ctl.working_time = 0;
-    // pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
-    // pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
-    // FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
-    // FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
-
-    // led_ctl.status = LED_STATUS_RED_BLUE_FLASH;
+    delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍） 
 
     while (1)
     {
         key_driver_scan(&ad_key_para);
         ad_key_handle();
 
-        // uart_data_handle();
+        uart_data_handle();
 
         battery_monitor_handle();
 

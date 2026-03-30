@@ -62,7 +62,7 @@ typedef u8 led_status_t;
 
 typedef struct
 {
-    led_status_t status; // 状态
+    led_status_t status; // 状态（红灯、蓝灯、黄灯和白灯）
 
     // 用于控制黄灯和白灯的pwm占空比：
     u8 is_slowly_adjust_end; // 灯光缓慢调节是否结束

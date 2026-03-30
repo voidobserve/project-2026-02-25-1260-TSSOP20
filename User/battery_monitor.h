@@ -5,11 +5,11 @@
 #include "adc.h"
 
 // USER_TO_DO: 可能不使用下面这些宏
-#define BATTERY_VOLTAGE_100_PERCENT 4180 // 100% 对应
-#define BATTERY_VOLTAGE_75_PERCENT 4000  // 75%  对应
-#define BATTERY_VOLTAGE_50_PERCENT 3850  // 50%  对应
-#define BATTERY_VOLTAGE_25_PERCENT 3600  // 25%  对应
-#define BATTERY_VOLTAGE_0_PERCENT 3300   // 0%   对应
+// #define BATTERY_VOLTAGE_100_PERCENT 4180 // 100% 对应
+// #define BATTERY_VOLTAGE_75_PERCENT 4000  // 75%  对应
+// #define BATTERY_VOLTAGE_50_PERCENT 3850  // 50%  对应
+// #define BATTERY_VOLTAGE_25_PERCENT 3600  // 25%  对应
+// #define BATTERY_VOLTAGE_0_PERCENT 3300   // 0%   对应
 
 // ADC相关参数 (电池检测使用内部2.0V参考电压，VDD 1/5分压)
 #define BATTERY_ADC_REF_VOLTAGE_MV 2000 // 内部参考电压 2.0V
@@ -20,21 +20,29 @@
 #define ADC_TO_BATTERY_VOLTAGE_MV(adc_val) \
     (((u32)(adc_val) * BATTERY_ADC_REF_VOLTAGE_MV * BATTERY_VOLTAGE_DIVIDER) / 4096)
 
+#define VOLTAGE_HISTORY_SIZE 10
 // 检测电池电压的周期，单位：ms
-#define BATTERY_MONITOR_TIME_PERIOD ((u16)2000)
+#define BATTERY_VOLTAGE_UPDATE_PERIOD ((u16)4000)
+// 每隔多久将采集的电池电压放入缓存中，单位：ms
+#define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER ((u32)15 * 1000)
+// 每隔多久将缓存中的电池电压提取出来，单位：ms
+#define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT \
+    (BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER * VOLTAGE_HISTORY_SIZE)
 
-extern volatile u8 is_battery_monitor_time_comes; // 控制函数调用周期的变量
+extern volatile u8 is_send_low_battery_enable;
 
-extern volatile u8 stable_bat_percent;
+extern volatile u8 bat_percent;
 
-typedef struct
+// 电池电量更新模块的状态
+enum
 {
-    u8 battery_percent;
-
-} battery_monitor_t;
+    BAT_VOL_UPDATE_STA_IDLE,      // 空闲
+    BAT_VOL_UPDATE_STA_CAPTURING, // 正在采集
+    BAT_VOL_UPDATE_STA_COMPLETED, // 采集完成
+}; // battery voltage update status
+typedef u8 bat_vol_update_sta_t;
 
 void send_low_battery_timer_callback(void);
-void refresh_battery_level_timer_callback(void);
 
 // 计算电池电压对应的百分比 (0-100)
 u8 get_battery_percentage_by_voltage(u16 voltage_mv);
@@ -44,5 +52,9 @@ u8 get_battery_percentage_by_voltage(u16 voltage_mv);
 u8 get_battery_percentage_by_adc(u16 adc_val);
 
 void battery_monitor_handle(void);
+
+void bat_vol_update_timer_callback(void);
+void bat_vol_buff_add_timer_callback(void);
+void bat_vol_buff_get_avg_timer_callback(void);
 
 #endif // __BATTERY_MONITOR_H__

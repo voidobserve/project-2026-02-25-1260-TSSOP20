@@ -41,13 +41,13 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
         adc_scan();
 
         uart_receiver_timeout_add();
-        led_red_blue_flash_1ms_isr();
 
-        is_battery_monitor_time_comes = 1;
-        send_low_battery_timer_callback();
-
+        bat_vol_update_timer_callback();
+        bat_vol_buff_add_timer_callback();
+        bat_vol_buff_get_avg_timer_callback();
 
         led_slow_adjust_isr();
+        led_red_blue_flash_1ms_isr();
 
         // delay_exec_update();
     }

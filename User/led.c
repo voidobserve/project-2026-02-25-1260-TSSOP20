@@ -166,7 +166,7 @@ void led_status_set(led_status_t status)
         LED_BLUE_OFF();
 
         // 只亮黄灯和白灯
-        led_white_on(); 
+        led_white_on();
         led_yellow_on();
         break;
 
@@ -342,5 +342,99 @@ void led_slow_adjust_isr(void)
                 led_ctl.is_slowly_adjust_end = 1; // 表示缓慢调节结束
             }
         }
+    }
+}
+
+// 定义电池电量指示灯的各个状态
+enum
+{
+    LED_BAT_LEVEL_STA_IDLE,
+    LED_BAT_LEVEL_STA_CHARGE_BEGIN,      // 充电开始
+    LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM, // 正在跑充电开始的动画
+    LED_BAT_LEVEL_STA_CHARGING,          // 充电中
+    LED_BAT_LEVEL_STA_CHARGE_END,        // 充电结束
+
+    LED_BAT_LEVEL_STA_DISCHARGE, // 放电中
+};
+typedef u8 led_bat_level_sta_t;
+volatile led_bat_level_sta_t led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
+volatile u8 led_charge_anim_phase = 0; // 充电开始的动画阶段，0：灯光全灭，1：开始点亮第一个灯
+volatile u16 led_charge_anim_cnt = 0;
+
+// 充电或放电时，电池电量指示灯的动画
+// 外部参数： 全局变量 bat_percent ，电池电量百分比
+void led_bat_instruction_timer_callback(void)
+{
+    if (led_bat_level_sta == LED_BAT_LEVEL_STA_IDLE)
+    {
+        LED_100_PERCENT_OFF();
+        LED_75_PERCENT_OFF();
+        LED_50_PERCENT_OFF();
+        LED_25_PERCENT_OFF();
+    }
+    else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_BEGIN)
+    {
+        LED_100_PERCENT_OFF();
+        LED_75_PERCENT_OFF();
+        LED_50_PERCENT_OFF();
+        LED_25_PERCENT_OFF();
+        led_charge_anim_phase = 0;
+        led_charge_anim_cnt = 0;
+    }
+    else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM)
+    {
+        led_charge_anim_cnt++;
+        if (led_charge_anim_cnt >= 500)
+        {
+            led_charge_anim_cnt = 0;
+
+            if (led_charge_anim_phase == 0 &&
+                bat_percent >= 25)
+            {
+                LED_25_PERCENT_ON();
+                led_charge_anim_phase = 1;
+            }
+            else if (led_charge_anim_phase == 1 &&
+                     bat_percent >= 50)
+            {
+                LED_50_PERCENT_ON();
+                led_charge_anim_phase = 2;
+            }
+            else if (led_charge_anim_phase == 2 &&
+                     bat_percent >= 75)
+            {
+                LED_75_PERCENT_ON();
+                led_charge_anim_phase = 3;
+            }
+            else if (led_charge_anim_phase == 3)
+            {
+                // 最后一个阶段，需要确定充电ic已经停止充电，才进入
+            }
+            else
+            {
+                led_charge_anim_cnt = 0;
+                led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGING;
+            }
+        }
+    }
+    else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGING)
+    {
+        // 正在充电，让当前电量对应的指示灯闪烁（只闪烁一个灯）
+        led_charge_anim_cnt++;
+        if (led_charge_anim_cnt >= 500)
+        {
+            led_charge_anim_cnt = 0;
+        }
+    }
+    else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_END)
+    {
+        LED_100_PERCENT_ON();
+        LED_75_PERCENT_ON();
+        LED_50_PERCENT_ON();
+        LED_25_PERCENT_ON();
+    }
+    else if (led_bat_level_sta == LED_BAT_LEVEL_STA_DISCHARGE)
+    {
+        // 放电中
     }
 }
