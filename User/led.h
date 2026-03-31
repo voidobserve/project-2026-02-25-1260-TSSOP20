@@ -76,7 +76,22 @@ typedef struct
 
 } led_ctl_t;
 
+// 定义电池电量指示灯的各个状态
+enum
+{
+    LED_BAT_LEVEL_STA_IDLE,
+    LED_BAT_LEVEL_STA_CHARGE_BEGIN,      // 充电开始
+    LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM, // 正在跑充电开始的动画
+    LED_BAT_LEVEL_STA_CHARGING,          // 充电中
+    LED_BAT_LEVEL_STA_CHARGE_END,        // 充电结束
+
+    LED_BAT_LEVEL_STA_DISCHARGE, // 放电中
+};
+typedef u8 led_bat_level_sta_t;
+
 extern volatile led_ctl_t led_ctl;
+extern volatile led_bat_level_sta_t led_bat_level_sta;
+
 
 void led_init(void);
 
@@ -86,5 +101,6 @@ void led_status_set(led_status_t status);
 
 void led_red_blue_flash_1ms_isr(void);
 void led_slow_adjust_isr(void);
+void led_bat_instruction_timer_callback(void);
 
 #endif

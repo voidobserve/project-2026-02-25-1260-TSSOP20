@@ -5,6 +5,12 @@
 #include "user_config.h"
 #if USER_DEBUG_ENABLE
 
+extern volatile u8 flag_debug;
+void debug_time_add(void);
+void user_debug_pin_init(void);
+
+#if 0
+
 #define USER_DEBUG_PIN P17
 #define USER_DEBUG_PIN_SET() (USER_DEBUG_PIN = 1)
 #define USER_DEBUG_PIN_RESET() (USER_DEBUG_PIN = 0)
@@ -36,12 +42,12 @@ extern volatile timebase_config_t timebase_array[TIMEBASE_MAX];
 
 extern volatile u16 user_debug_val_u16;
 
-// extern volatile u8 flag_debug;
 
-void user_debug_pin_init(void);
+
+
 
 // 函数声明
-void debug_time_add(void);
+
 
 void timebase_init(void);
 void timebase_update(void);
@@ -55,6 +61,7 @@ void user_test_led(void);
 
 void user_test_main(void);
 
+#endif
 #endif
 
 #endif

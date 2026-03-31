@@ -100,18 +100,8 @@ void delay_exec_handle(void)
 }
 #endif
 
-void main(void)
-{
-    // 看门狗默认打开, 复位时间2s
-    WDT_KEY = WDT_KEY_VAL(0xDD); // 关闭看门狗 (如需配置看门狗请查看"WDT\WDT_Reset"示例)
-
-    system_init();
-
-    // 关闭HCK和HDA的调试功能
-    WDT_KEY = 0x55;  // 解除写保护
-    IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除映射）
-    WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
-
+void user_init(void)
+{ 
     adc_pin_init();
     adc_init();
     led_init();
@@ -129,11 +119,24 @@ void main(void)
 
 #if USER_DEBUG_ENABLE
     user_debug_pin_init();
-    timebase_init();
-    printf("sys reset\n");
-#endif
+    // timebase_init();
+    printf("sys init\n");
+#endif 
+}
 
-    delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍） 
+void main(void)
+{
+    // 看门狗默认打开, 复位时间2s
+    WDT_KEY = WDT_KEY_VAL(0xDD); // 关闭看门狗 (如需配置看门狗请查看"WDT\WDT_Reset"示例)
+    system_init();
+
+    // 关闭HCK和HDA的调试功能
+    WDT_KEY = 0x55;  // 解除写保护
+    IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除映射）
+    WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
+
+    user_init();
+    delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍）
 
     while (1)
     {
@@ -144,7 +147,9 @@ void main(void)
 
         battery_monitor_handle();
 
-        // charge_det();
+        charge_det();
+
+        // low_power_handle();
 
 #if USER_DEBUG_ENABLE
         // user_test_main();

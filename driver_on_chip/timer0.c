@@ -48,7 +48,11 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
 
         led_slow_adjust_isr();
         led_red_blue_flash_1ms_isr();
+        led_bat_instruction_timer_callback(); // 电池电量指示灯动画
 
+        low_power_enter_timer_callback();
+
+        debug_time_add();
         // delay_exec_update();
     }
 

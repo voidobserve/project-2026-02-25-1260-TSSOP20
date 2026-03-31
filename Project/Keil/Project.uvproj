@@ -466,6 +466,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\User\charge_det.c</FilePath>
             </File>
+            <File>
+              <FileName>low_power.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\low_power.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

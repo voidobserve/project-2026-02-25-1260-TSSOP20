@@ -2,14 +2,7 @@
 #define __BATTERY_MONITOR_H__
 
 #include "include.h"
-#include "adc.h"
-
-// USER_TO_DO: 可能不使用下面这些宏
-// #define BATTERY_VOLTAGE_100_PERCENT 4180 // 100% 对应
-// #define BATTERY_VOLTAGE_75_PERCENT 4000  // 75%  对应
-// #define BATTERY_VOLTAGE_50_PERCENT 3850  // 50%  对应
-// #define BATTERY_VOLTAGE_25_PERCENT 3600  // 25%  对应
-// #define BATTERY_VOLTAGE_0_PERCENT 3300   // 0%   对应
+#include "adc.h" 
 
 // ADC相关参数 (电池检测使用内部2.0V参考电压，VDD 1/5分压)
 #define BATTERY_ADC_REF_VOLTAGE_MV 2000 // 内部参考电压 2.0V
@@ -46,10 +39,6 @@ void send_low_battery_timer_callback(void);
 
 // 计算电池电压对应的百分比 (0-100)
 u8 get_battery_percentage_by_voltage(u16 voltage_mv);
-
-// 通过ADC值获取电池电量信息
-// battery_level_t get_battery_level_by_adc(u16 adc_val);
-u8 get_battery_percentage_by_adc(u16 adc_val);
 
 void battery_monitor_handle(void);
 

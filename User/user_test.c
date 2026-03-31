@@ -7,10 +7,20 @@
 
 #if USER_DEBUG_ENABLE
 
-volatile u16 user_debug_val_u16 = 0; // 测试时使用的全局变量，用来在中断获取数值，在主函数打印
+volatile u8 flag_debug = 0;
 
-// volatile u8 flag_debug = 0;
-volatile timebase_config_t timebase_array[TIMEBASE_MAX];
+void debug_time_add(void)
+{
+#if 1
+    static u16 cnt = 0;
+    cnt++;
+    if (cnt >= 5000)
+    {
+        cnt = 0;
+        flag_debug = 1;
+    }
+#endif
+}
 
 void user_debug_pin_init(void)
 {
@@ -20,18 +30,17 @@ void user_debug_pin_init(void)
     P17 = 0;
 }
 
-// void debug_time_add(void)
-// {
-// #if 1
-//     static u16 cnt = 0;
-//     cnt++;
-//     if (cnt >= 1000)
-//     {
-//         cnt = 0;
-//         flag_debug = 1;
-//     }
-// #endif
-// }
+
+#if 0
+
+volatile u16 user_debug_val_u16 = 0; // 测试时使用的全局变量，用来在中断获取数值，在主函数打印
+
+
+volatile timebase_config_t timebase_array[TIMEBASE_MAX];
+
+
+
+
 
 /**
  * @brief 初始化时基管理系统
@@ -220,4 +229,5 @@ void user_test_main(void)
     user_test_adc_scan();
 }
 
+#endif
 #endif

@@ -19,9 +19,6 @@ static volatile u8 bat_vol_history_buff_idx = 0;
 
 volatile u8 bat_percent = 0;
 
-
-
-
 // 由定时器调用，控制一段时间内，往数组中放入数据的时间
 void bat_vol_buff_add_timer_callback(void)
 {
@@ -82,6 +79,17 @@ u16 get_battery_voltage_by_adc(u16 adc_val)
         voltage_mv -= 130; // 这里做电压补偿（减去0.13V）
     }
     // printf("voltage_mv == %u\n", voltage_mv); //
+
+    if (is_in_charging)
+    {
+        //  // 充电时，减去 0.1 V，作为补偿。如果电压接近 4.2V 时，不用补偿 
+        if ((voltage_mv <= 4000) && voltage_mv > 100)
+        {
+            voltage_mv -= 100;
+        }
+    }
+
+    return voltage_mv;
 }
 
 void send_low_battery_timer_callback(void)
@@ -147,26 +155,28 @@ u16 bat_vol_history_buff_get_avg(void)
 }
 
 // 从系统获取当前时间戳 (需要在其他地方实现)
-extern u32 get_system_tick_count(void); // 假设这个函数提供系统运行时间(毫秒)
-volatile u32 sys_time;
-void sys_time_add(void)
-{
-    sys_time++;
-}
+// extern u32 get_system_tick_count(void); // 假设这个函数提供系统运行时间(毫秒)
+// volatile u32 sys_time;
+// void sys_time_add(void)
+// {
+//     sys_time++;
+// }
 
-u32 get_system_tick_count(void)
-{
-    return sys_time;
-}
+// u32 get_system_tick_count(void)
+// {
+//     return sys_time;
+// }
 
 // 修改后的电池监控处理函数
 void battery_monitor_handle(void)
 {
+    // 只在采集使用：
     static volatile u16 voltage_mv = 0;     //
     static volatile u16 max_voltage_mv = 0; // 存放一段时间内采集到的最大电压值（只在采集使用，不能作为最终的判断使用）
     static volatile u16 avg_voltage_mv = 0;
-    u8 percent = 0;
-    u8 last_percent = 0;
+
+    static u8 percent = 0;
+    static u8 last_percent = 0;
 
     u16 adc_val = 0;
     u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
@@ -190,6 +200,10 @@ void battery_monitor_handle(void)
             percent = get_battery_percentage_by_voltage(avg_voltage_mv);
             last_percent = percent;
             bat_percent = percent; // 初始化全局变量，电池电量百分比
+
+            printf("bat monitor init\n");
+            printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+            printf("percent == %u\n", (u16)percent);
         }
 
         // 采集一段时间的电压值，取其中最大的值作为电池电压
@@ -233,17 +247,17 @@ void battery_monitor_handle(void)
     if (is_bat_vol_buff_get_avg_enable)
     {
         avg_voltage_mv = bat_vol_history_buff_get_avg();
-        printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+        // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
 
         percent = get_battery_percentage_by_voltage(avg_voltage_mv);
-        printf("percent == %u\n", (u16)percent);
+        // printf("percent == %u\n", (u16)percent);
 
         is_bat_vol_buff_get_avg_enable = 0;
     }
 
     // 充电中，percent大于等于last_percent，不让percent小于last_percent
-    if (is_in_charging_by_charger || is_in_charging_by_solar_panel)
-    { 
+    if (is_in_charging)
+    {
         if (percent < last_percent)
         {
             percent = last_percent;
@@ -266,30 +280,81 @@ void battery_monitor_handle(void)
         }
     }
 
-    bat_percent = percent; 
+    bat_percent = percent;
 
-    // 测试时使用，充电动画：
-    if (is_in_charging_by_charger)
+    // USER_TO_DO 只在测试时使用：
+    // 每隔一段时间打印一次滤波后得到的电压和电量百分比
+    if (flag_debug)
     {
-        LED_100_PERCENT_ON();
-        LED_75_PERCENT_ON();
-        LED_50_PERCENT_ON();
-        LED_25_PERCENT_ON();
+        flag_debug = 0;
+        printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+        printf("bat_percent == %u\n", (u16)bat_percent); //
     }
-    else
+
+    if (is_in_charging &&
+        (led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_BEGIN &&
+         led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM &&
+         led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGING &&
+         led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_END))
     {
+        led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN;
+    }
+    // else // USER_TO_DO 这里只在测试时使用，不在充电，也不在放电，才关闭电池电量指示灯
+    // 不在充电、蓝牙ic不工作、灯光关闭时，关闭电量指示灯
+    else if (is_in_charging == 0 &&
+             ble_ic.is_working == 0 &&
+             led_ctl.status == LED_STATUS_OFF)
+    {
+        led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
         LED_100_PERCENT_OFF();
         LED_75_PERCENT_OFF();
         LED_50_PERCENT_OFF();
         LED_25_PERCENT_OFF();
     }
+    // 不在充电，但是蓝牙ic或者灯光打开，根据电池电量来点亮对应指示灯
+    else if (is_in_charging == 0 &&
+             (ble_ic.is_working || led_ctl.status != LED_STATUS_OFF))
+    {
+        if (bat_percent >= 90)
+        {
+            LED_100_PERCENT_ON();
+        }
 
-    /*
-        无指示灯亮起：电压 < 3.3V（低于最低电量，需要关机）
-        1个指示灯亮起：3.3V ≤ 电压 < 3.6V（低电量状态）
-        2个指示灯亮起：3.6V ≤ 电压 < 4.0V（中等电量状态）
-        3个指示灯亮起：4.0V ≤ 电压 < 4.2V（较高电量状态）
-        4个指示灯全亮：电压 ≥ 4.2V（满电状态）
-    */
+        if (bat_percent >= 75)
+        {
+            LED_75_PERCENT_ON();
+        }
 
+        if (bat_percent >= 50)
+        {
+            LED_50_PERCENT_ON();
+        }
+
+        if (bat_percent >= 25)
+        {
+            LED_25_PERCENT_ON();
+        }
+
+        // USER_TO_DO 低电量时，要打开蓝牙，发送低电量报警
+        if (avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
+        {
+            printf("detect low power\n");
+        }
+    }
+
+    // 测试时使用，充电动画：
+    // if (is_in_charging_by_charger)
+    // {
+    //     LED_100_PERCENT_ON();
+    //     LED_75_PERCENT_ON();
+    //     LED_50_PERCENT_ON();
+    //     LED_25_PERCENT_ON();
+    // }
+    // else
+    // {
+    //     LED_100_PERCENT_OFF();
+    //     LED_75_PERCENT_OFF();
+    //     LED_50_PERCENT_OFF();
+    //     LED_25_PERCENT_OFF();
+    // }
 }

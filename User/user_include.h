@@ -20,6 +20,7 @@
 #include "uart_data_handle.h"
 #include "bluetooth_ic_handle.h"  
 #include "charge_det.h"   
+#include "low_power.h" // 低功耗
 
 #if 0
 // 需要延时再执行操作的任务ID
@@ -44,5 +45,7 @@ void delay_exec_reset(delay_exec_task_id_t task_id);
 void delay_exec_update(void);
 u8 delay_exec_is_pending(delay_exec_task_id_t task_id);
 #endif
+
+void user_init(void);
 
 #endif

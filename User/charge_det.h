@@ -3,8 +3,14 @@
 
 #include "include.h"
 
-extern volatile u8 is_in_charging_by_solar_panel;
-extern volatile u8 is_in_charging_by_charger;
+// 充电ic的CH1
+#define CHARGE_IC_CH1 P21
+#define CHARGE_IC_CH2 P22
+
+
+// extern volatile u8 is_in_charging_by_solar_panel;
+// extern volatile u8 is_in_charging_by_charger;
+extern volatile u8 is_in_charging;// 是否正在充电
 
 void charge_det_init(void);
 void charge_det(void);

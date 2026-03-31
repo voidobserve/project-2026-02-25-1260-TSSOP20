@@ -2,8 +2,11 @@
 #include "user_include.h"
 
 // volatile u8 charge_det_sta; // 检测充电的状态
-volatile u8 is_in_charging_by_solar_panel = 0; // 是否正在通过太阳能充电
-volatile u8 is_in_charging_by_charger = 0;     // 是否正在通过充电器充电
+static volatile u8 is_in_charging_by_solar_panel = 0; // 是否正在通过太阳能充电
+static volatile u8 is_in_charging_by_charger = 0;     // 是否正在通过充电器充电
+
+volatile u8 is_in_charging = 0;   // 是否正在充电
+volatile u8 is_charging_stop = 0; // 充电ic是否停止充电
 
 void charge_det_init(void)
 {
@@ -16,50 +19,8 @@ void charge_det_init(void)
     P2_PU |= GPIO_P21_PULL_UP(0x01);
 }
 
-// 5000 us / 100us
-#define CHARGE_IC_SCAN_PERIOD ((u16)5000 / 100) // 扫描充电ic引脚的周期，单位：100us
-void charge_ic_sacn_100us_isr(void)
-{
-    static u16 cur_scan_cnt = 0; // 记录当前扫描的周期计数
-    static u16 toggle_cnt = 0;
-    static u8 last_pin_level = 0;
-    u8 cur_pin_level = P21;
-
-    if (P22 != 0)
-    {
-        // 清空相关计数，重新开始扫描
-        toggle_cnt = 0;
-        cur_scan_cnt = 0;
-        return;
-    }
-
-    cur_scan_cnt++;
-    /*
-        P22 == 0 并且检测到 P21 有1KHz的信号，说明正在充电
-    */
-    if (cur_pin_level != last_pin_level)
-    {
-        toggle_cnt++;
-        last_pin_level = cur_pin_level;
-    }
-
-    if (cur_scan_cnt >= CHARGE_IC_SCAN_PERIOD)
-    {
-        cur_scan_cnt = 0;
-
-        /*
-            1KHz 的信号，在一个扫描周期内
-        */
-        if (toggle_cnt >= 8)
-        {
-            toggle_cnt = 0;
-            // is_in_charging = 1;
-        }
-    }
-}
-
 // 新增：专门用于检测1KHz信号的函数
-// 每100微秒调用一次，用来检测P21引脚上的1KHz信号
+// 每100微秒调用一次，用来检测 P21 引脚上的1KHz信号
 void detect_1khz_signal_100us(void)
 {
     // 新增变量用于检测1KHz信号
@@ -70,31 +31,34 @@ void detect_1khz_signal_100us(void)
 
     static u16 toggle_count_in_period = 0;     // 一个预期的1KHz周期内的翻转次数
     static u16 measurement_period_counter = 0; // 测量周期计数器
-    static u8 detected_signal_pattern = 0;     // 标记是否检测到1KHz信号模式
+    static u8 is_detected_signal = 0;          // 标志位，是否检测到1KHz信号
 
     static u8 last_pin_state = 0;
-    u8 current_pin_state = P21;
+    u8 current_pin_state = CHARGE_IC_CH1;
     u8 pin_changed = (current_pin_state != last_pin_state);
     // 如果连续多次检测到1KHz信号模式，则设置充电标志
-    static u8 consecutive_detection_count = 0;
+    static u8 consecutive_detection_count = 0; // 标志位，是否连续检测到多次充电信号
 
-    // 检查 是否为低电平，如果 不是低电平，则不进行检测
-    if (P22 != 0)
-    {
-        // 重置所有状态
-        detection_state = 0;
-        signal_high_duration = 0;
-        signal_low_duration = 0;
-        toggle_count_in_period = 0;
-        measurement_period_counter = 0;
-        detected_signal_pattern = 0;
-        is_in_charging_by_charger = 0;
-        last_pin_state = current_pin_state;
-        return;
-    }
+    // 未检测到充电信号的计数器
+    static u16 undetected_charging_count = 0;
 
     // 增加测量周期计数
     measurement_period_counter++;
+
+    // 检测到低电平，并且之前没有检测到充电信号
+    if (current_pin_state == 0 && consecutive_detection_count == 0)
+    {
+        undetected_charging_count++;
+        if (undetected_charging_count >= (u16)2000 * 10) // 时间单位：100us
+        {
+            undetected_charging_count = 0;
+            is_in_charging_by_charger = 0;
+        }
+    }
+    else
+    {
+        undetected_charging_count = 0;
+    }
 
     switch (detection_state)
     {
@@ -173,16 +137,16 @@ void detect_1khz_signal_100us(void)
 
         if (toggle_count_in_period >= 16)
         { // 在这段时间内，至少检测到   多少次翻转
-            detected_signal_pattern = 1;
+            is_detected_signal = 1;
         }
         else
         {
-            detected_signal_pattern = 0;
+            is_detected_signal = 0;
         }
         toggle_count_in_period = 0;
     }
 
-    if (detected_signal_pattern)
+    if (is_detected_signal)
     {
         consecutive_detection_count++;
         if (consecutive_detection_count >= 100)
@@ -194,12 +158,13 @@ void detect_1khz_signal_100us(void)
     else
     {
         consecutive_detection_count = 0;
-        is_in_charging_by_charger = 0;
+        // is_in_charging_by_charger = 0;
     }
 
     last_pin_state = current_pin_state;
 }
 
+// 检测太阳能充电
 void charge_det(void)
 {
     static u16 adc_val = 0;
@@ -226,4 +191,22 @@ void charge_det(void)
     {
         is_in_charging_by_solar_panel = 0;
     }
+
+    if (is_in_charging_by_charger || is_in_charging_by_solar_panel)
+    {
+        is_in_charging = 1;
+    }
+    else if (is_in_charging_by_charger == 0 && is_in_charging_by_solar_panel == 0)
+    {
+        is_in_charging = 0;
+    }
+
+    // USER_TO_DO
+    // 检测到正在充电时，关闭蓝牙，关闭灯光
+    // if (is_in_charging)
+    // {
+    //     led_status_set(LED_STATUS_OFF); // 关闭灯光
+    //     uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
+    //     // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关闭蓝牙的操作
+    // }
 }

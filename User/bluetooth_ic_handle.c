@@ -4,6 +4,20 @@
 
 volatile bluetooth_ic_t ble_ic;
 
+void ble_ic_enable(void)
+{
+}
+
+// 前置操作
+void ble_ic_disable_pre(void)
+{
+}
+
+// 后置操作
+void ble_ic_disable_post(void)
+{
+}
+
 void bluetooth_ic_handle_init(void)
 {
     // 连接到蓝牙ic的 power key，蓝牙开机时输出低电平，蓝牙关机之后输出高电平

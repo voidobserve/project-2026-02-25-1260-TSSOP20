@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BLUETOOTH_IC_HANDLE                                               03/30/2026 10:04:38 PAGE 1   
+C51 COMPILER V9.60.7.0   BLUETOOTH_IC_HANDLE                                               03/31/2026 17:56:21 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BLUETOOTH_IC_HANDLE
@@ -15,23 +15,37 @@ line level    source
    4          
    5          volatile bluetooth_ic_t ble_ic;
    6          
-   7          void bluetooth_ic_handle_init(void)
+   7          void ble_ic_enable(void)
    8          {
-   9   1          // 连接到蓝牙ic的 power key，蓝牙开机时输出低电平，蓝牙关机之后输出高电平
-  10   1          P2_MD0 &= ~GPIO_P23_MODE_SEL(0x03);
-  11   1          P2_MD0 |= GPIO_P23_MODE_SEL(0x01);
-  12   1          FOUT_S23 = GPIO_FOUT_AF_FUNC;
-  13   1          P23 = 1; // 默认高电平，不打开蓝牙
-  14   1      
-  15   1          ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
-  16   1          // ble_ic.connect_status = BLUETOOTH_IC_STATUS_DISCONNECT;
-  17   1          // ble_ic.is_amp_off = 0;
-  18   1          ble_ic.is_working = 0;
+   9   1      }
+  10          
+  11          // 前置操作
+  12          void ble_ic_disable_pre(void)
+  13          {
+  14   1      }
+  15          
+  16          // 后置操作
+  17          void ble_ic_disable_post(void)
+  18          {
   19   1      }
+  20          
+  21          void bluetooth_ic_handle_init(void)
+  22          {
+  23   1          // 连接到蓝牙ic的 power key，蓝牙开机时输出低电平，蓝牙关机之后输出高电平
+  24   1          P2_MD0 &= ~GPIO_P23_MODE_SEL(0x03);
+  25   1          P2_MD0 |= GPIO_P23_MODE_SEL(0x01);
+  26   1          FOUT_S23 = GPIO_FOUT_AF_FUNC;
+  27   1          P23 = 1; // 默认高电平，不打开蓝牙
+  28   1      
+  29   1          ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
+  30   1          // ble_ic.connect_status = BLUETOOTH_IC_STATUS_DISCONNECT;
+  31   1          // ble_ic.is_amp_off = 0;
+  32   1          ble_ic.is_working = 0;
+  33   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     26    ----
+   CODE SIZE        =     29    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =      2    ----
    PDATA SIZE       =   ----    ----

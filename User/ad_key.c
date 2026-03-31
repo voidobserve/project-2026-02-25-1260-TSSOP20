@@ -169,6 +169,12 @@ void ad_key_handle(void)
     //     }
     // }
 
+    if (is_in_charging)
+    {
+        return;
+    }
+
+
     ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
     ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
     ad_key_para.latest_key_event = KEY_EVENT_NONE;

@@ -1,0 +1,175 @@
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         03/31/2026 17:56:22 PAGE 1   
+
+
+C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LOW_POWER
+OBJECT MODULE PLACED IN .\Release\Objects\low_power.obj
+COMPILER INVOKED BY: C:\Keil_v5\C51\BIN\C51.EXE ..\..\User\low_power.c LARGE OPTIMIZE(9,SIZE) BROWSE ORDER INTVECTOR(0X0
+                    -00C) INCDIR(..\..\Libraries\Include;..\..\User;..\..\driver_on_chip) INTERVAL(3) DEBUG OBJECTEXTEND PRINT(.\Release\List
+                    -ings\low_power.lst) OBJECT(.\Release\Objects\low_power.obj)
+
+line level    source
+
+   1          #include "low_power.h"
+   2          
+   3          #define LOW_POWER_ENTER_TIME_WHEN_POWER_OFF ((u16)2000) // 关机后，多久进入低功耗，单位：ms
+   4          
+   5          static volatile is_low_power_enter_enable = 0;
+   6          
+   7          // 判断进入低功耗的条件是否成立
+   8          u8 is_low_power_condition_establish(void)
+   9          {
+  10   1          // 蓝牙ic正在工作、灯光打开、正在充电，返回0，表示不进入低功耗
+  11   1          return !(ble_ic.is_working || led_ctl.status != LED_STATUS_OFF || is_in_charging);
+  12   1      }
+  13          
+  14          // 进入低功耗的条件成立，则累加时间，满足时间后进入低功耗
+  15          void low_power_enter_timer_callback(void)
+  16          {
+  17   1          static u16 cnt = 0;
+  18   1          if (is_low_power_condition_establish())
+  19   1          {
+  20   2              cnt++;
+  21   2              if (cnt >= LOW_POWER_ENTER_TIME_WHEN_POWER_OFF)
+  22   2              {
+  23   3                  cnt = 0;
+  24   3                  is_low_power_enter_enable = 1;
+  25   3              }
+  26   2          }
+  27   1          else
+  28   1          {
+  29   2              cnt = 0;
+  30   2              is_low_power_enter_enable = 0;
+  31   2          }
+  32   1      }
+  33          
+  34          void user_deinit(void)
+  35          {
+  36   1          __DisableIRQ(TMR1_IRQn);  // 禁止 定时器 1 中断
+  37   1          __DisableIRQ(TMR0_IRQn);  // 禁止 定时器 0 中断
+  38   1          __DisableIRQ(ADC_IRQn);   // 禁止 ADC 中断
+  39   1          __DisableIRQ(UART0_IRQn); // 禁止 串口 0 中断
+  40   1      
+  41   1          TMR1_CONL &= ~(TMR_MODE_SEL(0x1)); // 不使能计数
+  42   1          TMR0_CONL &= ~(TMR_MODE_SEL(0x1)); // 不使能计数
+  43   1      
+  44   1          // 关闭PWM
+  45   1          P30 = 1; // 不点亮 黄灯
+  46   1          FOUT_S30 = GPIO_FOUT_AF_FUNC;
+  47   1          P27 = 1; // 不点亮 白灯
+  48   1          FOUT_S27 = GPIO_FOUT_AF_FUNC;
+  49   1          STMR_CNTEN &= ~STMR_0_CNT_EN(0x1); // 不使能 STMR 0
+  50   1          STMR_PWMEN &= ~STMR_0_PWM_EN(0x1); // 不使能 PWM输出
+  51   1          STMR_CNTEN &= ~STMR_1_CNT_EN(0x1); // 不使能 STMR 1
+  52   1          STMR_PWMEN &= ~STMR_1_PWM_EN(0x1); // 不使能 PWM输出
+  53   1      
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         03/31/2026 17:56:22 PAGE 2   
+
+  54   1          ADC_CFG0 &= ~(ADC_EN(0x01)); // 关闭ADC
+  55   1      
+  56   1          // 电池电量指示灯、红灯和蓝灯配置：
+  57   1      
+  58   1          // 关闭串口
+  59   1          P2_MD1 |= GPIO_P25_MODE_SEL(0x03); // TX脚配置为 模拟输入
+  60   1          P2_MD1 |= GPIO_P26_MODE_SEL(0x03); // RX脚配置为 模拟输入
+  61   1          FOUT_S25 = GPIO_FOUT_AF_FUNC;
+  62   1          FOUT_S26 = GPIO_FOUT_AF_FUNC;
+  63   1          UART0_CON0 &= ~UART_EN(0x01);
+  64   1      }
+  65          
+  66          void low_power_handle(void)
+  67          {
+  68   1          if (is_low_power_enter_enable)
+  69   1          {
+  70   2              is_low_power_enter_enable = 0;
+  71   2          }
+  72   1          else
+  73   1          {
+  74   2              return;
+  75   2          }
+  76   1      
+  77   1      #if USER_DEBUG_ENABLE
+  78   1          printf("stop in\n");
+  79   1      #endif
+  80   1      
+  81   1          // 配置 wake up timer
+  82   1          __EnableIRQ(WUT_IRQn); // 使能WUT中断
+  83   1          IE_EA = 1;             // 使能总中断
+  84   1      
+  85   1          TMR_ALLCON = WUT_CNT_CLR(0x1); // 清除计数值
+  86   1      
+  87   1          /*
+  88   1              使用64K时钟，64分频，那么1ms计数一次，如果周期值是(1000 - 1)，那么1s产生
+             -一次中断
+  89   1          */
+  90   1          WUT_PRH = TMR_PERIOD_VAL_H(((((u32)64000 / 64 / 100 - 1)) >> 8) & 0xFF); // 周期值
+  91   1          WUT_PRL = TMR_PERIOD_VAL_L(((((u32)64000 / 64 / 100 - 1)) >> 0) & 0xFF);
+  92   1          WUT_CONH = TMR_PRD_PND(0x1) | TMR_PRD_IRQ_EN(0x1);                           // 使能唤醒定时器
+  93   1          WUT_CONL = TMR_SOURCE_SEL(0x7) | TMR_PRESCALE_SEL(0x06) | TMR_MODE_SEL(0x1); // 选择系统时钟，6
+             -4分频，计数模式
+  94   1      
+  95   1          LP_WKPND = LP_WKUP_0_PCLR(0x1);  // 清除唤醒标志位
+  96   1          LP_WKCON = (LP_WKUP_0_EDG(0x0) | // 通道0高电平触发唤醒
+  97   1                      LP_WKUP_0_EN(0x1));  // 唤醒通道0使能
+  98   1      
+  99   1          CLK_CON0 &= ~CLK_SYSCLK_SEL(0x3);  // 系统时钟选择rc64k
+ 100   1          CLK_ACON0 &= ~CLK_AIP_HRC_EN(0x1); // 关闭HRC时钟
+ 101   1      
+ 102   1          // P17 = 1; // 用该引脚测试低功耗的时间
+ 103   1          // =============================================================
+ 104   1          // 进入Stop低功耗模式
+ 105   1          LP_CON |= LP_STOP_EN(0x1);
+ 106   1          // 退出
+ 107   1          // =============================================================
+ 108   1          // P17 = 0; // 用该引脚测试低功耗的时间
+ 109   1      
+ 110   1          // 关闭 wake up timer
+ 111   1          __DisableIRQ(WUT_IRQn);           // 禁止WUT中断
+ 112   1          WUT_CONH &= ~TMR_PRD_IRQ_EN(0x1); // 不使能计数中断
+ 113   1          WUT_CONL &= ~TMR_MODE_SEL(0x1);   // 不使能计数
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         03/31/2026 17:56:22 PAGE 3   
+
+ 114   1      
+ 115   1          CLK_ACON0 |= CLK_AIP_HRC_EN(0x1); // 使能HRC时钟
+ 116   1          LP_WKPND |= LP_WKUP_0_PCLR(0x1);  // 清除通道0唤醒标志位
+ 117   1          CLK_CON0 |= CLK_SYSCLK_SEL(0x3);  // 系统时钟选择hirc_clk
+ 118   1      
+ 119   1          // USER_TO_DO
+ 120   1          // 唤醒后，检测有没有按键操作、有没有充电，有则恢复工作，没有则回到低
+             -功耗
+ 121   1      #if USER_DEBUG_ENABLE
+ 122   1          printf("stop out\n");
+ 123   1      #endif
+ 124   1          user_init();
+ 125   1      }
+ 126          
+ 127          // wake up timer 中断服务函数
+ 128          void WUT_IRQHandler(void) interrupt WUT_IRQn
+ 129          {
+ 130   1          // 进入中断设置IP，不可删除
+ 131   1          __IRQnIPnPush(WUT_IRQn);
+ 132   1      
+ 133   1          // ---------------- 用户函数处理 -------------------
+ 134   1      
+ 135   1          // 周期中断
+ 136   1          if (WUT_CONH & TMR_PRD_PND(0x1))
+ 137   1          {
+ 138   2              WUT_CONH |= TMR_PRD_PND(0x1); // 清除pending
+ 139   2          }
+ 140   1      
+ 141   1          // 退出中断设置IP，不可删除
+ 142   1          __IRQnIPnPop(WUT_IRQn);
+ 143   1      }
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =    316    ----
+   CONSTANT SIZE    =     19    ----
+   XDATA SIZE       =      4    ----
+   PDATA SIZE       =   ----    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =   ----    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)
