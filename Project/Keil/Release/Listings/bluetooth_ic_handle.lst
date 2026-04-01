@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BLUETOOTH_IC_HANDLE                                               03/31/2026 17:56:21 PAGE 1   
+C51 COMPILER V9.60.7.0   BLUETOOTH_IC_HANDLE                                               04/01/2026 14:43:55 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BLUETOOTH_IC_HANDLE
@@ -11,45 +11,59 @@ line level    source
 
    1          #include "bluetooth_ic_handle.h"
    2          #include "user_config.h"
-   3          #include "uart0.h"
-   4          
-   5          volatile bluetooth_ic_t ble_ic;
-   6          
-   7          void ble_ic_enable(void)
-   8          {
-   9   1      }
-  10          
-  11          // 前置操作
-  12          void ble_ic_disable_pre(void)
-  13          {
-  14   1      }
-  15          
-  16          // 后置操作
-  17          void ble_ic_disable_post(void)
-  18          {
-  19   1      }
-  20          
-  21          void bluetooth_ic_handle_init(void)
-  22          {
-  23   1          // 连接到蓝牙ic的 power key，蓝牙开机时输出低电平，蓝牙关机之后输出高电平
-  24   1          P2_MD0 &= ~GPIO_P23_MODE_SEL(0x03);
-  25   1          P2_MD0 |= GPIO_P23_MODE_SEL(0x01);
-  26   1          FOUT_S23 = GPIO_FOUT_AF_FUNC;
-  27   1          P23 = 1; // 默认高电平，不打开蓝牙
-  28   1      
-  29   1          ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
-  30   1          // ble_ic.connect_status = BLUETOOTH_IC_STATUS_DISCONNECT;
-  31   1          // ble_ic.is_amp_off = 0;
-  32   1          ble_ic.is_working = 0;
-  33   1      }
+   3          #include "user_include.h"
+   4          #include "uart0.h"
+   5          
+   6          volatile bluetooth_ic_t ble_ic;
+   7          
+   8          // 蓝牙ic打开
+   9          void ble_ic_enable(void)
+  10          {
+  11   1          BLE_IC_POWER_KEY_PIN = 0;
+  12   1          delay_ms(30); // 等待蓝牙开机完毕
+  13   1          uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
+  14   1          ble_ic.is_working = 1;
+  15   1      }
+  16          
+  17          // 蓝牙ic关闭 前置操作
+  18          void ble_ic_disable_pre(void)
+  19          {
+  20   1          uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
+  21   1          // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关闭蓝牙的
+             -操作
+  22   1      }
+  23          
+  24          // 蓝牙ic关闭 后置操作
+  25          void ble_ic_disable_post(void)
+  26          {
+  27   1          // 收到蓝牙ic回复的数据后，关闭蓝牙ic
+  28   1          BLE_IC_POWER_KEY_PIN = 1;
+  29   1          ble_ic.is_working = 0;
+  30   1      }
+  31          
+  32          void bluetooth_ic_handle_init(void)
+  33          {
+  34   1          // 连接到蓝牙ic的 power key，蓝牙开机时输出低电平，蓝牙关机之后输出高电平
+  35   1          P2_MD0 &= ~GPIO_P23_MODE_SEL(0x03);
+  36   1          P2_MD0 |= GPIO_P23_MODE_SEL(0x01);
+  37   1          FOUT_S23 = GPIO_FOUT_AF_FUNC;
+  38   1          P23 = 1; // 默认高电平，不打开蓝牙
+  39   1      
+  40   1          ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
+  41   1          // ble_ic.connect_status = BLUETOOTH_IC_STATUS_DISCONNECT;
+  42   1          // ble_ic.is_amp_off = 0;
+  43   1          ble_ic.is_working = 0;
+  44   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     29    ----
+   CODE SIZE        =     60    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =      2    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
+C51 COMPILER V9.60.7.0   BLUETOOTH_IC_HANDLE                                               04/01/2026 14:43:55 PAGE 2   
+
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----
 END OF MODULE INFORMATION.

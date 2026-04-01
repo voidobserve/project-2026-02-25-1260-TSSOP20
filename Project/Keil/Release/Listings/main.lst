@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              03/31/2026 17:56:20 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              04/01/2026 14:43:54 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
               {
                   delay_exec_array[task_id].cur_cnt = 0;
                   delay_exec_array[task_id].dest_cnt = interval_ms;
-C51 COMPILER V9.60.7.0   MAIN                                                              03/31/2026 17:56:20 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              04/01/2026 14:43:54 PAGE 2   
 
                   delay_exec_array[task_id].is_pending = 0;
                   delay_exec_array[task_id].is_enable = 1;
@@ -114,7 +114,7 @@ line level    source
               #endif
  102          
  103          void user_init(void)
- 104          { 
+ 104          {
  105   1          adc_pin_init();
  106   1          adc_init();
  107   1          led_init();
@@ -126,7 +126,7 @@ line level    source
  113   1          charge_det_init();
  114   1          // delay_exec_init();
  115   1      
-C51 COMPILER V9.60.7.0   MAIN                                                              03/31/2026 17:56:20 PAGE 3   
+C51 COMPILER V9.60.7.0   MAIN                                                              04/01/2026 14:43:54 PAGE 3   
 
  116   1          // 需要等外设都准备好，再跑时间
  117   1          timer0_init();
@@ -136,7 +136,7 @@ line level    source
  121   1          user_debug_pin_init();
  122   1          // timebase_init();
  123   1          printf("sys init\n");
- 124   1      #endif 
+ 124   1      #endif
  125   1      }
  126          
  127          void main(void)
@@ -165,7 +165,7 @@ line level    source
  149   2      
  150   2              charge_det();
  151   2      
- 152   2              // low_power_handle();
+ 152   2              // low_power_handle(); 
  153   2      
  154   2      #if USER_DEBUG_ENABLE
  155   2              // user_test_main();

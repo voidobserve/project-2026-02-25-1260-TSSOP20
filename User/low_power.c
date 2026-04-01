@@ -31,7 +31,7 @@ void low_power_enter_timer_callback(void)
     }
 }
 
-void user_deinit(void)
+void low_power_in(void)
 {
     __DisableIRQ(TMR1_IRQn);  // 禁止 定时器 1 中断
     __DisableIRQ(TMR0_IRQn);  // 禁止 定时器 0 中断
@@ -61,29 +61,12 @@ void user_deinit(void)
     FOUT_S25 = GPIO_FOUT_AF_FUNC;
     FOUT_S26 = GPIO_FOUT_AF_FUNC;
     UART0_CON0 &= ~UART_EN(0x01);
-}
 
-void low_power_handle(void)
-{
-    if (is_low_power_enter_enable)
-    {
-        is_low_power_enter_enable = 0;
-    }
-    else
-    {
-        return;
-    }
-
-#if USER_DEBUG_ENABLE
-    printf("stop in\n");
-#endif
-
+    // ==========================================================
     // 配置 wake up timer
-    __EnableIRQ(WUT_IRQn); // 使能WUT中断
-    IE_EA = 1;             // 使能总中断
-
+    __EnableIRQ(WUT_IRQn);         // 使能WUT中断
+    IE_EA = 1;                     // 使能总中断
     TMR_ALLCON = WUT_CNT_CLR(0x1); // 清除计数值
-
     /*
         使用64K时钟，64分频，那么1ms计数一次，如果周期值是(1000 - 1)，那么1s产生一次中断
     */
@@ -106,7 +89,10 @@ void low_power_handle(void)
     // 退出
     // =============================================================
     // P17 = 0; // 用该引脚测试低功耗的时间
+}
 
+void low_power_out(void)
+{
     // 关闭 wake up timer
     __DisableIRQ(WUT_IRQn);           // 禁止WUT中断
     WUT_CONH &= ~TMR_PRD_IRQ_EN(0x1); // 不使能计数中断
@@ -116,11 +102,71 @@ void low_power_handle(void)
     LP_WKPND |= LP_WKUP_0_PCLR(0x1);  // 清除通道0唤醒标志位
     CLK_CON0 |= CLK_SYSCLK_SEL(0x3);  // 系统时钟选择hirc_clk
 
-    // USER_TO_DO
-    // 唤醒后，检测有没有按键操作、有没有充电，有则恢复工作，没有则回到低功耗
 #if USER_DEBUG_ENABLE
     printf("stop out\n");
 #endif
+}
+
+void low_power_handle(void)
+{
+    u16 adc_val;
+
+    if (is_low_power_enter_enable)
+    {
+        is_low_power_enter_enable = 0;
+    }
+    else
+    {
+        return;
+    }
+label_low_power_in:
+
+#if USER_DEBUG_ENABLE
+    printf("stop in\n");
+#endif
+
+    low_power_in();
+    low_power_out();
+    is_sent_low_bat_alert = 0;
+
+    // USER_TO_DO
+    // 唤醒后，检测有没有按键操作、有没有充电，有则恢复工作，没有则回到低功耗
+    //
+    if (0)
+    {
+        u8 is_back_to_low_power = 1;
+
+        // USER_TO_DO 需要使能adc
+
+        adc_channel_sel(ADC_CHANNEL_SEL_AD_KEY);
+        delay_ms(1);
+        adc_val = adc_get_val_once();
+        // 如果ad值小于ad按键的阈值，说明有按键按下
+        if (adc_val < AD_KEY_INDEX_MAX_VAL)
+        {
+            // 有按键按下
+            is_back_to_low_power = 0;
+        }
+
+        adc_channel_sel(ADC_CHANNEL_SEL_SOLAR_DET);
+        delay_ms(1);
+        adc_val = adc_get_val_once();
+        if (((u32)adc_val * 4096 / 2400 / 2) >= 4500)
+        {
+            // 如果检测到大于4.5V，认为有太阳能充电
+            is_back_to_low_power = 0;
+        }
+
+        // USER_TO_DO 需要检查type-c充电口一侧的电压
+        
+
+
+        if (is_back_to_low_power)
+        {
+            goto label_low_power_in;
+        }
+    }
+
     user_init();
 }
 

@@ -1,23 +1,33 @@
 #include "battery_monitor.h"
 #include "user_include.h"
 
-// 电池模型参数
-#define BATTERY_FULL_VOLTAGE 4200        // 满电电压 (mV)
-#define BATTERY_EMPTY_VOLTAGE 3300       // 空电电压 (mV)
-#define BATTERY_LOW_WARNING_VOLTAGE 3600 // 低电量警告电压 (mV)
+// volatile u8 is_send_low_battery_enable = 0;
 
-volatile u8 is_send_low_battery_enable = 0;
+// 是否发送了低电量报警（在第一次上电、低功耗唤醒之后，需要清零）
+volatile u8 is_sent_low_bat_alert = 0;
 
+// ====================================================================
 static volatile u8 is_bat_vol_buff_add_enable = 0;     // 是否允许往电池电压数组中放入数据
 static volatile u8 is_bat_vol_buff_get_avg_enable = 0; // 是否允许往电池电压数组中获取平均值
 
-volatile bat_vol_update_sta_t bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
+// 控制一段时间内采集电池电压峰值（电压最大值）
+static volatile bat_vol_update_sta_t bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
 static volatile u16 bat_vol_update_cnt = 0;
 
+// 记录一段时间内采集到的电压值：
 static volatile u16 bat_vol_history_buff[VOLTAGE_HISTORY_SIZE] = {0};
 static volatile u8 bat_vol_history_buff_idx = 0;
+// ====================================================================
 
 volatile u8 bat_percent = 0;
+
+// 只在采集使用：
+static volatile u16 voltage_mv = 0;     //
+static volatile u16 max_voltage_mv = 0; // 存放一段时间内采集到的最大电压值（只在采集使用，不能作为最终的判断使用）
+volatile u16 avg_voltage_mv = 0;
+
+static u8 percent = 0;      // 电池电量百分比
+static u8 last_percent = 0; // 记录上一次采集到的电量百分比，用来控制电量百分比更新，充电时百分比不能下降，放电时百分比不能上升
 
 // 由定时器调用，控制一段时间内，往数组中放入数据的时间
 void bat_vol_buff_add_timer_callback(void)
@@ -82,7 +92,7 @@ u16 get_battery_voltage_by_adc(u16 adc_val)
 
     if (is_in_charging)
     {
-        //  // 充电时，减去 0.1 V，作为补偿。如果电压接近 4.2V 时，不用补偿 
+        //  // 充电时，减去 0.1 V，作为补偿。如果电压接近 4.2V 时，不用补偿
         if ((voltage_mv <= 4000) && voltage_mv > 100)
         {
             voltage_mv -= 100;
@@ -92,16 +102,16 @@ u16 get_battery_voltage_by_adc(u16 adc_val)
     return voltage_mv;
 }
 
-void send_low_battery_timer_callback(void)
-{
-    static u32 cnt = 0;
-    cnt++;
-    if (cnt >= (u32)30 * 1000)
-    {
-        is_send_low_battery_enable = 1;
-        cnt = 0;
-    }
-}
+// void send_low_battery_timer_callback(void)
+// {
+//     static u32 cnt = 0;
+//     cnt++;
+//     if (cnt >= (u32)30 * 1000)
+//     {
+//         is_send_low_battery_enable = 1;
+//         cnt = 0;
+//     }
+// }
 
 // 根据电压值计算初始电量百分比 (线性估算)
 u8 get_battery_percentage_by_voltage(u16 voltage_mv)
@@ -154,30 +164,33 @@ u16 bat_vol_history_buff_get_avg(void)
     return (u16)(ret / VOLTAGE_HISTORY_SIZE);
 }
 
-// 从系统获取当前时间戳 (需要在其他地方实现)
-// extern u32 get_system_tick_count(void); // 假设这个函数提供系统运行时间(毫秒)
-// volatile u32 sys_time;
-// void sys_time_add(void)
-// {
-//     sys_time++;
-// }
+// 在低功耗唤醒后调用，由唤醒后第一次采集到的ad值来初始化相关数据
+void battery_monitor_init_by_adc_val(u16 adc_val)
+{
+    voltage_mv = get_battery_voltage_by_adc(adc_val);
+    bat_vol_history_buff_init(voltage_mv);
+    avg_voltage_mv = voltage_mv;
+    percent = get_battery_percentage_by_voltage(voltage_mv);
+    last_percent = percent;
+    bat_percent = percent;
+}
 
-// u32 get_system_tick_count(void)
-// {
-//     return sys_time;
-// }
+#if USER_DEBUG_ENABLE
+// 测试用，手动改变得到的电池电压
+void user_test_init_by_voltage_mv(u16 test_voltage_mv)
+{
+    voltage_mv = test_voltage_mv;
+    bat_vol_history_buff_init(voltage_mv);
+    avg_voltage_mv = voltage_mv;
+    percent = get_battery_percentage_by_voltage(voltage_mv);
+    last_percent = percent;
+    bat_percent = percent;
+}
+#endif
 
 // 修改后的电池监控处理函数
 void battery_monitor_handle(void)
 {
-    // 只在采集使用：
-    static volatile u16 voltage_mv = 0;     //
-    static volatile u16 max_voltage_mv = 0; // 存放一段时间内采集到的最大电压值（只在采集使用，不能作为最终的判断使用）
-    static volatile u16 avg_voltage_mv = 0;
-
-    static u8 percent = 0;
-    static u8 last_percent = 0;
-
     u16 adc_val = 0;
     u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
 
@@ -194,7 +207,6 @@ void battery_monitor_handle(void)
             // 如果还没有采集过电池电压，直接将第一次采集到的ad值转换成电池电压
             voltage_mv = cur_voltage_mv;
 
-            // 初始化放电模型
             bat_vol_history_buff_init(voltage_mv);
             avg_voltage_mv = bat_vol_history_buff_get_avg();
             percent = get_battery_percentage_by_voltage(avg_voltage_mv);
@@ -299,46 +311,63 @@ void battery_monitor_handle(void)
     {
         led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN;
     }
-    // else // USER_TO_DO 这里只在测试时使用，不在充电，也不在放电，才关闭电池电量指示灯
     // 不在充电、蓝牙ic不工作、灯光关闭时，关闭电量指示灯
     else if (is_in_charging == 0 &&
              ble_ic.is_working == 0 &&
              led_ctl.status == LED_STATUS_OFF)
     {
         led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
-        LED_100_PERCENT_OFF();
-        LED_75_PERCENT_OFF();
-        LED_50_PERCENT_OFF();
-        LED_25_PERCENT_OFF();
     }
     // 不在充电，但是蓝牙ic或者灯光打开，根据电池电量来点亮对应指示灯
     else if (is_in_charging == 0 &&
              (ble_ic.is_working || led_ctl.status != LED_STATUS_OFF))
     {
-        if (bat_percent >= 90)
-        {
-            LED_100_PERCENT_ON();
-        }
-
-        if (bat_percent >= 75)
-        {
-            LED_75_PERCENT_ON();
-        }
-
-        if (bat_percent >= 50)
-        {
-            LED_50_PERCENT_ON();
-        }
-
-        if (bat_percent >= 25)
-        {
-            LED_25_PERCENT_ON();
-        }
+        led_bat_level_sta = LED_BAT_LEVEL_STA_DISCHARGE;
 
         // USER_TO_DO 低电量时，要打开蓝牙，发送低电量报警
-        if (avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
+        /*
+            低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
+        */
+        if (is_sent_low_bat_alert == 0 &&
+            avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
         {
+            // u8 i; // 循环计数值，控制连续发送低电量报警的次数
+#if USER_DEBUG_ENABLE
             printf("detect low power\n");
+#endif
+            if (ble_ic.is_working == 0)
+            {
+                ble_ic_enable();
+            }
+
+            // for (i = 0; i < 1; i++)
+            {
+                uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
+            }
+
+            is_sent_low_bat_alert = 1;
+        }
+
+        // 到了关机对应的电压
+        if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+        {
+#if USER_DEBUG_ENABLE 
+            printf("detect bat power empty\n");
+#endif 
+
+            // 关闭蓝牙
+            if (ble_ic.is_working)
+            {
+                uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
+                delay_ms(5000);
+                ble_ic_disable_pre();
+            }
+
+            // 关闭灯光
+            if (led_ctl.status != LED_STATUS_OFF)
+            {
+                led_status_set(LED_STATUS_OFF);
+            }
         }
     }
 

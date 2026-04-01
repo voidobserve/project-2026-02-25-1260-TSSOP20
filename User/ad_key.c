@@ -154,30 +154,20 @@ void ad_key_handle(void)
         return;
     }
 
-    // USER_TO_DO 需要注意低电量不执行操作
-    // 低电量，函数直接返回
-    // if ((led_ctl.status == LED_STATUS_OFF) &&
-    //     (ble_ic.is_working == 0) &&
-    //     (is_in_charging_by_charger == 0) &&
-    //     (is_in_charging_by_solar_panel == 0))
-    // {
-    //     // u8 bat_percent = slip_avg_get_filtered_val(); 
-    //     // 低电量，函数直接返回
-    //     if (stable_bat_percent < 10)
-    //     {
-    //         return;
-    //     }
-    // }
-
-    if (is_in_charging)
-    {
-        return;
-    }
-
-
     ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
     ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
     ad_key_para.latest_key_event = KEY_EVENT_NONE;
+
+    // 充电时、或者电池电量低于 xx 时，不执行按键操作
+    if (is_in_charging || avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+    {
+        /*
+            这里需要清空按键事件，否则在充电期间按下了按键，
+            退出充电时会立即进入对应的处理程序
+        */
+        ad_key_event = AD_KEY_EVENT_NONE;
+        return;
+    }
 
     switch (ad_key_event)
     {
@@ -227,6 +217,10 @@ void ad_key_handle(void)
 #if USER_DEBUG_ENABLE
         printf("key 2 long\n");
 #endif
+
+        // USER_TO_DO
+        user_test_init_by_voltage_mv(3300);
+
         break;
 
     case AD_KEY_EVENT_ID_2_HOLD:
@@ -302,15 +296,17 @@ void ad_key_handle(void)
         // 打开蓝牙/关闭蓝牙
         if (ble_ic.is_working)
         {
-            uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
-            // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关闭蓝牙的操作
+            // uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
+            // // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关闭蓝牙的操作
+            ble_ic_disable_pre();
         }
         else
         {
-            BLE_IC_POWER_KEY_PIN = 0;
-            delay_ms(30); // 等待蓝牙开机完毕
-            uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
-            ble_ic.is_working = 1;
+            // BLE_IC_POWER_KEY_PIN = 0;
+            // delay_ms(30); // 等待蓝牙开机完毕
+            // uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
+            // ble_ic.is_working = 1;
+            ble_ic_enable();
         }
         break;
 

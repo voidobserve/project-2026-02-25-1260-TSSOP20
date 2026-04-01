@@ -39,5 +39,8 @@ u16 adc_get_val(adc_channel_sel_t adc_channel);
 u8 adc_get_update_flag(adc_channel_sel_t adc_channel);
 void adc_clear_update_flag(adc_channel_sel_t adc_channel);
 
+// 下面开放的接口，要在adc中断屏蔽的时候使用，目前只在低功耗唤醒之后使用
+void adc_channel_sel(adc_channel_sel_t adc_channel);
+u16 adc_get_val_once(void);
 
 #endif

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   ADC                                                               03/31/2026 17:56:20 PAGE 1   
+C51 COMPILER V9.60.7.0   ADC                                                               04/01/2026 11:53:32 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE ADC
@@ -62,7 +62,7 @@ line level    source
   50          /**
   51           * @brief 更新通道对应的ad值（由ad中断更新）
   52           *
-C51 COMPILER V9.60.7.0   ADC                                                               03/31/2026 17:56:20 PAGE 2   
+C51 COMPILER V9.60.7.0   ADC                                                               04/01/2026 11:53:32 PAGE 2   
 
   53           * @param adc_channel
   54           * @param adc_val
@@ -126,7 +126,7 @@ line level    source
  112   2      
  113   2          default:
  114   2              break;
-C51 COMPILER V9.60.7.0   ADC                                                               03/31/2026 17:56:20 PAGE 3   
+C51 COMPILER V9.60.7.0   ADC                                                               04/01/2026 11:53:32 PAGE 3   
 
  115   2          }
  116   1      
@@ -177,7 +177,7 @@ line level    source
  161   2          case ADC_CHANNEL_SEL_SOLAR_DET:
  162   2              //  0 ~ 5 V， 经过二极管0.3V后，实际的充电电压范围：0 ~ 4.7V
  163   2              // 经过 1/2 分压后，单片机检测到的电压范围：0 ~ 2.35V
- 164   2              // 使用2.4V参考电压 
+ 164   2              // 使用2.4V参考电压
  165   2              ADC_ACON1 |= ADC_VREF_SEL(0x02) | // 选择 内部2.4V 作为参考电压
  166   2                           ADC_TEN_SEL(0x03) |  // 关闭测试信号
  167   2                           ADC_INREF_SEL(0x01); // 使能内部参考电压
@@ -190,86 +190,95 @@ line level    source
  174   1      
  175   1          ADC_CFG0 |= ADC_CHAN0_EN(0x1) | // 使能通道0
  176   1                      ADC_EN(0x1);        // 使能adc
-C51 COMPILER V9.60.7.0   ADC                                                               03/31/2026 17:56:20 PAGE 4   
+C51 COMPILER V9.60.7.0   ADC                                                               04/01/2026 11:53:32 PAGE 4   
 
  177   1      }
  178          
- 179          // 由1ms及以上的定时器调用
- 180          void adc_scan(void)
- 181          {
- 182   1          if (ADC_STATUS_IDLE == cur_adc_status ||
- 183   1              ADC_STATUS_SEL_SOLAR_DET == cur_adc_status)
- 184   1          {
- 185   2              adc_channel_sel(ADC_CHANNEL_SEL_AD_KEY);
- 186   2              cur_adc_status = ADC_STATUS_SEL_AD_KEY_WAITING;
- 187   2          }
- 188   1          else if (ADC_STATUS_SEL_AD_KEY_WAITING == cur_adc_status)
- 189   1          {
- 190   2              // 开启转换，之后在ad中断获取ad值
- 191   2              ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
- 192   2              cur_adc_status = ADC_STATUS_SEL_AD_KEY;
- 193   2          }
- 194   1          else if (ADC_STATUS_SEL_AD_KEY == cur_adc_status)
- 195   1          {
- 196   2              adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
- 197   2              cur_adc_status = ADC_STATUS_SEL_BAT_DET_WAITING;
- 198   2          }
- 199   1          else if (ADC_STATUS_SEL_BAT_DET_WAITING == cur_adc_status)
- 200   1          {
- 201   2              // 开启转换，之后在ad中断获取ad值
- 202   2              ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
- 203   2              cur_adc_status = ADC_STATUS_SEL_BAT_DET;
- 204   2          }
- 205   1          else if (ADC_STATUS_SEL_BAT_DET == cur_adc_status)
- 206   1          {
- 207   2              adc_channel_sel(ADC_CHANNEL_SEL_SOLAR_DET);
- 208   2              cur_adc_status = ADC_STATUS_SEL_SOLAR_DET_WAITING;
- 209   2          }
- 210   1          else if (ADC_STATUS_SEL_SOLAR_DET_WAITING == cur_adc_status)
- 211   1          {
- 212   2              // 开启转换，之后在ad中断获取ad值
- 213   2              ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
- 214   2              cur_adc_status = ADC_STATUS_SEL_SOLAR_DET;
- 215   2          }
- 216   1      }
- 217          
- 218          void ADC_IRQHandler(void) interrupt ADC_IRQn
- 219          {
- 220   1          volatile u16 adc_val;
- 221   1      
- 222   1          // 进入中断设置IP，不可删除
- 223   1          __IRQnIPnPush(ADC_IRQn);
- 224   1      
- 225   1          // ---------------- 用户函数处理 -------------------
- 226   1      
- 227   1          if (ADC_STA & ADC_CHAN0_DONE(0x01))
- 228   1          {
- 229   2              adc_val = (ADC_DATAH0 << 4) | (ADC_DATAL0 >> 4); // 先接收ad值
- 230   2              if (ADC_STATUS_SEL_AD_KEY == cur_adc_status)
- 231   2              {
- 232   3                  adc_update_val(ADC_CHANNEL_SEL_AD_KEY, adc_val);
- 233   3              }
- 234   2              else if (ADC_STATUS_SEL_BAT_DET == cur_adc_status)
- 235   2              {
- 236   3                  adc_update_val(ADC_CHANNEL_SEL_BAT_DET, adc_val);
- 237   3              }
- 238   2              else if (ADC_STATUS_SEL_SOLAR_DET == cur_adc_status)
-C51 COMPILER V9.60.7.0   ADC                                                               03/31/2026 17:56:20 PAGE 5   
+ 179          u16 adc_get_val_once(void)
+ 180          {
+ 181   1          ADC_CFG0 |= ADC_CHAN0_TRG(0x1); // 触发ADC0转换
+ 182   1          while (!(ADC_STA & ADC_CHAN0_DONE(0x1)))
+ 183   1              ;                                           // 等待转换完成
+ 184   1          ADC_STA = ADC_CHAN0_DONE(0x1);                  // 清除ADC0转换完成标志位
+ 185   1          return ((ADC_DATAH0 << 4) | (ADC_DATAL0 >> 4)); // 读取ADC0的值
+ 186   1      }
+ 187          
+ 188          // 由1ms及以上的定时器调用
+ 189          void adc_scan(void)
+ 190          {
+ 191   1          if (ADC_STATUS_IDLE == cur_adc_status ||
+ 192   1              ADC_STATUS_SEL_SOLAR_DET == cur_adc_status)
+ 193   1          {
+ 194   2              adc_channel_sel(ADC_CHANNEL_SEL_AD_KEY);
+ 195   2              cur_adc_status = ADC_STATUS_SEL_AD_KEY_WAITING;
+ 196   2          }
+ 197   1          else if (ADC_STATUS_SEL_AD_KEY_WAITING == cur_adc_status)
+ 198   1          {
+ 199   2              // 开启转换，之后在ad中断获取ad值
+ 200   2              ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
+ 201   2              cur_adc_status = ADC_STATUS_SEL_AD_KEY;
+ 202   2          }
+ 203   1          else if (ADC_STATUS_SEL_AD_KEY == cur_adc_status)
+ 204   1          {
+ 205   2              adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
+ 206   2              cur_adc_status = ADC_STATUS_SEL_BAT_DET_WAITING;
+ 207   2          }
+ 208   1          else if (ADC_STATUS_SEL_BAT_DET_WAITING == cur_adc_status)
+ 209   1          {
+ 210   2              // 开启转换，之后在ad中断获取ad值
+ 211   2              ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
+ 212   2              cur_adc_status = ADC_STATUS_SEL_BAT_DET;
+ 213   2          }
+ 214   1          else if (ADC_STATUS_SEL_BAT_DET == cur_adc_status)
+ 215   1          {
+ 216   2              adc_channel_sel(ADC_CHANNEL_SEL_SOLAR_DET);
+ 217   2              cur_adc_status = ADC_STATUS_SEL_SOLAR_DET_WAITING;
+ 218   2          }
+ 219   1          else if (ADC_STATUS_SEL_SOLAR_DET_WAITING == cur_adc_status)
+ 220   1          {
+ 221   2              // 开启转换，之后在ad中断获取ad值
+ 222   2              ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
+ 223   2              cur_adc_status = ADC_STATUS_SEL_SOLAR_DET;
+ 224   2          }
+ 225   1      }
+ 226          
+ 227          void ADC_IRQHandler(void) interrupt ADC_IRQn
+ 228          {
+ 229   1          volatile u16 adc_val;
+ 230   1      
+ 231   1          // 进入中断设置IP，不可删除
+ 232   1          __IRQnIPnPush(ADC_IRQn);
+ 233   1      
+ 234   1          // ---------------- 用户函数处理 -------------------
+ 235   1      
+ 236   1          if (ADC_STA & ADC_CHAN0_DONE(0x01))
+ 237   1          {
+ 238   2              adc_val = (ADC_DATAH0 << 4) | (ADC_DATAL0 >> 4); // 先接收ad值
+C51 COMPILER V9.60.7.0   ADC                                                               04/01/2026 11:53:32 PAGE 5   
 
- 239   2              {
- 240   3                  adc_update_val(ADC_CHANNEL_SEL_SOLAR_DET, adc_val);
- 241   3              }
- 242   2      
- 243   2              ADC_STA |= ADC_CHAN0_DONE(0x01); // 清除ADC0转换完成标志位
- 244   2          }
- 245   1      
- 246   1          // 退出中断设置IP，不可删除
- 247   1          __IRQnIPnPop(ADC_IRQn);
- 248   1      }
+ 239   2              if (ADC_STATUS_SEL_AD_KEY == cur_adc_status)
+ 240   2              {
+ 241   3                  adc_update_val(ADC_CHANNEL_SEL_AD_KEY, adc_val);
+ 242   3              }
+ 243   2              else if (ADC_STATUS_SEL_BAT_DET == cur_adc_status)
+ 244   2              {
+ 245   3                  adc_update_val(ADC_CHANNEL_SEL_BAT_DET, adc_val);
+ 246   3              }
+ 247   2              else if (ADC_STATUS_SEL_SOLAR_DET == cur_adc_status)
+ 248   2              {
+ 249   3                  adc_update_val(ADC_CHANNEL_SEL_SOLAR_DET, adc_val);
+ 250   3              }
+ 251   2      
+ 252   2              ADC_STA |= ADC_CHAN0_DONE(0x01); // 清除ADC0转换完成标志位
+ 253   2          }
+ 254   1      
+ 255   1          // 退出中断设置IP，不可删除
+ 256   1          __IRQnIPnPop(ADC_IRQn);
+ 257   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    475    ----
+   CODE SIZE        =    505    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =      7       2
    PDATA SIZE       =   ----    ----

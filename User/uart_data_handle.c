@@ -302,8 +302,10 @@ void uart_data_handle(void)
     case UART_RECV_CMD_BLE_AMP_OFF:
         // printf("recv amp off\n");
         // 收到蓝牙ic回复的数据后，关闭蓝牙ic
-        BLE_IC_POWER_KEY_PIN = 1;
-        ble_ic.is_working = 0;
+        // BLE_IC_POWER_KEY_PIN = 1;
+        // ble_ic.is_working = 0;
+
+        ble_ic_disable_post();
         break;
 
     default:

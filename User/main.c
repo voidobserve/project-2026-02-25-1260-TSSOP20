@@ -101,7 +101,7 @@ void delay_exec_handle(void)
 #endif
 
 void user_init(void)
-{ 
+{
     adc_pin_init();
     adc_init();
     led_init();
@@ -121,7 +121,7 @@ void user_init(void)
     user_debug_pin_init();
     // timebase_init();
     printf("sys init\n");
-#endif 
+#endif
 }
 
 void main(void)
@@ -149,7 +149,7 @@ void main(void)
 
         charge_det();
 
-        // low_power_handle();
+        // low_power_handle(); 
 
 #if USER_DEBUG_ENABLE
         // user_test_main();

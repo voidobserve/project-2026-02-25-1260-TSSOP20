@@ -13,7 +13,7 @@
 
 #define AD_KEY_PULL_UP_VAL ((u32)10 * 1000) // 按键上拉电阻阻值，单位：R
 
-// ad按键下拉电阻阻值，按从小到大排列（注意要修饰成u32类型，否则下面的计算会溢出），单位：R
+// ad按键下拉电阻阻值，按 从小到大 排列（注意要修饰成u32类型，否则下面的计算会溢出），单位：R
 #define AD_KEY_PULL_DOWN_VAL_1 ((u32)0)         //
 #define AD_KEY_PULL_DOWN_VAL_2 ((u32)2200)      //
 #define AD_KEY_PULL_DOWN_VAL_3 ((u32)7500)      //
@@ -34,6 +34,7 @@
 #define AD_KEY_INDEX_2_VAL ((u16)(((u32)AD_KEY_2_PRESS_VAL + AD_KEY_3_PRESS_VAL) / 2))
 #define AD_KEY_INDEX_3_VAL ((u16)(((u32)AD_KEY_3_PRESS_VAL + AD_KEY_4_PRESS_VAL) / 2))
 #define AD_KEY_INDEX_4_VAL ((u16)(((u32)AD_KEY_4_PRESS_VAL + AD_KEY_NONE_VAL) / 2)) 
+#define AD_KEY_INDEX_MAX_VAL ((u16)AD_KEY_INDEX_4_VAL) // 作为ad按键按下的阈值，只要ad值小于该值，说明ad按键按下
 
 #define AD_KEY_EFFECT_EVENT_NUMS (4) // 单个ad按键的有效按键事件个数（click、long、hold、loose）
 

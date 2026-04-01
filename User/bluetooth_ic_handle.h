@@ -30,4 +30,8 @@ extern volatile bluetooth_ic_t ble_ic;
 
 void bluetooth_ic_handle_init(void);
 
+void ble_ic_enable(void);
+void ble_ic_disable_pre(void);
+void ble_ic_disable_post(void);
+
 #endif

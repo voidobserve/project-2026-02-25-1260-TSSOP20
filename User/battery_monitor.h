@@ -3,6 +3,12 @@
 
 #include "include.h"
 #include "adc.h" 
+#include "user_include.h"
+
+// 电池模型参数
+#define BATTERY_FULL_VOLTAGE 4200        // 满电电压 (mV)
+#define BATTERY_EMPTY_VOLTAGE 3300       // 空电电压 (mV)
+#define BATTERY_LOW_WARNING_VOLTAGE 3600 // 低电量警告电压 (mV)
 
 // ADC相关参数 (电池检测使用内部2.0V参考电压，VDD 1/5分压)
 #define BATTERY_ADC_REF_VOLTAGE_MV 2000 // 内部参考电压 2.0V
@@ -22,9 +28,6 @@
 #define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT \
     (BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER * VOLTAGE_HISTORY_SIZE)
 
-extern volatile u8 is_send_low_battery_enable;
-
-extern volatile u8 bat_percent;
 
 // 电池电量更新模块的状态
 enum
@@ -35,15 +38,25 @@ enum
 }; // battery voltage update status
 typedef u8 bat_vol_update_sta_t;
 
-void send_low_battery_timer_callback(void);
+// extern volatile u8 is_send_low_battery_enable;
+
+extern volatile u8 bat_percent;
+extern volatile u8 is_sent_low_bat_alert;
+extern volatile u16 avg_voltage_mv;
+
+// void send_low_battery_timer_callback(void);
 
 // 计算电池电压对应的百分比 (0-100)
 u8 get_battery_percentage_by_voltage(u16 voltage_mv);
-
+void battery_monitor_init_by_adc_val(u16 adc_val);
 void battery_monitor_handle(void);
 
 void bat_vol_update_timer_callback(void);
 void bat_vol_buff_add_timer_callback(void);
 void bat_vol_buff_get_avg_timer_callback(void);
+
+#if USER_DEBUG_ENABLE
+void user_test_init_by_voltage_mv(u16 test_voltage_mv);
+#endif
 
 #endif // __BATTERY_MONITOR_H__

@@ -161,7 +161,7 @@ void adc_channel_sel(adc_channel_sel_t adc_channel)
     case ADC_CHANNEL_SEL_SOLAR_DET:
         //  0 ~ 5 V， 经过二极管0.3V后，实际的充电电压范围：0 ~ 4.7V
         // 经过 1/2 分压后，单片机检测到的电压范围：0 ~ 2.35V
-        // 使用2.4V参考电压 
+        // 使用2.4V参考电压
         ADC_ACON1 |= ADC_VREF_SEL(0x02) | // 选择 内部2.4V 作为参考电压
                      ADC_TEN_SEL(0x03) |  // 关闭测试信号
                      ADC_INREF_SEL(0x01); // 使能内部参考电压
@@ -174,6 +174,15 @@ void adc_channel_sel(adc_channel_sel_t adc_channel)
 
     ADC_CFG0 |= ADC_CHAN0_EN(0x1) | // 使能通道0
                 ADC_EN(0x1);        // 使能adc
+}
+
+u16 adc_get_val_once(void)
+{
+    ADC_CFG0 |= ADC_CHAN0_TRG(0x1); // 触发ADC0转换
+    while (!(ADC_STA & ADC_CHAN0_DONE(0x1)))
+        ;                                           // 等待转换完成
+    ADC_STA = ADC_CHAN0_DONE(0x1);                  // 清除ADC0转换完成标志位
+    return ((ADC_DATAH0 << 4) | (ADC_DATAL0 >> 4)); // 读取ADC0的值
 }
 
 // 由1ms及以上的定时器调用
