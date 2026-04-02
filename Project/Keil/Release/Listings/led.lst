@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LED                                                               04/01/2026 14:43:54 PAGE 1   
+C51 COMPILER V9.60.7.0   LED                                                               04/02/2026 15:54:20 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED
@@ -62,7 +62,7 @@ line level    source
   51   1          // led_ctl.cnt = 0;
   52   1          // led_ctl.cur_pwm_duty_val = PWM_DUTY_VAL_PERCENT_0;
   53   1          // led_ctl.is_slowly_adjust_end = 0;
-C51 COMPILER V9.60.7.0   LED                                                               04/01/2026 14:43:54 PAGE 2   
+C51 COMPILER V9.60.7.0   LED                                                               04/02/2026 15:54:20 PAGE 2   
 
   54   1          // led_ctl.adjust_time_cnt = 0;
   55   1          // led_ctl.working_time = 0;
@@ -126,7 +126,7 @@ line level    source
  112   2              // led_ctl.status = LED_STATUS_RED_BLUE_FLASH;
  113   2              // led_yellow_off();
  114   2              // led_white_off();
-C51 COMPILER V9.60.7.0   LED                                                               04/01/2026 14:43:54 PAGE 3   
+C51 COMPILER V9.60.7.0   LED                                                               04/02/2026 15:54:20 PAGE 3   
 
  115   2              led_status_set(LED_STATUS_RED_BLUE_FLASH);
  116   2              break;
@@ -190,7 +190,7 @@ line level    source
  174   2              led_yellow_off();
  175   2              led_white_off();
  176   2      
-C51 COMPILER V9.60.7.0   LED                                                               04/01/2026 14:43:54 PAGE 4   
+C51 COMPILER V9.60.7.0   LED                                                               04/02/2026 15:54:20 PAGE 4   
 
  177   2              led_ctl.red_blue_flash_time_cnt = 0;
  178   2              break;
@@ -254,7 +254,7 @@ line level    source
  232   2      
  233   2              if (time_in_cycle < 230) // 低电平230ms，灯亮（低电平）
  234   2              {
-C51 COMPILER V9.60.7.0   LED                                                               04/01/2026 14:43:54 PAGE 5   
+C51 COMPILER V9.60.7.0   LED                                                               04/02/2026 15:54:20 PAGE 5   
 
  235   3                  LED_RED_ON();  // 红灯亮
  236   3                  LED_BLUE_ON(); // 蓝灯亮
@@ -318,7 +318,7 @@ line level    source
  292          
  293          // 黄灯、白灯、黄白灯缓慢调节的动画效果
  294          void led_slow_adjust_isr(void)
-C51 COMPILER V9.60.7.0   LED                                                               04/01/2026 14:43:54 PAGE 6   
+C51 COMPILER V9.60.7.0   LED                                                               04/02/2026 15:54:20 PAGE 6   
 
  295          {
  296   1          if (led_ctl.status != LED_STATUS_OFF && led_ctl.is_slowly_adjust_end != 1)
@@ -382,7 +382,7 @@ line level    source
  353          // 外部参数： 全局变量 bat_percent ，电池电量百分比
  354          void led_bat_instruction_timer_callback(void)
  355          {
-C51 COMPILER V9.60.7.0   LED                                                               04/01/2026 14:43:54 PAGE 7   
+C51 COMPILER V9.60.7.0   LED                                                               04/02/2026 15:54:20 PAGE 7   
 
  356   1          if (led_bat_level_sta == LED_BAT_LEVEL_STA_IDLE)
  357   1          {
@@ -446,7 +446,7 @@ line level    source
  414   4                  case 0:
  415   4                      LED_25_PERCENT_TOGGLE();
  416   4                      break;
-C51 COMPILER V9.60.7.0   LED                                                               04/01/2026 14:43:54 PAGE 8   
+C51 COMPILER V9.60.7.0   LED                                                               04/02/2026 15:54:20 PAGE 8   
 
  417   4                  case 1:
  418   4                      LED_50_PERCENT_TOGGLE();
@@ -469,7 +469,7 @@ line level    source
  435   2              if (is_charging_ic_stop)
  436   2              {
  437   3                  led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
- 438   3                  printf("detect charge end\n");
+ 438   3                  // printf("detect charge end\n");
  439   3              }
  440   2              else if (bat_percent >= 75)
  441   2              {
@@ -510,7 +510,7 @@ line level    source
  476   2              if (bat_percent >= 25)
  477   2              {
  478   3                  LED_50_PERCENT_ON();
-C51 COMPILER V9.60.7.0   LED                                                               04/01/2026 14:43:54 PAGE 9   
+C51 COMPILER V9.60.7.0   LED                                                               04/02/2026 15:54:20 PAGE 9   
 
  479   3              }
  480   2      
@@ -523,8 +523,8 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1150    ----
-   CONSTANT SIZE    =     19    ----
+   CODE SIZE        =   1142    ----
+   CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     17       3
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----

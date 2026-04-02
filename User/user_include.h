@@ -4,7 +4,7 @@
 #include "user_config.h"
 #include "led.h"
 #include "uart0.h"
-#include "adc.h"
+#include "../driver_on_chip/adc.h"
 #include "pwm.h"
 
 #include "timer0.h"

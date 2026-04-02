@@ -12,6 +12,10 @@ void ble_ic_enable(void)
     delay_ms(30); // 等待蓝牙开机完毕
     uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
     ble_ic.is_working = 1;
+
+#if USER_DEBUG_ENABLE
+    printf("ble open\n");
+#endif
 }
 
 // 蓝牙ic关闭 前置操作
@@ -19,6 +23,10 @@ void ble_ic_disable_pre(void)
 {
     uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
     // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关闭蓝牙的操作
+
+#if USER_DEBUG_ENABLE
+    printf("ble close pre\n");
+#endif
 }
 
 // 蓝牙ic关闭 后置操作
@@ -27,6 +35,10 @@ void ble_ic_disable_post(void)
     // 收到蓝牙ic回复的数据后，关闭蓝牙ic
     BLE_IC_POWER_KEY_PIN = 1;
     ble_ic.is_working = 0;
+
+#if USER_DEBUG_ENABLE
+    printf("ble close post\n");
+#endif
 }
 
 void bluetooth_ic_handle_init(void)

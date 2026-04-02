@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/01/2026 14:43:55 PAGE 1   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/02/2026 15:54:21 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE CHARGE_DET
@@ -62,7 +62,7 @@ line level    source
   47   1          // 增加测量周期计数
   48   1          measurement_period_counter++;
   49   1      
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/01/2026 14:43:55 PAGE 2   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/02/2026 15:54:21 PAGE 2   
 
   50   1          // 检测到低电平，并且之前没有检测到充电信号，可能不在充电
   51   1          if (current_pin_state == 0 && consecutive_detection_count == 0)
@@ -126,7 +126,7 @@ line level    source
  108   2      
  109   2          case 2: // 检测低电平持续时间
  110   2              if (current_pin_state == 0)
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/01/2026 14:43:55 PAGE 3   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/02/2026 15:54:21 PAGE 3   
 
  111   2              { // 仍在低电平
  112   3                  signal_low_duration++;
@@ -190,7 +190,7 @@ line level    source
              -满电
  170   2              if (consecutive_detection_count >= (u32)5000 * 10) //  5000 *10 * 100 us 连续 5s检测到1Khz信
              -号，说明充满电
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/01/2026 14:43:55 PAGE 4   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/02/2026 15:54:21 PAGE 4   
 
  171   2              {
  172   3                  is_charging_ic_stop = 1;
@@ -254,7 +254,7 @@ line level    source
  230   2              if (ble_ic.is_working)
  231   2              {
  232   3                  ble_ic_disable_pre();
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/01/2026 14:43:55 PAGE 5   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/02/2026 15:54:21 PAGE 5   
 
  233   3                  delay_ms(30); // 等待蓝牙关闭
  234   3              }

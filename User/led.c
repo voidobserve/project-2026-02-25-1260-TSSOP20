@@ -435,7 +435,7 @@ void led_bat_instruction_timer_callback(void)
         if (is_charging_ic_stop)
         {
             led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
-            printf("detect charge end\n");
+            // printf("detect charge end\n");
         }
         else if (bat_percent >= 75)
         {

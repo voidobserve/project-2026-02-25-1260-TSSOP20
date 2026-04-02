@@ -134,7 +134,7 @@ label_low_power_in:
     //
     if (0)
     {
-        u8 is_back_to_low_power = 1;
+        u8 is_back_to_low_power = 1; // 默认从低功耗唤醒后，又返回低功耗
 
         // USER_TO_DO 需要使能adc
 

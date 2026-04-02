@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/01/2026 14:43:54 PAGE 1   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/02/2026 15:54:20 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART_DATA_HANDLE
@@ -62,7 +62,7 @@ line level    source
   51   2      #if USER_DEBUG_ENABLE
   52   2              // 校验和错误
   53   2              // printf("Checksum error: expected 0x%02x, got 0x%02x\n",
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/01/2026 14:43:54 PAGE 2   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/02/2026 15:54:20 PAGE 2   
 
   54   2              //        (u16)check_sum, (u16)uart_receiver.buffer[6]);
   55   2      #endif
@@ -126,7 +126,7 @@ line level    source
  113   2          case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0:
  114   2              // CMD字节，任何值都可以接受
  115   2              uart_receiver.buffer[uart_receiver.index++] = byte;
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/01/2026 14:43:54 PAGE 3   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/02/2026 15:54:20 PAGE 3   
 
  116   2              uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_CMD;
  117   2              return 0;
@@ -190,7 +190,7 @@ line level    source
  175          void uart_receiver_timeout_handler(void)
  176          {
  177   1      #if USER_DEBUG_ENABLE
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/01/2026 14:43:54 PAGE 4   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/02/2026 15:54:20 PAGE 4   
 
  178   1          u8 i;
  179   1      #endif
@@ -254,7 +254,7 @@ line level    source
              -AT_TAIL)
  236   3                  // {
  237   3                  //     printf("0 == uart0_rxbuffer_get_count()\n");
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/01/2026 14:43:54 PAGE 5   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/02/2026 15:54:20 PAGE 5   
 
  238   3                  // }
  239   3      
@@ -318,7 +318,7 @@ line level    source
  297   2              break;
  298   2          case UART_RECV_CMD_BLE_MUSIC_PAUSING:
  299   2              // printf("recv music pause\n");
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/01/2026 14:43:54 PAGE 6   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/02/2026 15:54:20 PAGE 6   
 
  300   2              ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
  301   2              break;

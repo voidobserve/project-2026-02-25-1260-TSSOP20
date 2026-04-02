@@ -3,6 +3,7 @@
 
 #include "include.h"
 #include "user_config.h"
+
 #if USER_DEBUG_ENABLE
 
 extern volatile u8 flag_debug;

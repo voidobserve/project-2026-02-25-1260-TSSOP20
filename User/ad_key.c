@@ -159,7 +159,8 @@ void ad_key_handle(void)
     ad_key_para.latest_key_event = KEY_EVENT_NONE;
 
     // 充电时、或者电池电量低于 xx 时，不执行按键操作
-    if (is_in_charging || avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+    // if (is_in_charging || avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+    if (is_in_charging || bat_percent <= 0)
     {
         /*
             这里需要清空按键事件，否则在充电期间按下了按键，
@@ -219,7 +220,7 @@ void ad_key_handle(void)
 #endif
 
         // USER_TO_DO
-        user_test_init_by_voltage_mv(3300);
+        user_test_init_by_voltage_mv(3600);
 
         break;
 
@@ -307,6 +308,8 @@ void ad_key_handle(void)
             // uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
             // ble_ic.is_working = 1;
             ble_ic_enable();
+
+
         }
         break;
 

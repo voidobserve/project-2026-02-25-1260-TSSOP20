@@ -2,7 +2,7 @@
 #define __BATTERY_MONITOR_H__
 
 #include "include.h"
-#include "adc.h" 
+#include "adc.h"
 #include "user_include.h"
 
 // 电池模型参数
@@ -28,7 +28,6 @@
 #define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT \
     (BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER * VOLTAGE_HISTORY_SIZE)
 
-
 // 电池电量更新模块的状态
 enum
 {
@@ -42,18 +41,21 @@ typedef u8 bat_vol_update_sta_t;
 
 extern volatile u8 bat_percent;
 extern volatile u8 is_sent_low_bat_alert;
-extern volatile u16 avg_voltage_mv;
+extern volatile u8 is_turn_off_by_low_bat; // 是否低电量关机
 
 // void send_low_battery_timer_callback(void);
 
 // 计算电池电压对应的百分比 (0-100)
 u8 get_battery_percentage_by_voltage(u16 voltage_mv);
-void battery_monitor_init_by_adc_val(u16 adc_val);
+// void battery_monitor_init_by_adc_val(u16 adc_val);
+void battery_monitor_refresh_by_adc_val(u16 adc_val);
 void battery_monitor_handle(void);
 
 void bat_vol_update_timer_callback(void);
 void bat_vol_buff_add_timer_callback(void);
 void bat_vol_buff_get_avg_timer_callback(void);
+
+void send_low_bat_timer_callback(void); // 控制发送低电量的周期
 
 #if USER_DEBUG_ENABLE
 void user_test_init_by_voltage_mv(u16 test_voltage_mv);

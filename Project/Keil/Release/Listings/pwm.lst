@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   PWM                                                               03/31/2026 14:27:10 PAGE 1   
+C51 COMPILER V9.60.7.0   PWM                                                               04/02/2026 14:44:02 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE PWM
@@ -62,7 +62,7 @@ line level    source
   50   1      }
   51          
   52          // 设置通道0的占空比
-C51 COMPILER V9.60.7.0   PWM                                                               03/31/2026 14:27:10 PAGE 2   
+C51 COMPILER V9.60.7.0   PWM                                                               04/02/2026 14:44:02 PAGE 2   
 
   53          void pwm_set_channel_0_duty(u16 channel_duty)
   54          {

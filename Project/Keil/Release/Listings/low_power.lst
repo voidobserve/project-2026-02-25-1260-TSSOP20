@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/01/2026 14:43:55 PAGE 1   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/02/2026 15:54:21 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LOW_POWER
@@ -62,7 +62,7 @@ line level    source
   51   1          STMR_CNTEN &= ~STMR_1_CNT_EN(0x1); // 不使能 STMR 1
   52   1          STMR_PWMEN &= ~STMR_1_PWM_EN(0x1); // 不使能 PWM输出
   53   1      
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/01/2026 14:43:55 PAGE 2   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/02/2026 15:54:21 PAGE 2   
 
   54   1          ADC_CFG0 &= ~(ADC_EN(0x01)); // 关闭ADC
   55   1      
@@ -126,7 +126,7 @@ line level    source
  111          {
  112   1          u16 adc_val;
  113   1      
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/01/2026 14:43:55 PAGE 3   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/02/2026 15:54:21 PAGE 3   
 
  114   1          if (is_low_power_enter_enable)
  115   1          {
@@ -152,7 +152,7 @@ line level    source
  134   1          //
  135   1          if (0)
  136   1          {
- 137   2              u8 is_back_to_low_power = 1;
+ 137   2              u8 is_back_to_low_power = 1; // 默认从低功耗唤醒后，又返回低功耗
  138   2      
  139   2              // USER_TO_DO 需要使能adc
  140   2      
@@ -190,7 +190,7 @@ line level    source
  172          
  173          // wake up timer 中断服务函数
  174          void WUT_IRQHandler(void) interrupt WUT_IRQn
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/01/2026 14:43:55 PAGE 4   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/02/2026 15:54:21 PAGE 4   
 
  175          {
  176   1          // 进入中断设置IP，不可删除
