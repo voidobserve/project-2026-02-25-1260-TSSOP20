@@ -14,7 +14,7 @@ void pwm_init(void)
     P2_MD1 |= GPIO_P27_MODE_SEL(0x01); // 输出模式
     // FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT; // 选择 stmr1_pwmout
     P27 = 1;
-    FOUT_S27 = GPIO_FOUT_AF_FUNC; // 先不点亮灯光 
+    FOUT_S27 = GPIO_FOUT_AF_FUNC; // 先不点亮灯光
 
     // ==================================================================
     // STMR0 用作 Y 黄灯输出
@@ -65,36 +65,38 @@ void pwm_set_channel_1_duty(u16 channel_duty)
     STMR_LOADEN |= STMR_1_LOAD_EN(0x1);                          // 自动装载使能
 }
 
-/**
- * @brief 获取第一路PWM的运行状态
- *
- * @return u8 0--pwm关闭，1--pwm开启
- */
-u8 pwm_get_channel_0_status(void)
-{
-    if (STMR_PWMEN & 0x01) // 如果pwm0使能
-    {
-        return 1;
-    }
-    else // 如果pwm0未使能
-    {
-        return 0;
-    }
-}
+// /**
+//  * @brief 
+//  * 
+//  */
+//  *
+//  * @return u8 0--pwm关闭，1--pwm开启
+//  */
+// u8 pwm_get_channel_0_status(void)
+// {
+//     if (STMR_PWMEN & 0x01) // 如果pwm0使能
+//     {
+//         return 1;
+//     }
+//     else // 如果pwm0未使能
+//     {
+//         return 0;
+//     }
+// }
 
-/**
- * @brief 获取第二路PWM的运行状态
- *
- * @return u8 0--pwm关闭，1--pwm开启
- */
-u8 pwm_get_channel_1_status(void)
-{
-    if (STMR_PWMEN & (0x01 << 1)) // 如果pwm1使能
-    {
-        return 1;
-    }
-    else // 如果 pwm 未使能
-    {
-        return 0;
-    }
-}
+// /**
+//  * @brief 获取第二路PWM的运行状态
+//  *
+//  * @return u8 0--pwm关闭，1--pwm开启
+//  */
+// u8 pwm_get_channel_1_status(void)
+// {
+//     if (STMR_PWMEN & (0x01 << 1)) // 如果pwm1使能
+//     {
+//         return 1;
+//     }
+//     else // 如果 pwm 未使能
+//     {
+//         return 0;
+//     }
+// }

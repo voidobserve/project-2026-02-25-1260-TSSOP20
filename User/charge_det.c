@@ -213,6 +213,10 @@ void charge_det(void)
     if (is_in_charging_by_charger || is_in_charging_by_solar_panel)
     {
         is_in_charging = 1;
+
+        // 有充电之后，清空低电量相关标志位
+        is_sent_low_bat_alert = 0;
+        is_turn_off_by_low_bat = 0;
     }
     else if (is_in_charging_by_charger == 0 && is_in_charging_by_solar_panel == 0)
     {

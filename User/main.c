@@ -111,14 +111,13 @@ void user_init(void)
 
     led_ctl_init();
     charge_det_init();
-    // delay_exec_init();
 
     // 需要等外设都准备好，再跑时间
     timer0_init();
     timer1_init();
 
 #if USER_DEBUG_ENABLE
-    user_debug_pin_init();
+    // user_debug_pin_init();
     // timebase_init();
     printf("sys init\n");
 #endif
@@ -135,6 +134,15 @@ void main(void)
     IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除映射）
     WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
 
+    P0_MD0 = 0xFF;
+    P0_MD1 = 0xFF;
+    P1_MD0 = 0xFF;
+    P1_MD1 = 0xFF;
+    P2_MD0 = 0xFF;
+    P2_MD1 = 0xFF;
+    P3_MD0 = 0xFF;
+    P3_MD1 = 0xFF;
+
     user_init();
     delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍）
 
@@ -149,7 +157,7 @@ void main(void)
 
         charge_det();
 
-        // low_power_handle(); 
+        low_power_handle();
 
 #if USER_DEBUG_ENABLE
         // user_test_main();

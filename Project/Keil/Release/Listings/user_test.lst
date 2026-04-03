@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/02/2026 15:54:20 PAGE 1   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE USER_TEST
@@ -17,32 +17,32 @@ line level    source
    6          // #include "led.h"
    7          
    8          #if USER_DEBUG_ENABLE
-   9          
-  10          volatile u8 flag_debug = 0;
-  11          
-  12          void debug_time_add(void)
-  13          {
-  14   1      #if 1
-  15   1          static u16 cnt = 0;
-  16   1          cnt++;
-  17   1          if (cnt >= 5000)
-  18   1          {
-  19   2              cnt = 0;
-  20   2              flag_debug = 1;
-  21   2          }
-  22   1      #endif
-  23   1      }
-  24          
-  25          void user_debug_pin_init(void)
-  26          {
-  27   1          P1_MD1 &= ~GPIO_P17_MODE_SEL(0x03); 
-  28   1          P1_MD1 |= GPIO_P17_MODE_SEL(0x01); 
-  29   1          FOUT_S17 = GPIO_FOUT_AF_FUNC; // 选择AF功能输出
-  30   1          P17 = 0;
-  31   1      }
-  32          
-  33          
-  34          #if 0
+              
+              volatile u8 flag_debug = 0;
+              
+              void debug_time_add(void)
+              {
+              #if 1
+                  static u16 cnt = 0;
+                  cnt++;
+                  if (cnt >= 5000)
+                  {
+                      cnt = 0;
+                      flag_debug = 1;
+                  }
+              #endif
+              }
+              
+              void user_debug_pin_init(void)
+              {
+                  P1_MD1 &= ~GPIO_P17_MODE_SEL(0x03); 
+                  P1_MD1 |= GPIO_P17_MODE_SEL(0x01); 
+                  FOUT_S17 = GPIO_FOUT_AF_FUNC; // 选择AF功能输出
+                  P17 = 0;
+              }
+              
+              
+              #if 0
               
               volatile u16 user_debug_val_u16 = 0; // 测试时使用的全局变量，用来在中断获取数值，在
              -主函数打印
@@ -62,7 +62,7 @@ line level    source
                   u8 i;
                   for (i = 0; i < TIMEBASE_MAX; i++)
                   {
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/02/2026 15:54:20 PAGE 2   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 2   
 
                       timebase_array[i].interval_ms = 0;
                       timebase_array[i].counter = 0;
@@ -126,7 +126,7 @@ line level    source
               
               /**
                * @brief 检查时基是否触发
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/02/2026 15:54:20 PAGE 3   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 3   
 
                * @param id 时基ID
                * @return 1-已触发, 0-未触发
@@ -190,7 +190,7 @@ line level    source
                           {
                               adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
                               adc_val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/02/2026 15:54:20 PAGE 4   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 4   
 
                               printf("adkey_val == %u\n", adc_val);
                               dir = 1;
@@ -248,15 +248,15 @@ line level    source
               }
               
               #endif
- 233          #endif
+              #endif
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =     51    ----
+   CODE SIZE        =   ----    ----
    CONSTANT SIZE    =   ----    ----
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/02/2026 15:54:20 PAGE 5   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 5   
 
-   XDATA SIZE       =      3    ----
+   XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

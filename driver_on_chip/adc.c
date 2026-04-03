@@ -25,13 +25,6 @@ void adc_pin_init(void)
 
 void adc_init(void)
 {
-    // ADC配置
-    // ADC_ACON1 &= ~(ADC_VREF_SEL(0x07) |  // 清空参考电压选择位
-    //                ADC_EXREF_SEL(0x01) | // 关闭外部参考电压
-    //                ADC_INREF_SEL(0x01)); // 关闭内部参考电压
-    // ADC_ACON1 |= ADC_VREF_SEL(0x06) |    // 选择 VCC 作为参考电压
-    //              ADC_TEN_SEL(0x03);      // 关闭测试信号
-
     ADC_ACON0 = ADC_CMP_EN(0x1) |  // 打开ADC中的CMP使能信号
                 ADC_BIAS_EN(0x1) | // 打开ADC偏置电流能使信号
                 ADC_BIAS_SEL(0x1); // 打开 ADC偏置电流
@@ -174,6 +167,17 @@ void adc_channel_sel(adc_channel_sel_t adc_channel)
 
     ADC_CFG0 |= ADC_CHAN0_EN(0x1) | // 使能通道0
                 ADC_EN(0x1);        // 使能adc
+}
+
+// 使能adc，只在低功耗退出时那一段检测时间内使用
+void adc_init_when_low_pwr_out(void)
+{
+    ADC_ACON0 = ADC_CMP_EN(0x1) |   // 打开ADC中的CMP使能信号
+                ADC_BIAS_EN(0x1) |  // 打开ADC偏置电流能使信号
+                ADC_BIAS_SEL(0x1);  // 打开 ADC偏置电流
+    ADC_CFG1 |= (0x0F << 3);        // ADC时钟分频为16分频，为系统时钟/16（把adc时钟设置为最慢，）
+    ADC_CFG0 |= ADC_CHAN0_EN(0x1) | // 使能 通道0
+                ADC_EN(0x1);        // 使能 adc
 }
 
 u16 adc_get_val_once(void)

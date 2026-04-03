@@ -53,8 +53,9 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
         low_power_enter_timer_callback();
         send_low_bat_timer_callback();
 
-
+#if USER_DEBUG_ENABLE
         debug_time_add();
+#endif
         // delay_exec_update();
     }
 

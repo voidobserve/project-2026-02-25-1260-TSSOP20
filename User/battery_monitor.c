@@ -3,7 +3,7 @@
 
 // volatile u8 is_send_low_battery_enable = 0;
 
-// 是否发送了低电量报警（USER_TO_DO 在第一次上电、低功耗唤醒之后、有充电之后，需要清零）
+// 是否发送了低电量报警（ USER_TO_DO 在第一次上电、低功耗唤醒之后、有充电之后，需要清零）
 volatile u8 is_sent_low_bat_alert = 0;
 volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ USER_TO_DO 从低功耗唤醒，有充电之后，都清除一下该标志位）
 
@@ -199,10 +199,12 @@ void battery_monitor_refresh_by_adc_val(u16 adc_val)
 {
     voltage_mv = get_battery_voltage_by_adc(adc_val);
     bat_vol_history_buff_init(voltage_mv);
+    max_voltage_mv = voltage_mv;
     avg_voltage_mv = voltage_mv;
     percent = get_battery_percentage_by_voltage(voltage_mv);
     last_percent = percent;
     bat_percent = percent;
+    bat_vol_update_sta = BAT_VOL_UPDATE_STA_COMPLETED;
 }
 
 #if USER_DEBUG_ENABLE
@@ -217,7 +219,7 @@ void user_test_init_by_voltage_mv(u16 test_voltage_mv)
     percent = get_battery_percentage_by_voltage(voltage_mv);
     last_percent = percent;
     bat_percent = percent;
-    bat_vol_update_sta = BAT_VOL_UPDATE_STA_CAPTURING;
+    bat_vol_update_sta = BAT_VOL_UPDATE_STA_COMPLETED;
 
     // printf("voltage_mv == %u\n", voltage_mv);
     // printf("max_voltage_mv == %u\n", max_voltage_mv);
@@ -234,6 +236,7 @@ void battery_monitor_handle(void)
     volatile u16 adc_val = 0;
     volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
 
+#if 1
     // 获取AD值（ad值有更新才获取）
     if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
     {
@@ -267,7 +270,7 @@ void battery_monitor_handle(void)
             否则会更新 voltage_mv 和 max_voltage_mv，可能会被赋值为0，
             导致又进入了 电池电量相关变量的初始化
         */
-#if 0
+#if 1
         if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
         {
             voltage_mv = max_voltage_mv;
@@ -286,6 +289,7 @@ void battery_monitor_handle(void)
         }
 #endif
     }
+#endif
 
     // 测试时使用：
     // if (cur_voltage_mv != 0)

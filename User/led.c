@@ -424,14 +424,46 @@ void led_bat_instruction_timer_callback(void)
                 LED_100_PERCENT_TOGGLE();
                 break;
             }
+
+            /*
+                如果电池电量已经到100%，并且充电IC已经停止工作，则说明充电结束
+                由于电池电量百分比不能准确反应电池电量，这里只判断充电ic有没有停止工作
+            */
+            // 充电时，电池电量指示灯要隔段时间才更新一次
+            if (is_charging_ic_stop && led_charge_anim_phase == 3)
+            {
+                led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
+                // printf("detect charge end\n");
+            }
+            else if (bat_percent >= 75 &&
+                     (led_charge_anim_phase == 2 || led_charge_anim_phase == 3))
+            {
+                led_charge_anim_phase = 3;
+                LED_75_PERCENT_ON(); //
+            }
+            else if (bat_percent >= 50 &&
+                     (led_charge_anim_phase == 1 || led_charge_anim_phase == 2))
+            {
+                led_charge_anim_phase = 2;
+                LED_50_PERCENT_ON(); //
+            }
+            else if (bat_percent >= 25 &&
+                     (led_charge_anim_phase == 0 || led_charge_anim_phase == 1))
+            {
+                led_charge_anim_phase = 1;
+                LED_25_PERCENT_ON(); //
+            }
         }
 
         led_charge_anim_cnt++;
 
         // 在充电过程中，电池电量增加，需要及时更新状态
 
-        // 如果电池电量已经到100%，并且充电IC已经停止工作，则说明充电结束
-        // if (bat_percent >= 100 && is_charging_ic_stop)
+        /*
+            如果电池电量已经到100%，并且充电IC已经停止工作，则说明充电结束
+            由于电池电量百分比不能准确反应电池电量，这里只判断充电ic有没有停止工作
+        */
+#if 0
         if (is_charging_ic_stop)
         {
             led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
@@ -452,6 +484,7 @@ void led_bat_instruction_timer_callback(void)
             led_charge_anim_phase = 1;
             LED_25_PERCENT_ON(); //
         }
+#endif
     }
     else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_END)
     {

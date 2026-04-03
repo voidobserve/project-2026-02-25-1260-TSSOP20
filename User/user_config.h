@@ -5,7 +5,7 @@
 
 // =========================================================================================================================
  
-#define USER_DEBUG_ENABLE 1 // 是否使用打印调试
+#define USER_DEBUG_ENABLE 0 // 是否使用打印调试
 #if USER_DEBUG_ENABLE
 #include <stdio.h>
 #include "user_test.h"

@@ -173,21 +173,18 @@ void ad_key_handle(void)
     switch (ad_key_event)
     {
         // ================================================================
-        // key 1，对应的丝印是 上一曲
+        // key 1，对应的丝印是 灯开关
     case AD_KEY_EVENT_ID_1_CLICK:
 #if USER_DEBUG_ENABLE
         printf("key 1 click\n");
 #endif
-        uart_data_send_cmd(UART_SEND_CMD_MUSIC_PREV);
+        led_status_switch();
         break;
 
     case AD_KEY_EVENT_ID_1_LONG:
 #if USER_DEBUG_ENABLE
         printf("key 1 long\n");
 #endif
-
-        // 长按发送音量加
-        uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
         break;
 
     case AD_KEY_EVENT_ID_1_HOLD:
@@ -195,8 +192,6 @@ void ad_key_handle(void)
         printf("key 1 hold\n");
 #endif
 
-        // 长按发送音量加
-        uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
         break;
 
     case AD_KEY_EVENT_ID_1_LOOSE:
@@ -206,28 +201,28 @@ void ad_key_handle(void)
         break;
 
         // ================================================================
-        // key 2，对应的丝印是 灯开关
+        // key 2，对应的丝印是 上一曲
     case AD_KEY_EVENT_ID_2_CLICK:
 #if USER_DEBUG_ENABLE
         printf("key 2 click\n");
 #endif
-        led_status_switch();
+        uart_data_send_cmd(UART_SEND_CMD_MUSIC_PREV);
         break;
 
     case AD_KEY_EVENT_ID_2_LONG:
 #if USER_DEBUG_ENABLE
         printf("key 2 long\n");
 #endif
-
-        // USER_TO_DO
-        user_test_init_by_voltage_mv(3600);
-
+        // 长按发送音量加
+        uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
         break;
 
     case AD_KEY_EVENT_ID_2_HOLD:
 #if USER_DEBUG_ENABLE
         printf("key 2 hold\n");
 #endif
+        // 长按发送音量加
+        uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
         break;
 
     case AD_KEY_EVENT_ID_2_LOOSE:
@@ -308,8 +303,6 @@ void ad_key_handle(void)
             // uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
             // ble_ic.is_working = 1;
             ble_ic_enable();
-
-
         }
         break;
 
