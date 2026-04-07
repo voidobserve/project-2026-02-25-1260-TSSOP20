@@ -234,7 +234,7 @@ void charge_det(void)
         if (ble_ic.is_working)
         {
             ble_ic_disable_pre();
-            delay_ms(30); // 等待蓝牙关闭
+            // delay_ms(30); // 等待蓝牙关闭
         }
     }
 }

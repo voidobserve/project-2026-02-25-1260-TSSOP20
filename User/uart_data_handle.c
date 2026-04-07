@@ -12,7 +12,10 @@ static volatile uart_receiver_t uart_receiver;
 // 重置接收器状态
 void uart_receiver_reset(void)
 {
-    memset((void *)&uart_receiver, 0, sizeof(uart_receiver_t));
+    // memset((void *)&uart_receiver, 0, sizeof(uart_receiver_t));
+    uart_receiver.index = 0;
+    uart_receiver.timeout_enable = 0;
+    uart_receiver.timeout_cnt = 0;
     uart_receiver.status = UART_DATA_HANDLE_STATUS_IDLE;
 }
 
@@ -50,8 +53,8 @@ u8 uart_receiver_process_checksum(void)
     {
 #if USER_DEBUG_ENABLE
         // 校验和错误
-        // printf("Checksum error: expected 0x%02x, got 0x%02x\n",
-        //        (u16)check_sum, (u16)uart_receiver.buffer[6]);
+        printf("Checksum error: expected 0x%02x, got 0x%02x\n",
+               (u16)check_sum, (u16)uart_receiver.buffer[6]);
 #endif
 
         return 1;
@@ -67,6 +70,7 @@ u8 uart_receiver_process_checksum(void)
  */
 u8 uart_receiver_process_byte(u8 byte)
 {
+    // printf("%02x ", (u16)byte);
     switch (uart_receiver.status)
     {
     case UART_DATA_HANDLE_STATUS_IDLE:
@@ -80,7 +84,6 @@ u8 uart_receiver_process_byte(u8 byte)
         {
             return 1;
         }
-
         break;
 
     case UART_DATA_HANDLE_STATUS_FORMAT_HEAD0:
@@ -135,6 +138,7 @@ u8 uart_receiver_process_byte(u8 byte)
         {
             return 1;
         }
+        break;
 
     case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL1:
         // 校验和字节
@@ -181,15 +185,15 @@ void uart_receiver_timeout_handler(void)
     if (uart_receiver.timeout_cnt >= UART_DATA_HANDLE_TIMEOUT)
     {
 #if USER_DEBUG_ENABLE
-        // printf("UART receive timeout, current status: %d\n", (u16)uart_receiver.status);
+        printf("UART receive timeout, current status: %d\n", (u16)uart_receiver.status);
 
         // 打印当前缓冲区内容
-        // printf("Buffer content: \n");
-        // for (i = 0; i < uart_receiver.index; i++)
-        // {
-        //     printf("0x%02x ", (u16)uart_receiver.buffer[i]);
-        // }
-        // printf("\n");
+        printf("Buffer content: \n");
+        for (i = 0; i < uart_receiver.index; i++)
+        {
+            printf("0x%02x ", (u16)uart_receiver.buffer[i]);
+        }
+        printf("\n");
 #endif
 
         // 重置接收器
@@ -219,16 +223,18 @@ void uart_data_handle(void)
         uart_receiver_timeout_handler();
     }
 
-    if (uart0_rxbuffer_get_count() == 0)
-    {
-        return;
-    }
+    // if (uart0_rxbuffer_get_count() == 0)
+    // {
+    //     return;
+    // }
 
+#if 1
     // 处理接收缓冲区中的数据
     while (1)
     {
         if (0 == uart0_rxbuffer_get_count() ||
-            uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
+            uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_TAIL ||
+            uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM) // 接收完校验和就认为接收完成
         {
 #if USER_DEBUG_ENABLE
             // 缓冲区为空或者接收完成，退出循环
@@ -257,16 +263,50 @@ void uart_data_handle(void)
         {
 #if USER_DEBUG_ENABLE
             // 处理失败
-            // printf("Byte processing failed\n");
-            // printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
+            // 如果连格式头都没有接收，不打印错误信息
+            if (uart_receiver.status != 0)
+            {
+                printf("Byte processing failed\n");
+                printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
+            }
+
             // printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
             // printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
 #endif
             uart_receiver_reset();
         }
     }
+#else
+    if (uart0_rxbuffer_get_count())
+    {
+        recv_byte = uart0_rxbuffer_get_byte();
 
-    if (uart_receiver.status != UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
+        // 启用超时计数
+        uart_receiver.timeout_enable = 1;
+        uart_receiver.timeout_cnt = 0;
+
+        // 处理字节
+        if (uart_receiver_process_byte(recv_byte))
+        {
+#if USER_DEBUG_ENABLE
+            // 处理失败
+            // 如果连格式头都没有接收，不打印错误信息
+            if (uart_receiver.status != 0)
+            {
+                printf("Byte processing failed\n");
+                printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
+            }
+
+            // printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
+            // printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
+#endif
+            uart_receiver_reset();
+        }
+    }
+#endif
+
+    if (uart_receiver.status != UART_DATA_HANDLE_STATUS_FORMAT_TAIL &&
+        uart_receiver.status != UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM) // 接收完校验和就认为接收完成
     {
         return;
     }
@@ -300,7 +340,9 @@ void uart_data_handle(void)
         ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
         break;
     case UART_RECV_CMD_BLE_AMP_OFF:
-        // printf("recv amp off\n");
+#if USER_DEBUG_ENABLE
+        printf("recv amp off\n");
+#endif
         // 收到蓝牙ic回复的数据后，关闭蓝牙ic
         // BLE_IC_POWER_KEY_PIN = 1;
         // ble_ic.is_working = 0;
@@ -309,7 +351,9 @@ void uart_data_handle(void)
         break;
 
     default:
-        // printf("Unknown command: 0x%02x\n", (u16)uart_receiver.buffer[4]);
+#if USER_DEBUG_ENABLE
+        printf("Unknown command: 0x%02x\n", (u16)uart_receiver.buffer[4]);
+#endif
         break;
     }
 

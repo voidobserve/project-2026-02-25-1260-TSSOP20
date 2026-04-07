@@ -257,9 +257,9 @@ void battery_monitor_handle(void)
             bat_percent = percent; // 初始化全局变量，电池电量百分比
 
 #if USER_DEBUG_ENABLE
-            printf("bat monitor init\n");
-            printf("avg_voltage_mv == %u\n", avg_voltage_mv);
-            printf("percent == %u\n", (u16)percent);
+            // printf("bat monitor init\n");
+            // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+            // printf("percent == %u\n", (u16)percent);
 #endif
         }
 
@@ -349,7 +349,7 @@ void battery_monitor_handle(void)
     bat_percent = percent; // 得到稳定之后的电池电量百分比
 
 #if USER_DEBUG_ENABLE
-#if 1
+#if 0
     // USER_TO_DO 只在测试时使用：
     // 每隔一段时间打印一次滤波后得到的电压和电量百分比
     if (flag_debug)
@@ -403,7 +403,8 @@ void battery_monitor_handle(void)
                 if (ble_ic.is_working)
                 {
                     uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
-                    delay_ms(5000); // 这里要等蓝牙播报完成
+                    // delay_ms(5000); // 这里要等蓝牙播报完成
+                    delay_ms(30);
                     ble_ic_disable_pre();
                     delay_ms(100);
                 }

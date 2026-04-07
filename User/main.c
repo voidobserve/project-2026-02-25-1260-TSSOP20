@@ -109,6 +109,7 @@ void user_init(void)
     pwm_init();
     bluetooth_ic_handle_init();
 
+    uart_receiver_reset();
     led_ctl_init();
     charge_det_init();
 
@@ -134,6 +135,7 @@ void main(void)
     IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除映射）
     WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
 
+    // 提前把未使用的、封装未引出的引脚，都配置为模拟输入模式，在低功耗模式下会使用
     P0_MD0 = 0xFF;
     P0_MD1 = 0xFF;
     P1_MD0 = 0xFF;
@@ -157,7 +159,7 @@ void main(void)
 
         charge_det();
 
-        low_power_handle();
+        low_power_handle(); 
 
 #if USER_DEBUG_ENABLE
         // user_test_main();

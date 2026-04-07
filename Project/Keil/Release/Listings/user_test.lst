@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 1   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/07/2026 18:03:42 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE USER_TEST
@@ -62,7 +62,7 @@ line level    source
                   u8 i;
                   for (i = 0; i < TIMEBASE_MAX; i++)
                   {
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 2   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/07/2026 18:03:42 PAGE 2   
 
                       timebase_array[i].interval_ms = 0;
                       timebase_array[i].counter = 0;
@@ -126,7 +126,7 @@ line level    source
               
               /**
                * @brief 检查时基是否触发
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 3   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/07/2026 18:03:42 PAGE 3   
 
                * @param id 时基ID
                * @return 1-已触发, 0-未触发
@@ -190,7 +190,7 @@ line level    source
                           {
                               adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
                               adc_val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 4   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/07/2026 18:03:42 PAGE 4   
 
                               printf("adkey_val == %u\n", adc_val);
                               dir = 1;
@@ -254,7 +254,7 @@ line level    source
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =   ----    ----
    CONSTANT SIZE    =   ----    ----
-C51 COMPILER V9.60.7.0   USER_TEST                                                         04/03/2026 16:59:41 PAGE 5   
+C51 COMPILER V9.60.7.0   USER_TEST                                                         04/07/2026 18:03:42 PAGE 5   
 
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

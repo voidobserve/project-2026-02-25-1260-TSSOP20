@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/03/2026 16:59:41 PAGE 1   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/07/2026 18:09:09 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART_DATA_HANDLE
@@ -23,239 +23,246 @@ line level    source
   12          // 重置接收器状态
   13          void uart_receiver_reset(void)
   14          {
-  15   1          memset((void *)&uart_receiver, 0, sizeof(uart_receiver_t));
-  16   1          uart_receiver.status = UART_DATA_HANDLE_STATUS_IDLE;
-  17   1      }
-  18          
-  19          /**
-  20           * @brief 接收器超时使能时，累计超时时间，在定时器中断中调用
-  21           *
-  22           */
-  23          void uart_receiver_timeout_add(void)
-  24          {
-  25   1          if (uart_receiver.timeout_enable)
-  26   1          {
-  27   2              uart_receiver.timeout_cnt++;
-  28   2          }
-  29   1      }
-  30          
-  31          /**
-  32           * @brief 计算校验和。有接收完校验和之后，才调用该函数
-  33           *
-  34           * @return u8 0：校验通过；   1：校验不通过
-  35           */
-  36          u8 uart_receiver_process_checksum(void)
-  37          {
-  38   1          u8 i;
-  39   1          u8 check_sum = 0;
-  40   1          for (i = 0; i < 5; i++) // 只计算前5个字节的校验和
-  41   1          {
-  42   2              check_sum += uart_receiver.buffer[i];
-  43   2          }
-  44   1      
-  45   1          if (check_sum == uart_receiver.buffer[6])
-  46   1          {
-  47   2              return 0;
-  48   2          }
-  49   1          else
-  50   1          {
-  51   2      #if USER_DEBUG_ENABLE
+  15   1          // memset((void *)&uart_receiver, 0, sizeof(uart_receiver_t));
+  16   1          uart_receiver.index = 0;
+  17   1          uart_receiver.timeout_enable = 0;
+  18   1          uart_receiver.timeout_cnt = 0;
+  19   1          uart_receiver.status = UART_DATA_HANDLE_STATUS_IDLE;
+  20   1      }
+  21          
+  22          /**
+  23           * @brief 接收器超时使能时，累计超时时间，在定时器中断中调用
+  24           *
+  25           */
+  26          void uart_receiver_timeout_add(void)
+  27          {
+  28   1          if (uart_receiver.timeout_enable)
+  29   1          {
+  30   2              uart_receiver.timeout_cnt++;
+  31   2          }
+  32   1      }
+  33          
+  34          /**
+  35           * @brief 计算校验和。有接收完校验和之后，才调用该函数
+  36           *
+  37           * @return u8 0：校验通过；   1：校验不通过
+  38           */
+  39          u8 uart_receiver_process_checksum(void)
+  40          {
+  41   1          u8 i;
+  42   1          u8 check_sum = 0;
+  43   1          for (i = 0; i < 5; i++) // 只计算前5个字节的校验和
+  44   1          {
+  45   2              check_sum += uart_receiver.buffer[i];
+  46   2          }
+  47   1      
+  48   1          if (check_sum == uart_receiver.buffer[6])
+  49   1          {
+  50   2              return 0;
+  51   2          }
+  52   1          else
+  53   1          {
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/07/2026 18:09:09 PAGE 2   
+
+  54   2      #if USER_DEBUG_ENABLE
                       // 校验和错误
-                      // printf("Checksum error: expected 0x%02x, got 0x%02x\n",
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/03/2026 16:59:41 PAGE 2   
-
-                      //        (u16)check_sum, (u16)uart_receiver.buffer[6]);
+                      printf("Checksum error: expected 0x%02x, got 0x%02x\n",
+                             (u16)check_sum, (u16)uart_receiver.buffer[6]);
               #endif
-  56   2      
-  57   2              return 1;
-  58   2          }
-  59   1      }
-  60          
-  61          /**
-  62           * @brief 接收器处理单个字节
-  63           *
-  64           * @param byte
-  65           * @return u8 0：接收成功
-  66           *            非0：接收失败
-  67           */
-  68          u8 uart_receiver_process_byte(u8 byte)
-  69          {
-  70   1          switch (uart_receiver.status)
-  71   1          {
-  72   2          case UART_DATA_HANDLE_STATUS_IDLE:
-  73   2              if (byte == UART_DATA_HANDLE_FORMAT_HEAD0)
-  74   2              {
-  75   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
-  76   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD0;
-  77   3                  return 0;
-  78   3              }
-  79   2              else
-  80   2              {
-  81   3                  return 1;
+  59   2      
+  60   2              return 1;
+  61   2          }
+  62   1      }
+  63          
+  64          /**
+  65           * @brief 接收器处理单个字节
+  66           *
+  67           * @param byte
+  68           * @return u8 0：接收成功
+  69           *            非0：接收失败
+  70           */
+  71          u8 uart_receiver_process_byte(u8 byte)
+  72          {
+  73   1          // printf("%02x ", (u16)byte);
+  74   1          switch (uart_receiver.status)
+  75   1          {
+  76   2          case UART_DATA_HANDLE_STATUS_IDLE:
+  77   2              if (byte == UART_DATA_HANDLE_FORMAT_HEAD0)
+  78   2              {
+  79   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
+  80   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD0;
+  81   3                  return 0;
   82   3              }
-  83   2      
-  84   2              break;
-  85   2      
-  86   2          case UART_DATA_HANDLE_STATUS_FORMAT_HEAD0:
-  87   2              if (byte == UART_DATA_HANDLE_FORMAT_HEAD1)
-  88   2              {
-  89   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
-  90   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD1;
-  91   3                  return 0;
-  92   3              }
-  93   2              else
-  94   2              {
-  95   3                  // 错误
-  96   3                  return 1;
-  97   3              }
-  98   2              break;
-  99   2      
- 100   2          case UART_DATA_HANDLE_STATUS_FORMAT_HEAD1:
- 101   2              if (byte == UART_DATA_HANDLE_FORMAT_FIX_VAL0)
- 102   2              {
- 103   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
- 104   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0;
- 105   3                  return 0;
- 106   3              }
- 107   2              else
- 108   2              {
- 109   3                  return 1;
- 110   3              }
- 111   2              break;
- 112   2      
- 113   2          case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0:
- 114   2              // CMD字节，任何值都可以接受
- 115   2              uart_receiver.buffer[uart_receiver.index++] = byte;
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/03/2026 16:59:41 PAGE 3   
+  83   2              else
+  84   2              {
+  85   3                  return 1;
+  86   3              }
+  87   2              break;
+  88   2      
+  89   2          case UART_DATA_HANDLE_STATUS_FORMAT_HEAD0:
+  90   2              if (byte == UART_DATA_HANDLE_FORMAT_HEAD1)
+  91   2              {
+  92   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
+  93   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_HEAD1;
+  94   3                  return 0;
+  95   3              }
+  96   2              else
+  97   2              {
+  98   3                  // 错误
+  99   3                  return 1;
+ 100   3              }
+ 101   2              break;
+ 102   2      
+ 103   2          case UART_DATA_HANDLE_STATUS_FORMAT_HEAD1:
+ 104   2              if (byte == UART_DATA_HANDLE_FORMAT_FIX_VAL0)
+ 105   2              {
+ 106   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
+ 107   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0;
+ 108   3                  return 0;
+ 109   3              }
+ 110   2              else
+ 111   2              {
+ 112   3                  return 1;
+ 113   3              }
+ 114   2              break;
+ 115   2      
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/07/2026 18:09:09 PAGE 3   
 
- 116   2              uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_CMD;
- 117   2              return 0;
- 118   2              break;
- 119   2      
- 120   2          case UART_DATA_HANDLE_STATUS_FORMAT_CMD:
- 121   2              // DATA字节，任何值都可以接受
- 122   2              uart_receiver.buffer[uart_receiver.index++] = byte;
- 123   2              uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_DATA;
- 124   2              return 0;
- 125   2              break;
- 126   2      
- 127   2          case UART_DATA_HANDLE_STATUS_FORMAT_DATA:
- 128   2              if (byte == UART_DATA_HANDLE_FORMAT_FIX_VAL1)
- 129   2              {
- 130   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
- 131   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL1;
- 132   3                  return 0;
- 133   3              }
- 134   2              else
- 135   2              {
- 136   3                  return 1;
- 137   3              }
- 138   2      
- 139   2          case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL1:
- 140   2              // 校验和字节
- 141   2              uart_receiver.buffer[uart_receiver.index++] = byte;
- 142   2              uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM;
- 143   2              if (uart_receiver_process_checksum())
- 144   2              {
- 145   3                  // 校验和出错
- 146   3                  return 1;
- 147   3              }
- 148   2              else
- 149   2              {
- 150   3                  return 0;
+ 116   2          case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0:
+ 117   2              // CMD字节，任何值都可以接受
+ 118   2              uart_receiver.buffer[uart_receiver.index++] = byte;
+ 119   2              uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_CMD;
+ 120   2              return 0;
+ 121   2              break;
+ 122   2      
+ 123   2          case UART_DATA_HANDLE_STATUS_FORMAT_CMD:
+ 124   2              // DATA字节，任何值都可以接受
+ 125   2              uart_receiver.buffer[uart_receiver.index++] = byte;
+ 126   2              uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_DATA;
+ 127   2              return 0;
+ 128   2              break;
+ 129   2      
+ 130   2          case UART_DATA_HANDLE_STATUS_FORMAT_DATA:
+ 131   2              if (byte == UART_DATA_HANDLE_FORMAT_FIX_VAL1)
+ 132   2              {
+ 133   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
+ 134   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL1;
+ 135   3                  return 0;
+ 136   3              }
+ 137   2              else
+ 138   2              {
+ 139   3                  return 1;
+ 140   3              }
+ 141   2              break;
+ 142   2      
+ 143   2          case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL1:
+ 144   2              // 校验和字节
+ 145   2              uart_receiver.buffer[uart_receiver.index++] = byte;
+ 146   2              uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM;
+ 147   2              if (uart_receiver_process_checksum())
+ 148   2              {
+ 149   3                  // 校验和出错
+ 150   3                  return 1;
  151   3              }
- 152   2              break;
- 153   2      
- 154   2          case UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM:
- 155   2              if (byte == UART_DATA_HANDLE_FORMAT_TAIL)
- 156   2              {
- 157   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
- 158   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_TAIL;
- 159   3                  return 0;
- 160   3              }
- 161   2              else
- 162   2              {
- 163   3                  return 1;
+ 152   2              else
+ 153   2              {
+ 154   3                  return 0;
+ 155   3              }
+ 156   2              break;
+ 157   2      
+ 158   2          case UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM:
+ 159   2              if (byte == UART_DATA_HANDLE_FORMAT_TAIL)
+ 160   2              {
+ 161   3                  uart_receiver.buffer[uart_receiver.index++] = byte;
+ 162   3                  uart_receiver.status = UART_DATA_HANDLE_STATUS_FORMAT_TAIL;
+ 163   3                  return 0;
  164   3              }
- 165   2              break;
- 166   2      
- 167   2          default:
- 168   2              break;
- 169   2          }
- 170   1      
- 171   1          return 1;
- 172   1      }
- 173          
- 174          // 超时处理函数
- 175          void uart_receiver_timeout_handler(void)
- 176          {
- 177   1      #if USER_DEBUG_ENABLE
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/03/2026 16:59:41 PAGE 4   
+ 165   2              else
+ 166   2              {
+ 167   3                  return 1;
+ 168   3              }
+ 169   2              break;
+ 170   2      
+ 171   2          default:
+ 172   2              break;
+ 173   2          }
+ 174   1      
+ 175   1          return 1;
+ 176   1      }
+ 177          
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/07/2026 18:09:09 PAGE 4   
 
+ 178          // 超时处理函数
+ 179          void uart_receiver_timeout_handler(void)
+ 180          {
+ 181   1      #if USER_DEBUG_ENABLE
                   u8 i;
               #endif
- 180   1      
- 181   1          if (uart_receiver.timeout_cnt >= UART_DATA_HANDLE_TIMEOUT)
- 182   1          {
- 183   2      #if USER_DEBUG_ENABLE
-                      // printf("UART receive timeout, current status: %d\n", (u16)uart_receiver.status);
+ 184   1      
+ 185   1          if (uart_receiver.timeout_cnt >= UART_DATA_HANDLE_TIMEOUT)
+ 186   1          {
+ 187   2      #if USER_DEBUG_ENABLE
+                      printf("UART receive timeout, current status: %d\n", (u16)uart_receiver.status);
               
                       // 打印当前缓冲区内容
-                      // printf("Buffer content: \n");
-                      // for (i = 0; i < uart_receiver.index; i++)
-                      // {
-                      //     printf("0x%02x ", (u16)uart_receiver.buffer[i]);
-                      // }
-                      // printf("\n");
+                      printf("Buffer content: \n");
+                      for (i = 0; i < uart_receiver.index; i++)
+                      {
+                          printf("0x%02x ", (u16)uart_receiver.buffer[i]);
+                      }
+                      printf("\n");
               #endif
- 194   2      
- 195   2              // 重置接收器
- 196   2              uart_receiver_reset();
- 197   2          }
- 198   1      }
- 199          void uart_data_handle(void)
- 200          {
- 201   1      #if USER_DEBUG_ENABLE
+ 198   2      
+ 199   2              // 重置接收器
+ 200   2              uart_receiver_reset();
+ 201   2          }
+ 202   1      }
+ 203          void uart_data_handle(void)
+ 204          {
+ 205   1      #if USER_DEBUG_ENABLE
                   u8 i;
               #endif
- 204   1          u8 recv_byte;
- 205   1          static u8 initialized = 0; // 串口接收器对象是否已经完成初始化
- 206   1      
- 207   1          // 初始化接收器（只执行一次）
- 208   1          if (!initialized)
- 209   1          {
- 210   2              uart_receiver_reset();
- 211   2              initialized = 1;
- 212   2          }
- 213   1      
- 214   1          // 检查超时
- 215   1          // if (uart_receiver.timeout_enable &&
- 216   1          //     uart0_rxbuffer_get_count() == 0)
- 217   1          if (uart_receiver.timeout_enable)
- 218   1          {
- 219   2              uart_receiver_timeout_handler();
- 220   2          }
- 221   1      
- 222   1          if (uart0_rxbuffer_get_count() == 0)
- 223   1          {
- 224   2              return;
- 225   2          }
- 226   1      
- 227   1          // 处理接收缓冲区中的数据
- 228   1          while (1)
- 229   1          {
- 230   2              if (0 == uart0_rxbuffer_get_count() ||
- 231   2                  uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
- 232   2              {
- 233   3      #if USER_DEBUG_ENABLE
+ 208   1          u8 recv_byte;
+ 209   1          static u8 initialized = 0; // 串口接收器对象是否已经完成初始化
+ 210   1      
+ 211   1          // 初始化接收器（只执行一次）
+ 212   1          if (!initialized)
+ 213   1          {
+ 214   2              uart_receiver_reset();
+ 215   2              initialized = 1;
+ 216   2          }
+ 217   1      
+ 218   1          // 检查超时
+ 219   1          // if (uart_receiver.timeout_enable &&
+ 220   1          //     uart0_rxbuffer_get_count() == 0)
+ 221   1          if (uart_receiver.timeout_enable)
+ 222   1          {
+ 223   2              uart_receiver_timeout_handler();
+ 224   2          }
+ 225   1      
+ 226   1          // if (uart0_rxbuffer_get_count() == 0)
+ 227   1          // {
+ 228   1          //     return;
+ 229   1          // }
+ 230   1      
+ 231   1      #if 1
+ 232   1          // 处理接收缓冲区中的数据
+ 233   1          while (1)
+ 234   1          {
+ 235   2              if (0 == uart0_rxbuffer_get_count() ||
+ 236   2                  uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_TAIL ||
+ 237   2                  uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM) // 接收完校验和就认�
+             -��接收完成
+ 238   2              {
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/07/2026 18:09:09 PAGE 5   
+
+ 239   3      #if USER_DEBUG_ENABLE
                           // 缓冲区为空或者接收完成，退出循环
                           // if (0 == uart0_rxbuffer_get_count() && uart_receiver.status != UART_DATA_HANDLE_STATUS_FORM
              -AT_TAIL)
                           // {
                           //     printf("0 == uart0_rxbuffer_get_count()\n");
                           // }
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/03/2026 16:59:41 PAGE 5   
-
               
                           // if (uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
                           // {
@@ -263,38 +270,75 @@ line level    source
                           // }
               
               #endif
- 246   3                  break;
- 247   3              }
- 248   2      
- 249   2              recv_byte = uart0_rxbuffer_get_byte();
- 250   2      
- 251   2              // 启用超时计数
- 252   2              uart_receiver.timeout_enable = 1;
- 253   2              uart_receiver.timeout_cnt = 0;
+ 252   3                  break;
+ 253   3              }
  254   2      
- 255   2              // 处理字节
- 256   2              if (uart_receiver_process_byte(recv_byte))
- 257   2              {
- 258   3      #if USER_DEBUG_ENABLE
+ 255   2              recv_byte = uart0_rxbuffer_get_byte();
+ 256   2      
+ 257   2              // 启用超时计数
+ 258   2              uart_receiver.timeout_enable = 1;
+ 259   2              uart_receiver.timeout_cnt = 0;
+ 260   2      
+ 261   2              // 处理字节
+ 262   2              if (uart_receiver_process_byte(recv_byte))
+ 263   2              {
+ 264   3      #if USER_DEBUG_ENABLE
                           // 处理失败
-                          // printf("Byte processing failed\n");
-                          // printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
+                          // 如果连格式头都没有接收，不打印错误信息
+                          if (uart_receiver.status != 0)
+                          {
+                              printf("Byte processing failed\n");
+                              printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
+                          }
+              
                           // printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
                           // printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
               #endif
- 265   3                  uart_receiver_reset();
- 266   3              }
- 267   2          }
- 268   1      
- 269   1          if (uart_receiver.status != UART_DATA_HANDLE_STATUS_FORMAT_TAIL)
- 270   1          {
- 271   2              return;
- 272   2          }
- 273   1      
- 274   1          // ===========================================================
- 275   1          // 接收完成，处理数据
- 276   1      
- 277   1      #if USER_DEBUG_ENABLE
+ 276   3                  uart_receiver_reset();
+ 277   3              }
+ 278   2          }
+ 279   1      #else
+                  if (uart0_rxbuffer_get_count())
+                  {
+                      recv_byte = uart0_rxbuffer_get_byte();
+              
+                      // 启用超时计数
+                      uart_receiver.timeout_enable = 1;
+                      uart_receiver.timeout_cnt = 0;
+              
+                      // 处理字节
+                      if (uart_receiver_process_byte(recv_byte))
+                      {
+              #if USER_DEBUG_ENABLE
+                          // 处理失败
+                          // 如果连格式头都没有接收，不打印错误信息
+                          if (uart_receiver.status != 0)
+                          {
+                              printf("Byte processing failed\n");
+                              printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
+                          }
+              
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/07/2026 18:09:09 PAGE 6   
+
+                          // printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
+                          // printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
+              #endif
+                          uart_receiver_reset();
+                      }
+                  }
+              #endif
+ 307   1      
+ 308   1          if (uart_receiver.status != UART_DATA_HANDLE_STATUS_FORMAT_TAIL &&
+ 309   1              uart_receiver.status != UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM) // 接收完校验和就认为�
+             -�收完成
+ 310   1          {
+ 311   2              return;
+ 312   2          }
+ 313   1      
+ 314   1          // ===========================================================
+ 315   1          // 接收完成，处理数据
+ 316   1      
+ 317   1      #if USER_DEBUG_ENABLE
               #if 0
                   // 打印接收到的一帧数据
                   printf("================================>\n");
@@ -307,64 +351,68 @@ line level    source
                   printf("================================^\n");
               #endif
               #endif
- 290   1      
- 291   1          //
- 292   1          switch ((uart_recv_cmd_t)uart_receiver.buffer[4])
- 293   1          {
- 294   2          case UART_RECV_CMD_BLE_MUSIC_PLAYING:
- 295   2              // printf("recv music playing\n");
- 296   2              ble_ic.music_status = BLUETOOTH_IC_STATUS_PLAYING_MUSIC;
- 297   2              break;
- 298   2          case UART_RECV_CMD_BLE_MUSIC_PAUSING:
- 299   2              // printf("recv music pause\n");
- 300   2              ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/03/2026 16:59:41 PAGE 6   
+ 330   1      
+ 331   1          //
+ 332   1          switch ((uart_recv_cmd_t)uart_receiver.buffer[4])
+ 333   1          {
+ 334   2          case UART_RECV_CMD_BLE_MUSIC_PLAYING:
+ 335   2              // printf("recv music playing\n");
+ 336   2              ble_ic.music_status = BLUETOOTH_IC_STATUS_PLAYING_MUSIC;
+ 337   2              break;
+ 338   2          case UART_RECV_CMD_BLE_MUSIC_PAUSING:
+ 339   2              // printf("recv music pause\n");
+ 340   2              ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
+ 341   2              break;
+ 342   2          case UART_RECV_CMD_BLE_AMP_OFF:
+ 343   2      #if USER_DEBUG_ENABLE
+                      printf("recv amp off\n");
+              #endif
+ 346   2              // 收到蓝牙ic回复的数据后，关闭蓝牙ic
+ 347   2              // BLE_IC_POWER_KEY_PIN = 1;
+ 348   2              // ble_ic.is_working = 0;
+ 349   2      
+ 350   2              ble_ic_disable_post();
+ 351   2              break;
+ 352   2      
+ 353   2          default:
+ 354   2      #if USER_DEBUG_ENABLE
+                      printf("Unknown command: 0x%02x\n", (u16)uart_receiver.buffer[4]);
+              #endif
+ 357   2              break;
+ 358   2          }
+ 359   1      
+ 360   1          // 重置接收器，准备下一次接收
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  04/07/2026 18:09:09 PAGE 7   
 
- 301   2              break;
- 302   2          case UART_RECV_CMD_BLE_AMP_OFF:
- 303   2              // printf("recv amp off\n");
- 304   2              // 收到蓝牙ic回复的数据后，关闭蓝牙ic
- 305   2              // BLE_IC_POWER_KEY_PIN = 1;
- 306   2              // ble_ic.is_working = 0;
- 307   2      
- 308   2              ble_ic_disable_post();
- 309   2              break;
- 310   2      
- 311   2          default:
- 312   2              // printf("Unknown command: 0x%02x\n", (u16)uart_receiver.buffer[4]);
- 313   2              break;
- 314   2          }
- 315   1      
- 316   1          // 重置接收器，准备下一次接收
- 317   1          uart_receiver_reset();
- 318   1      }
- 319          
- 320          // 根据命令，自动打包数据并发送
- 321          // 串口数据发送
- 322          void uart_data_send_cmd(uart_send_cmd_t cmd)
- 323          {
- 324   1          u8 buf[] = {
- 325   1              UART_DATA_HANDLE_FORMAT_HEAD0,
- 326   1              UART_DATA_HANDLE_FORMAT_HEAD1,
- 327   1              UART_DATA_HANDLE_FORMAT_FIX_VAL0,
- 328   1              0x80,
- 329   1              0xFF, // cmd
- 330   1              UART_DATA_HANDLE_FORMAT_FIX_VAL1,
- 331   1              0xFF, // check_sum
- 332   1              UART_DATA_HANDLE_FORMAT_TAIL,
- 333   1          };
- 334   1      
- 335   1          buf[4] = cmd;                                        // cmd
- 336   1          buf[6] = buf[0] + buf[1] + buf[2] + buf[3] + buf[4]; // check_sum
- 337   1      
- 338   1          uart0_sendbuf(buf, ARRAY_SIZE(buf));
- 339   1      }
+ 361   1          uart_receiver_reset();
+ 362   1      }
+ 363          
+ 364          // 根据命令，自动打包数据并发送
+ 365          // 串口数据发送
+ 366          void uart_data_send_cmd(uart_send_cmd_t cmd)
+ 367          {
+ 368   1          u8 buf[] = {
+ 369   1              UART_DATA_HANDLE_FORMAT_HEAD0,
+ 370   1              UART_DATA_HANDLE_FORMAT_HEAD1,
+ 371   1              UART_DATA_HANDLE_FORMAT_FIX_VAL0,
+ 372   1              0x80,
+ 373   1              0xFF, // cmd
+ 374   1              UART_DATA_HANDLE_FORMAT_FIX_VAL1,
+ 375   1              0xFF, // check_sum
+ 376   1              UART_DATA_HANDLE_FORMAT_TAIL,
+ 377   1          };
+ 378   1      
+ 379   1          buf[4] = cmd;                                        // cmd
+ 380   1          buf[6] = buf[0] + buf[1] + buf[2] + buf[3] + buf[4]; // check_sum
+ 381   1      
+ 382   1          uart0_sendbuf(buf, ARRAY_SIZE(buf));
+ 383   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    462    ----
+   CODE SIZE        =    464    ----
    CONSTANT SIZE    =      8    ----
-   XDATA SIZE       =     17       9
+   XDATA SIZE       =     26       9
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

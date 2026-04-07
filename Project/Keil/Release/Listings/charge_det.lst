@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/03/2026 17:30:14 PAGE 1   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/07/2026 18:03:42 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE CHARGE_DET
@@ -62,7 +62,7 @@ line level    source
   47   1          // 增加测量周期计数
   48   1          measurement_period_counter++;
   49   1      
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/03/2026 17:30:14 PAGE 2   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/07/2026 18:03:42 PAGE 2   
 
   50   1          // 检测到低电平，并且之前没有检测到充电信号，可能不在充电
   51   1          if (current_pin_state == 0 && consecutive_detection_count == 0)
@@ -126,7 +126,7 @@ line level    source
  108   2      
  109   2          case 2: // 检测低电平持续时间
  110   2              if (current_pin_state == 0)
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/03/2026 17:30:14 PAGE 3   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/07/2026 18:03:42 PAGE 3   
 
  111   2              { // 仍在低电平
  112   3                  signal_low_duration++;
@@ -190,7 +190,7 @@ line level    source
              -满电
  170   2              if (consecutive_detection_count >= (u32)5000 * 10) //  5000 *10 * 100 us 连续 5s检测到1Khz信
              -号，说明充满电
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/03/2026 17:30:14 PAGE 4   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/07/2026 18:03:42 PAGE 4   
 
  171   2              {
  172   3                  is_charging_ic_stop = 1;
@@ -254,20 +254,20 @@ line level    source
  230   2              {
  231   3                  led_status_set(LED_STATUS_OFF); // 关闭灯光
  232   3              }
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/03/2026 17:30:14 PAGE 5   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        04/07/2026 18:03:42 PAGE 5   
 
  233   2      
  234   2              if (ble_ic.is_working)
  235   2              {
  236   3                  ble_ic_disable_pre();
- 237   3                  delay_ms(30); // 等待蓝牙关闭
+ 237   3                  // delay_ms(30); // 等待蓝牙关闭
  238   3              }
  239   2          }
  240   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    641    ----
+   CODE SIZE        =    634    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     21       4
    PDATA SIZE       =   ----    ----

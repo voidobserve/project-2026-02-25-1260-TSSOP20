@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/03/2026 17:30:13 PAGE 1   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BATTERY_MONITOR
@@ -62,7 +62,7 @@ line level    source
   46   2              cnt++;
   47   2              if (cnt >= SEND_LOW_BAT_TIME_PERIOD)
   48   2              {
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/03/2026 17:30:13 PAGE 2   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 2   
 
   49   3                  cnt = 0;
   50   3                  is_send_low_bat_repeatedly_enable = 1;
@@ -126,7 +126,7 @@ line level    source
  107   1      }
  108          
  109          // 根据ad值，转换成对应的电池电压值
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/03/2026 17:30:13 PAGE 3   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 3   
 
  110          u16 get_battery_voltage_by_adc(u16 adc_val)
  111          {
@@ -190,7 +190,7 @@ line level    source
  168   2              bat_vol_history_buff[i] = voltage_mv;
  169   2          }
  170   1          bat_vol_history_buff_idx = 0;
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/03/2026 17:30:13 PAGE 4   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 4   
 
  171   1      }
  172          
@@ -254,7 +254,7 @@ line level    source
               }
               #endif
  232          
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/03/2026 17:30:13 PAGE 5   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 5   
 
  233          // 修改后的电池监控处理函数
  234          void battery_monitor_handle(void)
@@ -284,9 +284,9 @@ line level    source
  257   3                  bat_percent = percent; // 初始化全局变量，电池电量百分比
  258   3      
  259   3      #if USER_DEBUG_ENABLE
-                          printf("bat monitor init\n");
-                          printf("avg_voltage_mv == %u\n", avg_voltage_mv);
-                          printf("percent == %u\n", (u16)percent);
+                          // printf("bat monitor init\n");
+                          // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+                          // printf("percent == %u\n", (u16)percent);
               #endif
  264   3              }
  265   2      
@@ -318,7 +318,7 @@ line level    source
  290   2      #endif
  291   2          }
  292   1      #endif
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/03/2026 17:30:13 PAGE 6   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 6   
 
  293   1      
  294   1          // 测试时使用：
@@ -379,10 +379,10 @@ line level    source
  349   1          bat_percent = percent; // 得到稳定之后的电池电量百分比
  350   1      
  351   1      #if USER_DEBUG_ENABLE
-              #if 1
+              #if 0
                   // USER_TO_DO 只在测试时使用：
                   // 每隔一段时间打印一次滤波后得到的电压和电量百分比
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/03/2026 17:30:13 PAGE 7   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 7   
 
                   if (flag_debug)
                   {
@@ -435,68 +435,69 @@ line level    source
  403   4                      if (ble_ic.is_working)
  404   4                      {
  405   5                          uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
- 406   5                          delay_ms(5000); // 这里要等蓝牙播报完成
- 407   5                          ble_ic_disable_pre();
- 408   5                          delay_ms(100);
- 409   5                      }
- 410   4      
- 411   4                      is_turn_off_by_low_bat = 1;
- 412   4                  }
- 413   3              }
- 414   2              /*
- 415   2                  低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
- 416   2              */
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/03/2026 17:30:13 PAGE 8   
+ 406   5                          // delay_ms(5000); // 这里要等蓝牙播报完成
+ 407   5                          delay_ms(30);
+ 408   5                          ble_ic_disable_pre();
+ 409   5                          delay_ms(100);
+ 410   5                      }
+ 411   4      
+ 412   4                      is_turn_off_by_low_bat = 1;
+ 413   4                  }
+ 414   3              }
+ 415   2              /*
+ 416   2                  低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 8   
 
- 417   2              else if (is_sent_low_bat_alert == 0 &&
- 418   2                       avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
- 419   2              {
- 420   3                  // u8 i; // 循环计数值，控制连续发送低电量报警的次数
- 421   3      #if USER_DEBUG_ENABLE
+ 417   2              */
+ 418   2              else if (is_sent_low_bat_alert == 0 &&
+ 419   2                       avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
+ 420   2              {
+ 421   3                  // u8 i; // 循环计数值，控制连续发送低电量报警的次数
+ 422   3      #if USER_DEBUG_ENABLE
                           printf("detect low power\n");
               #endif
- 424   3                  if (ble_ic.is_working == 0)
- 425   3                  {
- 426   4                      ble_ic_enable();
- 427   4                  }
- 428   3      
- 429   3                  // for (i = 0; i < 1; i++)
- 430   3                  {
- 431   4                      uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
- 432   4                  }
- 433   3      
- 434   3                  is_sent_low_bat_alert = 1;
- 435   3              }
- 436   2      
- 437   2              // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间�
+ 425   3                  if (ble_ic.is_working == 0)
+ 426   3                  {
+ 427   4                      ble_ic_enable();
+ 428   4                  }
+ 429   3      
+ 430   3                  // for (i = 0; i < 1; i++)
+ 431   3                  {
+ 432   4                      uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
+ 433   4                  }
+ 434   3      
+ 435   3                  is_sent_low_bat_alert = 1;
+ 436   3              }
+ 437   2      
+ 438   2              // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间�
              -�送一次低电量报警：
- 438   2              if (is_send_low_bat_repeatedly_enable)
- 439   2              {
- 440   3                  uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
- 441   3                  is_send_low_bat_repeatedly_enable = 0;
- 442   3      
- 443   3      #if USER_DEBUG_ENABLE
+ 439   2              if (is_send_low_bat_repeatedly_enable)
+ 440   2              {
+ 441   3                  uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
+ 442   3                  is_send_low_bat_repeatedly_enable = 0;
+ 443   3      
+ 444   3      #if USER_DEBUG_ENABLE
                           printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
               #endif
- 446   3              }
- 447   2          }
- 448   1      
- 449   1          // 测试时使用，充电动画：
- 450   1          // if (is_in_charging_by_charger)
- 451   1          // {
- 452   1          //     LED_100_PERCENT_ON();
- 453   1          //     LED_75_PERCENT_ON();
- 454   1          //     LED_50_PERCENT_ON();
- 455   1          //     LED_25_PERCENT_ON();
- 456   1          // }
- 457   1          // else
- 458   1          // {
- 459   1          //     LED_100_PERCENT_OFF();
- 460   1          //     LED_75_PERCENT_OFF();
- 461   1          //     LED_50_PERCENT_OFF();
- 462   1          //     LED_25_PERCENT_OFF();
- 463   1          // }
- 464   1      }
+ 447   3              }
+ 448   2          }
+ 449   1      
+ 450   1          // 测试时使用，充电动画：
+ 451   1          // if (is_in_charging_by_charger)
+ 452   1          // {
+ 453   1          //     LED_100_PERCENT_ON();
+ 454   1          //     LED_75_PERCENT_ON();
+ 455   1          //     LED_50_PERCENT_ON();
+ 456   1          //     LED_25_PERCENT_ON();
+ 457   1          // }
+ 458   1          // else
+ 459   1          // {
+ 460   1          //     LED_100_PERCENT_OFF();
+ 461   1          //     LED_75_PERCENT_OFF();
+ 462   1          //     LED_50_PERCENT_OFF();
+ 463   1          //     LED_25_PERCENT_OFF();
+ 464   1          // }
+ 465   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE

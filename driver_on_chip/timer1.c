@@ -8,6 +8,7 @@
  */
 void timer1_init(void)
 {
+#if 1
     __EnableIRQ(TMR1_IRQn); // 使能 中断
     IE_EA = 1;              // 使能总中断
 
@@ -18,6 +19,7 @@ void timer1_init(void)
     TMR1_CONL = TMR_SOURCE_SEL(0x7) |                   // 选择系统时钟
                 TMR_PRESCALE_SEL(0x00) |                // 预分频为1
                 TMR_MODE_SEL(0x1);                      // 计数模式
+#endif
 }
 
 // extern void fun(void);

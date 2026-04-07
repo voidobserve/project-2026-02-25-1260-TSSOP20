@@ -133,7 +133,6 @@ void led_status_switch(void)
 // 设置led灯的状态
 void led_status_set(led_status_t status)
 {
-
     switch (status)
     {
     case LED_STATUS_OFF: // 关灯

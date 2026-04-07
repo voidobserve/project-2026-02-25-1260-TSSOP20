@@ -21,10 +21,17 @@ void adc_pin_init(void)
 
     // P14 检测太阳能一侧的电压
     P1_MD1 |= GPIO_P14_MODE_SEL(0x3);
+
+    
+    // USER_TO_DO 还没有加入ad检测功能
+    // 检测type-c充电的引脚
+    P1_MD1 |= GPIO_P16_MODE_SEL(0x03);
 }
 
 void adc_init(void)
 {
+    cur_adc_status = ADC_STATUS_IDLE;
+
     ADC_ACON0 = ADC_CMP_EN(0x1) |  // 打开ADC中的CMP使能信号
                 ADC_BIAS_EN(0x1) | // 打开ADC偏置电流能使信号
                 ADC_BIAS_SEL(0x1); // 打开 ADC偏置电流

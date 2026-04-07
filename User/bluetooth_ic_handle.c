@@ -11,7 +11,7 @@ void ble_ic_enable(void)
     BLE_IC_POWER_KEY_PIN = 0;
     delay_ms(30); // 等待蓝牙开机完毕
     uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
-    ble_ic.is_working = 1;
+    ble_ic.is_working = 1; 
 
 #if USER_DEBUG_ENABLE
     printf("ble open\n");

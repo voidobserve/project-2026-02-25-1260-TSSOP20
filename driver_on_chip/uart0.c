@@ -20,6 +20,7 @@ void uart0_init(void)
     P2_MD1 |= GPIO_P25_MODE_SEL(0x1); // 配置为输出模式
     FOUT_S25 |= GPIO_FOUT_UART0_TX;   // 配置为UART0_TX
 
+    P2_PU |= GPIO_P26_PULL_UP(0x01);
     P2_MD1 &= ~GPIO_P26_MODE_SEL(0x03); // 清空对应的寄存器配置，对应输入模式
     FIN_S7 = GPIO_FIN_SEL_P26;          // 选择 uart0 rx 对应的引脚
 
@@ -29,8 +30,9 @@ void uart0_init(void)
                  UART_RX_IRQ_EN(0x01) |          // 0x01：rx中断使能
                  UART_EN(0x01);                  // UART 使能
 
-    __EnableIRQ(UART0_IRQn); // 打开模块中断
-    IE_EA = 1;               // 打开总中断
+    __SetIRQnIP(UART0_IRQn, 1); // 设置中断优先级，数值越大，优先级越高
+    __EnableIRQ(UART0_IRQn);    // 打开模块中断
+    IE_EA = 1;                  // 打开总中断
 }
 
 // UART0发送一个字节数据的函数
@@ -41,8 +43,8 @@ void uart0_sendbyte(u8 byte)
     // IE_EA = 0; // 关闭总中断
     UART0_DATA = byte;
     // IE_EA = 1;
-    while (!(UART0_STA & UART_TX_DONE(0x01))) // 等待这次发送完成
-        ;
+    // while (!(UART0_STA & UART_TX_DONE(0x01))) // 等待这次发送完成
+    //     ;
 }
 
 void uart0_sendbuf(u8 *buf, u8 len)
@@ -55,7 +57,7 @@ void uart0_sendbuf(u8 *buf, u8 len)
 }
 
 // 获取接收缓冲区中有效的数据个数，单位：字节Byte
-u8 uart0_rxbuffer_get_count(void)
+u16 uart0_rxbuffer_get_count(void)
 {
     return uart0_rx_buffer.count;
 }
@@ -72,7 +74,14 @@ u8 uart0_rxbuffer_get_byte(void)
     }
 
     // 先偏移索引，再取出数据
-    uart0_rx_buffer.tail = (uart0_rx_buffer.tail + 1) % UART_RX_BUF_SIZE;
+    // uart0_rx_buffer.tail = (uart0_rx_buffer.tail + 1) % UART_RX_BUF_SIZE;
+    // rxbyte = uart0_rx_buffer.buffer[uart0_rx_buffer.tail];
+
+    uart0_rx_buffer.tail++;
+    if (uart0_rx_buffer.tail >= UART_RX_BUF_SIZE)
+    {
+        uart0_rx_buffer.tail = 0;
+    }
     rxbyte = uart0_rx_buffer.buffer[uart0_rx_buffer.tail];
 
     uart0_rx_buffer.count--;
@@ -85,11 +94,17 @@ static void uart0_rxbuffer_put_byte(u8 byte)
     // 目前的逻辑：缓冲区满，覆盖旧的数据
 
     // 先偏移索引，再存放数据
-    uart0_rx_buffer.head = (uart0_rx_buffer.head + 1) % UART_RX_BUF_SIZE;
+    // uart0_rx_buffer.head = (uart0_rx_buffer.head + 1) % UART_RX_BUF_SIZE;
+    // uart0_rx_buffer.buffer[uart0_rx_buffer.head] = byte;
+
+    uart0_rx_buffer.head++;
+    if (uart0_rx_buffer.head >= UART_RX_BUF_SIZE)
+    {
+        uart0_rx_buffer.head = 0;
+    }
     uart0_rx_buffer.buffer[uart0_rx_buffer.head] = byte;
 
     uart0_rx_buffer.count++;
-
     if (uart0_rx_buffer.count > UART_RX_BUF_SIZE)
     {
         uart0_rx_buffer.count = UART_RX_BUF_SIZE;
@@ -105,7 +120,10 @@ void UART0_IRQHandler(void) interrupt UART0_IRQn
     // RX接收完成中断
     if (UART0_STA & UART_RX_DONE(0x1))
     {
-        uart0_rxbuffer_put_byte(UART0_DATA);
+        u8 recv_byte = UART0_DATA;
+        uart0_rxbuffer_put_byte(recv_byte);
+
+        // printf("%02x\n", (u16)recv_byte);
     }
     // 退出中断设置IP，不可删除
     __IRQnIPnPop(UART0_IRQn);

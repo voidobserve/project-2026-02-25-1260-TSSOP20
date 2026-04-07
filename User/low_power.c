@@ -34,7 +34,7 @@ void low_power_enter_timer_callback(void)
 void low_power_in(void)
 {
 #if USER_DEBUG_ENABLE
-    printf("stop in\n");
+    // printf("stop in\n");
 #endif
 
     __DisableIRQ(TMR1_IRQn);  // 禁止 定时器 1 中断
@@ -72,6 +72,7 @@ void low_power_in(void)
     P2_PU &= ~(GPIO_P22_PULL_UP(0x01) | GPIO_P21_PULL_UP(0x01)); // 关闭上拉
 
     // 关闭串口
+    P2_PU &= ~GPIO_P26_PULL_UP(0x01);
     P2_MD1 |= GPIO_P25_MODE_SEL(0x03); // TX脚配置为 模拟输入
     P2_MD1 |= GPIO_P26_MODE_SEL(0x03); // RX脚配置为 模拟输入
     FOUT_S25 = GPIO_FOUT_AF_FUNC;
@@ -97,8 +98,9 @@ void low_power_in(void)
 
     // USER_TO_DO
     // 充电ic检测脚 ch1
-    P2_MD0 &= GPIO_P21_MODE_SEL(0x3);
-    FIN_S11 = GPIO_FIN_SEL_P21; // 配置 P21 为通道1输入唤醒端口
+    P2_MD0 &= ~GPIO_P21_MODE_SEL(0x3);
+    P2_PU &= ~GPIO_P21_PULL_UP(0x01); // 关闭上拉
+    FIN_S11 = GPIO_FIN_SEL_P21;       // 配置 P21 为通道1输入唤醒端口
 
     delay_ms(1); // 官方提供的SDK中，这里有延时操作
 
@@ -125,7 +127,8 @@ void low_power_in(void)
                  LP_WKUP_0_EN(0x1));   // 唤醒通道0使能
 
     LP_WKCON &= ~LP_WKUP_1_EDG(0x01); // 通道1 高电平 触发唤醒
-    LP_WKCON |= LP_WKUP_1_EN(0x1);    // 唤醒 通道1 使能
+    // LP_WKCON |= LP_WKUP_1_EDG(0x01); // 通道1 低电平 触发唤醒
+    LP_WKCON |= LP_WKUP_1_EN(0x1); // 唤醒 通道1 使能
 
     LP_WKPND |= LP_WKUP_2_PCLR(0x1);  // 清除唤醒标志位
     LP_WKCON |= (LP_WKUP_2_EDG(0x0) | // 通道2高电平触发唤醒
@@ -155,11 +158,9 @@ void low_power_in(void)
     // P17 = 1; // 用该引脚测试低功耗的时间
     // =============================================================
     // 进入 sleep 低功耗模式
-    LP_CON = (LP_IDLE_EN(0x1) |
+    LP_CON = (LP_IDLE_EN(0x1) |     // Idle低功耗模式使能
               LP_SLEEP_GO_EN(0x1) | // Sleep低功耗模式唤醒后继续跑后续程序
-                                    //               LP_GLIRC_EN(0x1)    |            // 关闭RC64K低速时钟
               LP_SLEEP_EN(0x1));    // 使能睡眠
-    // LP_CON |= LP_SLEEP_EN(0x1);
     // 退出
     // =============================================================
     // P17 = 0; // 用该引脚测试低功耗的时间
@@ -172,7 +173,13 @@ void low_power_out(void)
     WUT_CONH &= ~TMR_PRD_IRQ_EN(0x1); // 不使能计数中断
     WUT_CONL &= ~TMR_MODE_SEL(0x1);   // 不使能计数
 
+    // 不使能唤醒通道
+    LP_WKCON &= ~(LP_WKUP_0_EN(0x01) |
+                  LP_WKUP_1_EN(0x01) |
+                  LP_WKUP_2_EN(0x01));
+
     FIN_S10 = GPIO_FIN_SEL_GND;
+    FIN_S11 = GPIO_FIN_SEL_GND;
 
     // CLK_ACON0 |= CLK_AIP_HRC_EN(0x1); // 使能HRC时钟
     // LP_WKPND |= LP_WKUP_0_PCLR(0x1);  // 清除通道0唤醒标志位
@@ -191,7 +198,7 @@ void low_power_out(void)
 
 #if USER_DEBUG_ENABLE
     uart0_init();
-    printf("stop out\n");
+    // printf("stop out\n");
 #endif
 }
 
@@ -212,75 +219,71 @@ label_low_power_in:
 
     low_power_in();
     low_power_out();
-    is_sent_low_bat_alert = 0;
 
-    // USER_TO_DO
     // 唤醒后，检测有没有按键操作、有没有充电，有则恢复工作，没有则回到低功耗
-    if (1)
+    adc_pin_init();
+    adc_init_when_low_pwr_out();
+
+    adc_channel_sel(ADC_CHANNEL_SEL_AD_KEY);
+    delay_ms(1);
+    adc_val = adc_get_val_once();
+    // 如果ad值小于ad按键的阈值，说明有按键按下
+    if (adc_val < AD_KEY_INDEX_MAX_VAL)
     {
-        adc_pin_init();
-        adc_init_when_low_pwr_out();
-
-        // USER_TO_DO 这里用在旧的板子上，检测有没有充电信号：
-        // charge_det_init();
-        // timer1_init();
-
-        adc_channel_sel(ADC_CHANNEL_SEL_AD_KEY);
-        delay_ms(1);
-        adc_val = adc_get_val_once();
-        // 如果ad值小于ad按键的阈值，说明有按键按下
-        if (adc_val < AD_KEY_INDEX_MAX_VAL)
-        {
-            // 有按键按下
-            is_back_to_low_power = 0;
+        // 有按键按下
+        is_back_to_low_power = 0;
 #if USER_DEBUG_ENABLE
-            printf("key down\n");
+        printf("key down\n");
 #endif
-        }
-
-        adc_channel_sel(ADC_CHANNEL_SEL_SOLAR_DET);
-        delay_ms(1);
-        adc_val = adc_get_val_once();
-        // 如果检测到大于4.5V，认为有太阳能充电
-        if (((u32)adc_val * 4096 / 2400 / 2) >= 4500)
-        {
-            is_back_to_low_power = 0;
-#if USER_DEBUG_ENABLE
-            printf("charge by solar panel\n");
-#endif
-        }
-
-        adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
-        delay_ms(1);
-        adc_val = adc_get_val_once();
-        // 从低功耗唤醒之后，需要采集一次电池对应的ad值，更新电池相关的变量
-        battery_monitor_refresh_by_adc_val(adc_val);
-
-        // USER_TO_DO 需要检查type-c充电口一侧的电压，判断有没有充电
-
-        // USER_TO_DO 旧版的pcb，需要打开定时器1，看看充电ic有没有信号，判断是不是正在充电
-        // charge_det();
-        // if (is_in_charging)
-        // {
-        //     is_back_to_low_power = 0;
-        // }
-        if (LP_WKPND & LP_WKUP_1_PND(0x01)) // 这里测试好像没有效果
-        {
-            is_back_to_low_power = 0;
-        }
-
-        if (is_back_to_low_power)
-        {
-#if USER_DEBUG_ENABLE
-            printf("goto low power in\n");
-#endif
-            goto label_low_power_in;
-        }
-
-        is_sent_low_bat_alert = 0;
-        is_turn_off_by_low_bat = 0;
     }
 
+    adc_channel_sel(ADC_CHANNEL_SEL_SOLAR_DET);
+    delay_ms(1);
+    adc_val = adc_get_val_once();
+    // 如果检测到大于4.5V，认为有太阳能充电
+    if (((u32)adc_val * 4096 / 2400 / 2) >= 4500)
+    {
+        is_back_to_low_power = 0;
+#if USER_DEBUG_ENABLE
+        printf("charge by solar panel\n");
+#endif
+    }
+
+    adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
+    delay_ms(1);
+    adc_val = adc_get_val_once();
+    // 从低功耗唤醒之后，需要采集一次电池对应的ad值，更新电池相关的变量
+    battery_monitor_refresh_by_adc_val(adc_val);
+
+    // USER_TO_DO 需要检查type-c充电口一侧的电压，判断有没有充电
+
+    // USER_TO_DO 旧版的pcb，需要打开定时器1，看看充电ic有没有信号，判断是不是正在充电
+    // charge_det();
+    // if (is_in_charging)
+    // {
+    //     is_back_to_low_power = 0;
+    // }
+    // 如果是充电ic输出正在充电的信号，导致的唤醒
+    if (LP_WKPND & LP_WKUP_1_PND(0x01))
+    {
+        is_back_to_low_power = 0;
+#if USER_DEBUG_ENABLE
+        printf("wake up by charging\n");
+#endif
+        LP_WKPND |= LP_WKUP_1_PCLR(0x01); // 清空唤醒标志位
+    }
+
+    if (is_back_to_low_power)
+    {
+#if USER_DEBUG_ENABLE
+        // printf("goto low power in\n");
+#endif
+        goto label_low_power_in;
+    }
+
+    // 成功退出低功耗之后，清除低电量报警和低电量关机的标志位
+    is_sent_low_bat_alert = 0;
+    is_turn_off_by_low_bat = 0;
     user_init();
 }
 
