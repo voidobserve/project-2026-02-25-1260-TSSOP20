@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 1   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/09/2026 16:03:54 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BATTERY_MONITOR
@@ -62,7 +62,7 @@ line level    source
   46   2              cnt++;
   47   2              if (cnt >= SEND_LOW_BAT_TIME_PERIOD)
   48   2              {
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 2   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/09/2026 16:03:54 PAGE 2   
 
   49   3                  cnt = 0;
   50   3                  is_send_low_bat_repeatedly_enable = 1;
@@ -126,7 +126,7 @@ line level    source
  107   1      }
  108          
  109          // 根据ad值，转换成对应的电池电压值
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 3   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/09/2026 16:03:54 PAGE 3   
 
  110          u16 get_battery_voltage_by_adc(u16 adc_val)
  111          {
@@ -190,7 +190,7 @@ line level    source
  168   2              bat_vol_history_buff[i] = voltage_mv;
  169   2          }
  170   1          bat_vol_history_buff_idx = 0;
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 4   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/09/2026 16:03:54 PAGE 4   
 
  171   1      }
  172          
@@ -254,7 +254,7 @@ line level    source
               }
               #endif
  232          
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 5   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/09/2026 16:03:54 PAGE 5   
 
  233          // 修改后的电池监控处理函数
  234          void battery_monitor_handle(void)
@@ -318,7 +318,7 @@ line level    source
  290   2      #endif
  291   2          }
  292   1      #endif
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 6   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/09/2026 16:03:54 PAGE 6   
 
  293   1      
  294   1          // 测试时使用：
@@ -382,7 +382,7 @@ line level    source
               #if 0
                   // USER_TO_DO 只在测试时使用：
                   // 每隔一段时间打印一次滤波后得到的电压和电量百分比
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 7   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/09/2026 16:03:54 PAGE 7   
 
                   if (flag_debug)
                   {
@@ -446,7 +446,7 @@ line level    source
  414   3              }
  415   2              /*
  416   2                  低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/07/2026 18:03:42 PAGE 8   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   04/09/2026 16:03:54 PAGE 8   
 
  417   2              */
  418   2              else if (is_sent_low_bat_alert == 0 &&

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BLUETOOTH_IC_HANDLE                                               04/07/2026 18:03:42 PAGE 1   
+C51 COMPILER V9.60.7.0   BLUETOOTH_IC_HANDLE                                               04/09/2026 16:03:54 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BLUETOOTH_IC_HANDLE
@@ -62,7 +62,7 @@ line level    source
   50   1          P23 = 1; // 默认高电平，不打开蓝牙
   51   1      
   52   1          ble_ic.music_status = BLUETOOTH_IC_STATUS_PAUSE_MUSIC;
-C51 COMPILER V9.60.7.0   BLUETOOTH_IC_HANDLE                                               04/07/2026 18:03:42 PAGE 2   
+C51 COMPILER V9.60.7.0   BLUETOOTH_IC_HANDLE                                               04/09/2026 16:03:54 PAGE 2   
 
   53   1          // ble_ic.connect_status = BLUETOOTH_IC_STATUS_DISCONNECT;
   54   1          // ble_ic.is_amp_off = 0;

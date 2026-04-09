@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/07/2026 18:16:50 PAGE 1   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/09/2026 16:03:54 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LOW_POWER
@@ -62,7 +62,7 @@ line level    source
   51   1          ADC_CFG0 &= ~(ADC_EN(0x01));       // 关闭ADC
   52   1      
   53   1          FIN_S7 = GPIO_FIN_SEL_GND;
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/07/2026 18:16:50 PAGE 2   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/09/2026 16:03:54 PAGE 2   
 
   54   1          UART0_CON0 &= ~UART_EN(0x01);
   55   1      
@@ -126,7 +126,7 @@ line level    source
  112   1          // 10ms 唤醒一次
  113   1          // WUT_PRH = TMR_PERIOD_VAL_H(((((u32)64000 / 64 / 100 - 1)) >> 8) & 0xFF); // 周期值
  114   1          // WUT_PRL = TMR_PERIOD_VAL_L(((((u32)64000 / 64 / 100 - 1)) >> 0) & 0xFF);
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/07/2026 18:16:50 PAGE 3   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/09/2026 16:03:54 PAGE 3   
 
  115   1          // 200ms 唤醒一次
  116   1          // WUT_PRH = TMR_PERIOD_VAL_H(((((u32)64000 / 64 / 5 - 1)) >> 8) & 0xFF); // 周期值
@@ -190,7 +190,7 @@ line level    source
  171   1          // 关闭 wake up timer
  172   1          __DisableIRQ(WUT_IRQn);           // 禁止WUT中断
  173   1          WUT_CONH &= ~TMR_PRD_IRQ_EN(0x1); // 不使能计数中断
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/07/2026 18:16:50 PAGE 4   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/09/2026 16:03:54 PAGE 4   
 
  174   1          WUT_CONL &= ~TMR_MODE_SEL(0x1);   // 不使能计数
  175   1      
@@ -254,7 +254,7 @@ line level    source
  230   1          // 如果ad值小于ad按键的阈值，说明有按键按下
  231   1          if (adc_val < AD_KEY_INDEX_MAX_VAL)
  232   1          {
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/07/2026 18:16:50 PAGE 5   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/09/2026 16:03:54 PAGE 5   
 
  233   2              // 有按键按下
  234   2              is_back_to_low_power = 0;
@@ -318,7 +318,7 @@ line level    source
  291          void WUT_IRQHandler(void) interrupt WUT_IRQn
  292          {
  293   1          // 进入中断设置IP，不可删除
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/07/2026 18:16:50 PAGE 6   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         04/09/2026 16:03:54 PAGE 6   
 
  294   1          __IRQnIPnPush(WUT_IRQn);
  295   1      

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LED                                                               04/07/2026 18:03:42 PAGE 1   
+C51 COMPILER V9.60.7.0   LED                                                               04/09/2026 16:03:54 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED
@@ -62,7 +62,7 @@ line level    source
   51   1          // led_ctl.cnt = 0;
   52   1          // led_ctl.cur_pwm_duty_val = PWM_DUTY_VAL_PERCENT_0;
   53   1          // led_ctl.is_slowly_adjust_end = 0;
-C51 COMPILER V9.60.7.0   LED                                                               04/07/2026 18:03:42 PAGE 2   
+C51 COMPILER V9.60.7.0   LED                                                               04/09/2026 16:03:54 PAGE 2   
 
   54   1          // led_ctl.adjust_time_cnt = 0;
   55   1          // led_ctl.working_time = 0;
@@ -126,7 +126,7 @@ line level    source
  112   2              // led_ctl.status = LED_STATUS_RED_BLUE_FLASH;
  113   2              // led_yellow_off();
  114   2              // led_white_off();
-C51 COMPILER V9.60.7.0   LED                                                               04/07/2026 18:03:42 PAGE 3   
+C51 COMPILER V9.60.7.0   LED                                                               04/09/2026 16:03:54 PAGE 3   
 
  115   2              led_status_set(LED_STATUS_RED_BLUE_FLASH);
  116   2              break;
@@ -190,7 +190,7 @@ line level    source
  174   2              led_white_off();
  175   2      
  176   2              led_ctl.red_blue_flash_time_cnt = 0;
-C51 COMPILER V9.60.7.0   LED                                                               04/07/2026 18:03:42 PAGE 4   
+C51 COMPILER V9.60.7.0   LED                                                               04/09/2026 16:03:54 PAGE 4   
 
  177   2              break;
  178   2          }
@@ -254,7 +254,7 @@ line level    source
  232   2              if (time_in_cycle < 230) // 低电平230ms，灯亮（低电平）
  233   2              {
  234   3                  LED_RED_ON();  // 红灯亮
-C51 COMPILER V9.60.7.0   LED                                                               04/07/2026 18:03:42 PAGE 5   
+C51 COMPILER V9.60.7.0   LED                                                               04/09/2026 16:03:54 PAGE 5   
 
  235   3                  LED_BLUE_ON(); // 蓝灯亮
  236   3              }
@@ -318,7 +318,7 @@ line level    source
  292          // 黄灯、白灯、黄白灯缓慢调节的动画效果
  293          void led_slow_adjust_isr(void)
  294          {
-C51 COMPILER V9.60.7.0   LED                                                               04/07/2026 18:03:42 PAGE 6   
+C51 COMPILER V9.60.7.0   LED                                                               04/09/2026 16:03:54 PAGE 6   
 
  295   1          if (led_ctl.status != LED_STATUS_OFF && led_ctl.is_slowly_adjust_end != 1)
  296   1          {
@@ -382,7 +382,7 @@ line level    source
  353          void led_bat_instruction_timer_callback(void)
  354          {
  355   1          if (led_bat_level_sta == LED_BAT_LEVEL_STA_IDLE)
-C51 COMPILER V9.60.7.0   LED                                                               04/07/2026 18:03:42 PAGE 7   
+C51 COMPILER V9.60.7.0   LED                                                               04/09/2026 16:03:54 PAGE 7   
 
  356   1          {
  357   2              LED_100_PERCENT_OFF();
@@ -446,7 +446,7 @@ line level    source
  414   4                      LED_25_PERCENT_TOGGLE();
  415   4                      break;
  416   4                  case 1:
-C51 COMPILER V9.60.7.0   LED                                                               04/07/2026 18:03:42 PAGE 8   
+C51 COMPILER V9.60.7.0   LED                                                               04/09/2026 16:03:54 PAGE 8   
 
  417   4                      LED_50_PERCENT_TOGGLE();
  418   4                      break;
@@ -510,7 +510,7 @@ line level    source
                           LED_75_PERCENT_ON(); //
                       }
                       else if (bat_percent >= 50)
-C51 COMPILER V9.60.7.0   LED                                                               04/07/2026 18:03:42 PAGE 9   
+C51 COMPILER V9.60.7.0   LED                                                               04/09/2026 16:03:54 PAGE 9   
 
                       {
                           led_charge_anim_phase = 2;

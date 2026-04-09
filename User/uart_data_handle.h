@@ -33,8 +33,11 @@ enum
 {
     UART_SEND_CMD_BLE_OPEN = (u8)0x0B,           // 打开蓝牙
     UART_SEND_CMD_BLE_CLOSE = (u8)0x0D,          // 关闭蓝牙
+
+    // 目前播放音乐和暂停播放音乐都是发送 0x01 
     UART_SEND_CMD_MUSIC_PLAY = (u8)0x01,         // 播放音乐
-    UART_SEND_CMD_MUSIC_PAUSE = (u8)0x02,        // 暂停播放
+    UART_SEND_CMD_MUSIC_PAUSE = (u8)0x01,        // 暂停播放
+    
     UART_SEND_CMD_MUSIC_PREV = (u8)0x03,         // 上一曲
     UART_SEND_CMD_MUSIC_NEXT = (u8)0x04,         // 下一曲
     UART_SEND_CMD_VOLUME_ADD = (u8)0x07,         // 音量加
