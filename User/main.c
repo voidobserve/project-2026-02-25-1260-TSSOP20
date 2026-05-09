@@ -148,6 +148,13 @@ void main(void)
     user_init();
     delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍）
 
+    // USER_TO_DO 只在测试时使用
+    // led_status_set(LED_STATUS_YELLOW);
+    // is_in_charging = 1;
+    // is_in_charging_by_solar_panel = 1;
+    // led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN;
+    // led_status_set(LED_STATUS_OFF);
+
     while (1)
     {
         key_driver_scan(&ad_key_para);
@@ -157,9 +164,10 @@ void main(void)
 
         battery_monitor_handle();
 
-        charge_det();
+        // charge_det();
 
-        low_power_handle(); 
+        // USER_TO_DO 测试时屏蔽：
+        // low_power_handle(); 
 
 #if USER_DEBUG_ENABLE
         // user_test_main();

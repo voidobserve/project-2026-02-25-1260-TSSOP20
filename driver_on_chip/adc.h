@@ -11,6 +11,8 @@ enum
     ADC_CHANNEL_SEL_AD_KEY, // ad按键检测
     ADC_CHANNEL_SEL_BAT_DET, // 电池电量检测
     ADC_CHANNEL_SEL_SOLAR_DET, // 太阳能充电检测
+
+    ADC_CHANNEL_SEL_TYPE_C,
 };
 typedef u8 adc_channel_sel_t;
 
@@ -23,6 +25,9 @@ enum
     ADC_STATUS_SEL_BAT_DET,
     ADC_STATUS_SEL_SOLAR_DET_WAITING,
     ADC_STATUS_SEL_SOLAR_DET, 
+
+    ADC_STATUS_SEL_TYPE_C_WAITING,
+    ADC_STATUS_SEL_TYPE_C,
 };
  
 

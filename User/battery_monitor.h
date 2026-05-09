@@ -7,8 +7,8 @@
 
 // 电池模型参数
 #define BATTERY_FULL_VOLTAGE 4200        // 满电电压 (mV)
-#define BATTERY_EMPTY_VOLTAGE 3300       // 空电电压 (mV)
-#define BATTERY_LOW_WARNING_VOLTAGE 3600 // 低电量警告电压 (mV)
+#define BATTERY_EMPTY_VOLTAGE 2900       // 空电电压 (mV)
+#define BATTERY_LOW_WARNING_VOLTAGE 3200 // 低电量警告电压 (mV)
 
 // ADC相关参数 (电池检测使用内部2.0V参考电压，VDD 1/5分压)
 #define BATTERY_ADC_REF_VOLTAGE_MV 2000 // 内部参考电压 2.0V
@@ -19,11 +19,13 @@
 #define ADC_TO_BATTERY_VOLTAGE_MV(adc_val) \
     (((u32)(adc_val) * BATTERY_ADC_REF_VOLTAGE_MV * BATTERY_VOLTAGE_DIVIDER) / 4096)
 
-#define VOLTAGE_HISTORY_SIZE 10
+// #define VOLTAGE_HISTORY_SIZE 10
+#define VOLTAGE_HISTORY_SIZE 1
 // 检测电池电压的周期，单位：ms
 #define BATTERY_VOLTAGE_UPDATE_PERIOD ((u16)4000)
 // 每隔多久将采集的电池电压放入缓存中，单位：ms
-#define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER ((u32)15 * 1000)
+// #define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER ((u32)15 * 1000)
+#define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER ((u32)4 * 1000)
 // 每隔多久将缓存中的电池电压提取出来，单位：ms
 #define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT \
     (BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER * VOLTAGE_HISTORY_SIZE)
@@ -42,6 +44,8 @@ typedef u8 bat_vol_update_sta_t;
 extern volatile u8 bat_percent;
 extern volatile u8 is_sent_low_bat_alert;
 extern volatile u8 is_turn_off_by_low_bat; // 是否低电量关机
+
+extern volatile u16 avg_voltage_mv; // @attention 在当前文件外调用时，慎用
 
 // void send_low_battery_timer_callback(void);
 

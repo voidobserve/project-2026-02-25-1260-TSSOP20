@@ -25,7 +25,7 @@ static volatile u16 voltage_mv = 0;     //
 static volatile u16 max_voltage_mv = 0; // 存放一段时间内采集到的最大电压值（只在采集使用，不能作为最终的判断使用）
 
 // 最后得到的、稳定的电池电压
-static volatile u16 avg_voltage_mv = 0;
+volatile u16 avg_voltage_mv = 0; // @attention 在当前文件外调用时，慎用
 
 static volatile u8 percent = 0;      // 电池电量百分比
 static volatile u8 last_percent = 0; // 记录上一次采集到的电量百分比，用来控制电量百分比更新，充电时百分比不能下降，放电时百分比不能上升
@@ -181,6 +181,7 @@ void bat_vol_history_buff_add(u16 voltage_mv)
     // }
 }
 
+// 获取缓冲区中所有元素的平均值
 u16 bat_vol_history_buff_get_avg(void)
 {
     u8 i;
@@ -237,6 +238,7 @@ void battery_monitor_handle(void)
     volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
 
 #if 1
+    // USER_TO_DO 这里可能要放在ad中断，ad值一更新就顺便调用这里
     // 获取AD值（ad值有更新才获取）
     if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
     {
@@ -251,7 +253,8 @@ void battery_monitor_handle(void)
             voltage_mv = cur_voltage_mv;
 
             bat_vol_history_buff_init(voltage_mv);
-            avg_voltage_mv = bat_vol_history_buff_get_avg();
+            // avg_voltage_mv = bat_vol_history_buff_get_avg();
+            avg_voltage_mv = cur_voltage_mv;
             percent = get_battery_percentage_by_voltage(avg_voltage_mv);
             last_percent = percent;
             bat_percent = percent; // 初始化全局变量，电池电量百分比
@@ -271,10 +274,17 @@ void battery_monitor_handle(void)
             导致又进入了 电池电量相关变量的初始化
         */
 #if 1
+        /*
+            @attention 这里没有判断上一次的电压值，会实时更新 voltage_mv 
+            在充电时，哪怕电压有下降，也会更新 voltage_mv
+            在放电时，电压有上升，也会更新 voltage_mv
+        */  
         if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
         {
+            // 如果已经采集了一段时间的电压值，则将 voltage_mv 赋值为 max_voltage_mv
             voltage_mv = max_voltage_mv;
-            max_voltage_mv = 0;
+
+            max_voltage_mv = 0; // 清零，准备下一轮采集
             bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
 
             // 输出计算结果 (调试用)
@@ -282,6 +292,7 @@ void battery_monitor_handle(void)
         }
         else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_CAPTURING)
         {
+            // 如果还在采集时间内，更新采集到的最大电压值 max_voltage_mv
             if (max_voltage_mv < cur_voltage_mv)
             {
                 max_voltage_mv = cur_voltage_mv;
@@ -320,20 +331,22 @@ void battery_monitor_handle(void)
 
         is_bat_vol_buff_get_avg_enable = 0;
     }
-
-    // 充电中，percent大于等于last_percent，不让percent小于last_percent
+ 
+    // 充电中， percent 大于等于 last_percent，不让 percent 小于 last_percent
     if (is_in_charging)
     {
         if (percent < last_percent)
         {
+            // 如果当前计算出的电量百分比小于上一次的
             percent = last_percent;
         }
         else
         {
+            // 如果当前计算出的电量百分比 大于等于 上一次，更新 last_percent
             last_percent = percent;
         }
     }
-    // 放电中，percent小于等于last_percent，不让percent大于last_percent
+    // 放电中， percent 小于等于 last_percent，不让 percent 大于 last_percent
     else
     {
         if (percent > last_percent)
@@ -342,19 +355,23 @@ void battery_monitor_handle(void)
         }
         else
         {
+            // 如果当前计算出的电量百分比 小于等于 上一次，更新 last_percent
             last_percent = percent;
         }
     }
 
-    bat_percent = percent; // 得到稳定之后的电池电量百分比
+    bat_percent = last_percent; // 得到稳定之后的电池电量百分比
 
 #if USER_DEBUG_ENABLE
-#if 0
+    // printf("bat_percent = %u\n", (u16)bat_percent);
+
+#if 1
     // USER_TO_DO 只在测试时使用：
     // 每隔一段时间打印一次滤波后得到的电压和电量百分比
     if (flag_debug)
     {
         flag_debug = 0;
+        printf("max_voltage_mv == %u\n", max_voltage_mv);
         printf("avg_voltage_mv == %u\n", avg_voltage_mv);
         printf("bat_percent == %u\n", (u16)bat_percent); //
     }

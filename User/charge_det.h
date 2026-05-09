@@ -7,11 +7,17 @@
 #define CHARGE_IC_CH1 P21
 #define CHARGE_IC_CH2 P22
 
-extern volatile u8 is_in_charging; // 是否正在充电 
+extern volatile u8 is_in_charging_by_solar_panel; // 是否正在通过太阳能充电
+extern volatile u8 is_in_charging_by_charger; // 是否正在通过充电IC充电
+
+extern volatile u8 is_in_charging;      // 是否正在充电
 extern volatile u8 is_charging_ic_stop; // 充电ic是否停止充电
+
+
 
 void charge_det_init(void);
 void charge_det(void);
 void detect_1khz_signal_100us(void); // 新增：检测1KHz信号的函数
+void charge_det_time_add(void);
 
 #endif

@@ -6,6 +6,11 @@
 
 volatile led_ctl_t led_ctl;
 
+// 控制电池电量指示灯的状态：
+volatile led_bat_level_sta_t led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
+volatile u8 led_charge_anim_phase = 0; // 充电开始的动画阶段，0：灯光全灭，1：开始点亮第一个灯
+volatile u16 led_charge_anim_cnt = 0;
+
 void led_init(void)
 {
     // 100% 电量指示灯
@@ -60,7 +65,9 @@ void led_ctl_init(void)
 
 void led_yellow_on(void)
 {
-    pwm_set_channel_0_duty(STRM0_PERIOD_30_PERCENT_VAL);
+    // pwm_set_channel_0_duty(STMR0_PERIOD_30_PERCENT_VAL);
+    pwm_set_channel_0_duty(STMR0_PERIOD_0_PERCENT_VAL);
+    // led_ctl.cur_pwm_duty_val = STMR0_PERIOD_0_PERCENT_VAL;
     FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
 }
 
@@ -72,7 +79,9 @@ void led_yellow_off(void)
 
 void led_white_on(void)
 {
-    pwm_set_channel_1_duty(STRM1_PERIOD_30_PERCENT_VAL);
+    // pwm_set_channel_1_duty(STMR1_PERIOD_30_PERCENT_VAL);
+    pwm_set_channel_1_duty(STMR1_PERIOD_0_PERCENT_VAL); //
+    // led_ctl.cur_pwm_duty_val = STMR1_PERIOD_0_PERCENT_VAL;
     FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
 }
 
@@ -133,6 +142,9 @@ void led_status_switch(void)
 // 设置led灯的状态
 void led_status_set(led_status_t status)
 {
+    // 每次切换状态时，都清空工作时间
+    led_ctl.working_time = 0; // 工作时间清零
+
     switch (status)
     {
     case LED_STATUS_OFF: // 关灯
@@ -141,7 +153,6 @@ void led_status_set(led_status_t status)
         LED_RED_OFF();
         LED_BLUE_OFF();
 
-        led_ctl.working_time = 0;         // 工作时间清零
         led_ctl.cur_pwm_duty_val = 0;     // PWM占空比值清零
         led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
         break;
@@ -292,13 +303,24 @@ void led_red_blue_flash_1ms_isr(void)
 // 黄灯、白灯、黄白灯缓慢调节的动画效果
 void led_slow_adjust_isr(void)
 {
-    if (led_ctl.status != LED_STATUS_OFF && led_ctl.is_slowly_adjust_end != 1)
+    if ((led_ctl.status == LED_STATUS_YELLOW ||
+         led_ctl.status == LED_STATUS_WHITE ||
+         led_ctl.status == LED_STATUS_WHITE_YELLOW) &&
+        (led_ctl.is_slowly_adjust_end != 1))
     {
-        // 如果灯光正在工作，并且缓慢调节没有结束
-        led_ctl.working_time++;
+        /*
+            黄灯、白灯、黄白灯模式下，
+            并且缓慢调节灯光的操作没有结束，
+            记录灯光工作时间，进行缓慢调节
+        */
+        if (led_ctl.working_time < ((u32)-1)) // 防止计数溢出
+        {
+            led_ctl.working_time++;
+        }
     }
     else
     {
+        // 不在黄灯、白灯、黄白灯模式，或者缓慢调节已经结束
         return;
     }
 
@@ -309,6 +331,7 @@ void led_slow_adjust_isr(void)
         现在 30% 对应的占空比值为 STRM0_PERIOD_30_PERCENT_VAL 和 STRM1_PERIOD_30_PERCENT_VAL
         300s调节时间中，每调节单位1的占空比值要经过 PWM_DUTY_SLOW_ADJUST_UNIT 的时间
     */
+    // USER_TO_DO 测试时屏蔽，实际要恢复：
     if (led_ctl.working_time <= (u32)180 * 1000)
     {
         // 开灯的前180s不调节
@@ -323,16 +346,15 @@ void led_slow_adjust_isr(void)
         if (led_ctl.cur_pwm_duty_val < PWM_DUTY_VAL_PERCENT_X(30))
         {
             led_ctl.cur_pwm_duty_val++;
-            if (led_ctl.status == LED_STATUS_WHITE ||
+            if (led_ctl.status == LED_STATUS_YELLOW ||
                 led_ctl.status == LED_STATUS_WHITE_YELLOW)
             {
                 pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
             }
 
-            if (led_ctl.status == LED_STATUS_YELLOW ||
+            if (led_ctl.status == LED_STATUS_WHITE ||
                 led_ctl.status == LED_STATUS_WHITE_YELLOW)
             {
-
                 pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
             }
 
@@ -343,10 +365,6 @@ void led_slow_adjust_isr(void)
         }
     }
 }
-
-volatile led_bat_level_sta_t led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
-volatile u8 led_charge_anim_phase = 0; // 充电开始的动画阶段，0：灯光全灭，1：开始点亮第一个灯
-volatile u16 led_charge_anim_cnt = 0;
 
 // 充电或放电时，电池电量指示灯的动画
 // 外部参数： 全局变量 bat_percent ，电池电量百分比
@@ -429,7 +447,12 @@ void led_bat_instruction_timer_callback(void)
                 由于电池电量百分比不能准确反应电池电量，这里只判断充电ic有没有停止工作
             */
             // 充电时，电池电量指示灯要隔段时间才更新一次
-            if (is_charging_ic_stop && led_charge_anim_phase == 3)
+            // if (is_charging_ic_stop && led_charge_anim_phase == 3)
+            // 有两种充满电的情况，通过充电ic充满电，和通过太阳能一侧充满电
+            if ((is_in_charging_by_charger && is_charging_ic_stop && led_charge_anim_phase == 3) ||
+                (is_in_charging_by_solar_panel &&
+                 bat_percent >= 99 &&     // 可能充电充不到100%
+                 avg_voltage_mv >= 4195)) // 可能充不到4.2V，这里检测到大于4.195就认为充满
             {
                 led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
                 // printf("detect charge end\n");
@@ -455,35 +478,6 @@ void led_bat_instruction_timer_callback(void)
         }
 
         led_charge_anim_cnt++;
-
-        // 在充电过程中，电池电量增加，需要及时更新状态
-
-        /*
-            如果电池电量已经到100%，并且充电IC已经停止工作，则说明充电结束
-            由于电池电量百分比不能准确反应电池电量，这里只判断充电ic有没有停止工作
-        */
-#if 0
-        if (is_charging_ic_stop)
-        {
-            led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
-            // printf("detect charge end\n");
-        }
-        else if (bat_percent >= 75)
-        {
-            led_charge_anim_phase = 3;
-            LED_75_PERCENT_ON(); //
-        }
-        else if (bat_percent >= 50)
-        {
-            led_charge_anim_phase = 2;
-            LED_50_PERCENT_ON(); //
-        }
-        else if (bat_percent >= 25)
-        {
-            led_charge_anim_phase = 1;
-            LED_25_PERCENT_ON(); //
-        }
-#endif
     }
     else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_END)
     {
@@ -499,15 +493,27 @@ void led_bat_instruction_timer_callback(void)
         {
             LED_100_PERCENT_ON();
         }
+        else
+        {
+            LED_100_PERCENT_OFF();
+        }
 
         if (bat_percent >= 50)
         {
             LED_75_PERCENT_ON();
         }
+        else
+        {
+            LED_75_PERCENT_OFF();
+        }
 
         if (bat_percent >= 25)
         {
             LED_50_PERCENT_ON();
+        }
+        else
+        {
+            LED_50_PERCENT_OFF();
         }
 
         if (bat_percent >= 0)

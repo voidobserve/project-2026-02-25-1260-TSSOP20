@@ -40,6 +40,7 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
         ad_key_para.cur_scan_times++; // 满足一定时间后，会在 key_driver_scan 中清零
         adc_scan();
 
+        charge_det_time_add();
         uart_receiver_timeout_add();
 
         bat_vol_update_timer_callback();

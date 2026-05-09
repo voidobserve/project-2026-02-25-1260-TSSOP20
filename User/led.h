@@ -44,6 +44,7 @@
 #define PWM_DUTY_SLOW_ADJUST_TIME ((u32)300 * 1000) // 黄灯和白灯的pwm占空比缓慢调节时间，单位：ms
 
 // 占空比值小于调节时间，每 xx ms调节1单位的占空比值
+// 目前值 == 33 
 #define PWM_DUTY_SLOW_ADJUST_UNIT ((u32)PWM_DUTY_SLOW_ADJUST_TIME / PWM_DUTY_VAL_PERCENT_X(30))
 
 /*

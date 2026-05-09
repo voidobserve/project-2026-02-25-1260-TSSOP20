@@ -2,11 +2,19 @@
 #include "user_include.h"
 
 // volatile u8 charge_det_sta; // 检测充电的状态
-static volatile u8 is_in_charging_by_solar_panel = 0; // 是否正在通过太阳能充电
-static volatile u8 is_in_charging_by_charger = 0;     // 是否正在通过充电器充电
+volatile u8 is_in_charging_by_solar_panel = 0; // 是否正在通过太阳能充电
+volatile u8 is_in_charging_by_charger = 0;     // 是否正在通过充电器充电
 
-volatile u8 is_in_charging = 0;   // 是否正在充电
+volatile u8 is_in_charging = 0;      // 是否正在充电
 volatile u8 is_charging_ic_stop = 0; // 充电ic是否停止充电
+
+// USER_TO_DO 充电检测和断开充电检测都要加上防抖动处理
+volatile bit flag_is_time_to_det_charge = 0; // 是否到了检测充电状态的时机
+
+volatile u8 is_not_charging_by_charger_cnt = 0;
+
+volatile u8 is_charging_by_solar_panel_cnt = 0;
+volatile u8 is_not_charging_by_solar_panel_cnt = 0;
 
 void charge_det_init(void)
 {
@@ -33,13 +41,10 @@ void detect_1khz_signal_100us(void)
     static u16 measurement_period_counter = 0; // 测量周期计数器
     static u8 is_detected_signal = 0;          // 标志位，是否检测到1KHz信号
 
-    static u8 last_pin_state = 0;
-    u8 current_pin_state = CHARGE_IC_CH1;
-    u8 pin_changed = (current_pin_state != last_pin_state);
+    static u8 last_pin_state = 0;         // 上一次检测到的引脚状态
+    u8 current_pin_state = CHARGE_IC_CH1; // 当前引脚状态
     // 如果连续多次检测到1KHz信号模式，则设置充电标志
-    // static u8 consecutive_detection_count = 0; // 计数器，是否连续检测到多次充电信号（用于检测是否有充电）
     static u16 consecutive_detection_count = 0; // 计数器，是否连续检测到多次充电信号（用于检测是否有充电）
-    // static u16 consecutive_detection_count_  // 计数器，是否连续检测到多次充电信号（用于检测是否充满电）
 
     // 未检测到充电信号的计数器
     static u16 undetected_charging_count = 0;
@@ -53,6 +58,7 @@ void detect_1khz_signal_100us(void)
         undetected_charging_count++;
         if (undetected_charging_count >= (u16)2000 * 10) // 时间单位：100us
         {
+            // 目前至少持续1s以上，才能确认充电ic没有在充电
             undetected_charging_count = 0;
             is_in_charging_by_charger = 0;
             is_charging_ic_stop = 0;
@@ -151,19 +157,10 @@ void detect_1khz_signal_100us(void)
 
     if (is_detected_signal)
     {
-#if 0
-        consecutive_detection_count++;
-        if (consecutive_detection_count >= 100) //  100 * 10ms 连续 1s检测到1Khz信号
-        { // 连续  ms检测到1KHz信号
-            is_in_charging_by_charger = 1;
-            consecutive_detection_count = 100; // 限制最大值，防止溢出
-        }
-#endif
-
         consecutive_detection_count++;
         if (consecutive_detection_count >= 100) // 100 * 100us，连续 10ms 检测到1Khz信号
         {
-            is_in_charging_by_charger = 1; 
+            is_in_charging_by_charger = 1;
         }
 
         // if (consecutive_detection_count >= 500) //  500 * 10ms 连续 5s检测到1Khz信号，说明充满电
@@ -182,16 +179,39 @@ void detect_1khz_signal_100us(void)
     last_pin_state = current_pin_state;
 }
 
-// 
+void charge_det_time_add(void)
+{
+    flag_is_time_to_det_charge = 1;
+}
+
+extern volatile u16 adc_type_c_det_val;
+//
 void charge_det(void)
 {
-    static u16 adc_val = 0;
+    static u16 adc_val_of_solar_panel = 0;
+    static u16 adc_val_of_type_c = 0;
     u16 voltage_mv = 0;
 
     if (adc_get_update_flag(ADC_CHANNEL_SEL_SOLAR_DET))
     {
         adc_clear_update_flag(ADC_CHANNEL_SEL_SOLAR_DET);
-        adc_val = adc_get_val(ADC_CHANNEL_SEL_SOLAR_DET);
+        adc_val_of_solar_panel = adc_get_val(ADC_CHANNEL_SEL_SOLAR_DET);
+    }
+
+    if (adc_get_update_flag(ADC_CHANNEL_SEL_TYPE_C))
+    {
+        adc_clear_update_flag(ADC_CHANNEL_SEL_TYPE_C);
+        adc_val_of_type_c = adc_get_val(ADC_CHANNEL_SEL_TYPE_C);
+    }
+
+    if (flag_is_time_to_det_charge)
+    {
+        flag_is_time_to_det_charge = 0;
+    }
+    else
+    {
+        // 检测时间没有到，直接返回
+        return;
     }
 
     /*
@@ -199,16 +219,61 @@ void charge_det(void)
         太阳能一侧的电压 == ad值 / 4096 * 参考电压 * 分压系数
         从太阳能到电池的电压 == 太阳能一侧的电压 - 0.3V
     */
-    voltage_mv = (u32)adc_val * 2 * 2400 / 4096;
+    voltage_mv = (u32)adc_val_of_solar_panel * 2 * 2400 / 4096;
     // printf("voltage_mv == %u\n", voltage_mv);
     if (voltage_mv >= 4500) // 大于 4.5V，认为是正在给电池充电
     {
-        is_in_charging_by_solar_panel = 1;
+        is_not_charging_by_solar_panel_cnt = 0;
+        is_charging_by_solar_panel_cnt++;
+        if (is_charging_by_solar_panel_cnt >= 200) // 目前单位：ms
+        {
+            is_charging_by_solar_panel_cnt = 0;
+            // 累计一段时间后，才认为有充电
+            is_in_charging_by_solar_panel = 1;
+
+#if USER_DEBUG_ENABLE
+            // printf("is charging by solar panel\n");
+#endif
+        }
     }
     else
     {
-        is_in_charging_by_solar_panel = 0;
+        is_charging_by_solar_panel_cnt = 0;
+        is_not_charging_by_solar_panel_cnt++;
+        if (is_not_charging_by_solar_panel_cnt >= 200) // 目前单位：ms
+        {
+            is_not_charging_by_solar_panel_cnt = 0;
+            // 累计一段时间后，才认为没有充电
+            is_in_charging_by_solar_panel = 0;
+
+#if USER_DEBUG_ENABLE
+            // printf("is not charging by solar panel\n");
+#endif
+        }
     }
+
+    /*
+        目前测试，使用2V参考电压，
+        只插入type-c充电，检测到的ad值会在4095。
+        只通过太阳能一侧充电，检测到的ad值会在100附近
+
+        这里只要小于2000，就认为没有通过type-c充电
+    */
+    if (adc_val_of_type_c <= 2000)
+    {
+        is_not_charging_by_charger_cnt++;
+        if (is_not_charging_by_charger_cnt >= 200) // 目前单位：ms
+        {
+            is_not_charging_by_charger_cnt = 0;
+            is_in_charging_by_charger = 0;
+        }
+    }
+    else if (adc_val_of_type_c >= 4000)
+    {
+        is_not_charging_by_charger_cnt = 0;
+    }
+
+    // printf("adc_type_c_det_val == %u\n", adc_type_c_det_val);
 
     if (is_in_charging_by_charger || is_in_charging_by_solar_panel)
     {

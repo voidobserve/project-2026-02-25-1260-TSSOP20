@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              04/09/2026 16:03:53 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              05/09/2026 16:41:49 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
               {
                   delay_exec_array[task_id].cur_cnt = 0;
                   delay_exec_array[task_id].dest_cnt = interval_ms;
-C51 COMPILER V9.60.7.0   MAIN                                                              04/09/2026 16:03:53 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              05/09/2026 16:41:49 PAGE 2   
 
                   delay_exec_array[task_id].is_pending = 0;
                   delay_exec_array[task_id].is_enable = 1;
@@ -126,17 +126,17 @@ line level    source
  113   1          led_ctl_init();
  114   1          charge_det_init();
  115   1      
-C51 COMPILER V9.60.7.0   MAIN                                                              04/09/2026 16:03:53 PAGE 3   
+C51 COMPILER V9.60.7.0   MAIN                                                              05/09/2026 16:41:49 PAGE 3   
 
  116   1          // 需要等外设都准备好，再跑时间
  117   1          timer0_init();
  118   1          timer1_init();
  119   1      
  120   1      #if USER_DEBUG_ENABLE
-                  // user_debug_pin_init();
-                  // timebase_init();
-                  printf("sys init\n");
-              #endif
+ 121   1          // user_debug_pin_init();
+ 122   1          // timebase_init();
+ 123   1          printf("sys init\n");
+ 124   1      #endif
  125   1      }
  126          
  127          void main(void)
@@ -165,37 +165,45 @@ line level    source
  148   1          user_init();
  149   1          delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍）
  150   1      
- 151   1          while (1)
- 152   1          {
- 153   2              key_driver_scan(&ad_key_para);
- 154   2              ad_key_handle();
- 155   2      
- 156   2              uart_data_handle();
- 157   2      
- 158   2              battery_monitor_handle();
- 159   2      
- 160   2              charge_det();
- 161   2      
- 162   2              low_power_handle(); 
- 163   2      
- 164   2      #if USER_DEBUG_ENABLE
-                      // user_test_main();
-              #endif
- 167   2          }
- 168   1      }
- 169          
- 170          /**
- 171           * @}
- 172           */
- 173          
- 174          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
+ 151   1          // USER_TO_DO 只在测试时使用
+ 152   1          // led_status_set(LED_STATUS_YELLOW);
+ 153   1          // is_in_charging = 1;
+ 154   1          // is_in_charging_by_solar_panel = 1;
+ 155   1          // led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN;
+ 156   1          // led_status_set(LED_STATUS_OFF);
+ 157   1      
+ 158   1          while (1)
+ 159   1          {
+ 160   2              key_driver_scan(&ad_key_para);
+ 161   2              ad_key_handle();
+ 162   2      
+ 163   2              uart_data_handle();
+ 164   2      
+ 165   2              battery_monitor_handle();
+ 166   2      
+ 167   2              // charge_det();
+ 168   2      
+ 169   2              // USER_TO_DO 测试时屏蔽：
+ 170   2              // low_power_handle(); 
+ 171   2      
+ 172   2      #if USER_DEBUG_ENABLE
+ 173   2              // user_test_main();
+ 174   2      #endif
+ 175   2          }
+C51 COMPILER V9.60.7.0   MAIN                                                              05/09/2026 16:41:49 PAGE 4   
 
-C51 COMPILER V9.60.7.0   MAIN                                                              04/09/2026 16:03:53 PAGE 4   
+ 176   1      }
+ 177          
+ 178          /**
+ 179           * @}
+ 180           */
+ 181          
+ 182          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    110    ----
-   CONSTANT SIZE    =   ----    ----
+   CODE SIZE        =    113    ----
+   CONSTANT SIZE    =     10    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
