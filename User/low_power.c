@@ -102,7 +102,7 @@ void low_power_in(void)
     P2_PU &= ~GPIO_P21_PULL_UP(0x01); // 关闭上拉
     FIN_S11 = GPIO_FIN_SEL_P21;       // 配置 P21 为通道1输入唤醒端口
 
-    delay_ms(1); // 官方提供的SDK中，这里有延时操作
+    delay_ms(1); // 官方提供的低功耗SDK中，这里有延时操作
 
     /*
            配置 wake up timer

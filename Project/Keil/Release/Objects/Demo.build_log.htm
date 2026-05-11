@@ -26,19 +26,16 @@ Project File Date:  04/07/2026
 
 <h2>Output:</h2>
 Build target 'Target 1'
+compiling charge_det.c...
 linking...
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?USER_DEBUG_PIN_INIT?USER_TEST
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?_USER_TEST_INIT_BY_VOLTAGE_MV?BATTERY_MONITOR
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?CHARGE_DET?CHARGE_DET
-*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
-    SEGMENT: ?PR?LOW_POWER_HANDLE?LOW_POWER
-Program Size: data=15.6 xdata=751 code=10564
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_GET_BATTERY_PERCENTAGE_BY_VOLTAGE?BATTERY_MONITOR
+    CALLER1: ?C_C51STARTUP
+    CALLER2: ?PR?ADC_IRQHANDLER?ADC
+Program Size: data=9.5 xdata=739 code=8947
 creating hex file from ".\Release\Objects\Demo"...
-".\Release\Objects\Demo" - 0 Error(s), 4 Warning(s).
-Build Time Elapsed:  00:00:01
+".\Release\Objects\Demo" - 0 Error(s), 1 Warning(s).
+Build Time Elapsed:  00:00:00
 </pre>
 </body>
 </html>

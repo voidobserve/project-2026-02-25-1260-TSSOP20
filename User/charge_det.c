@@ -32,22 +32,22 @@ void charge_det_init(void)
 void detect_1khz_signal_100us(void)
 {
     // 新增变量用于检测1KHz信号
-    static u16 signal_high_duration = 0; // 高电平持续时间计数
-    static u16 signal_low_duration = 0;  // 低电平持续时间计数
+    static volatile u16 signal_high_duration = 0; // 高电平持续时间计数
+    static volatile u16 signal_low_duration = 0;  // 低电平持续时间计数
 
-    static u8 detection_state = 0; // 检测状态：0-初始状态，1-检测到高电平，2-检测到低电平
+    static volatile u8 detection_state = 0; // 检测状态：0-初始状态，1-检测到高电平，2-检测到低电平
 
-    static u16 toggle_count_in_period = 0;     // 一个预期的1KHz周期内的翻转次数
-    static u16 measurement_period_counter = 0; // 测量周期计数器
-    static u8 is_detected_signal = 0;          // 标志位，是否检测到1KHz信号
+    static volatile u16 toggle_count_in_period = 0;      // 一个预期的1KHz周期内的翻转次数
+    static volatile u16 measurement_period_counter = 0; // 测量周期计数器
+    static volatile u8 is_detected_signal = 0;          // 标志位，是否检测到1KHz信号
 
-    static u8 last_pin_state = 0;         // 上一次检测到的引脚状态
-    u8 current_pin_state = CHARGE_IC_CH1; // 当前引脚状态
+    static volatile u8 last_pin_state = 0; // 上一次检测到的引脚状态
+    u8 current_pin_state = CHARGE_IC_CH1;  // 当前引脚状态
     // 如果连续多次检测到1KHz信号模式，则设置充电标志
-    static u16 consecutive_detection_count = 0; // 计数器，是否连续检测到多次充电信号（用于检测是否有充电）
+    static volatile u16 consecutive_detection_count = 0; // 计数器，是否连续检测到多次充电信号（用于检测是否有充电）
 
     // 未检测到充电信号的计数器
-    static u16 undetected_charging_count = 0;
+    static volatile u16 undetected_charging_count = 0;
 
     // 增加测量周期计数
     measurement_period_counter++;
@@ -62,6 +62,7 @@ void detect_1khz_signal_100us(void)
             undetected_charging_count = 0;
             is_in_charging_by_charger = 0;
             is_charging_ic_stop = 0;
+            consecutive_detection_count = 0;
         }
     }
     else
@@ -144,12 +145,13 @@ void detect_1khz_signal_100us(void)
 
         // user_debug_val_u16 = toggle_count_in_period; // 获取得到的计数值（测试时使用）
 
-        if (toggle_count_in_period >= 16)
-        { // 在这段时间内，至少检测到   多少次翻转
+        if (toggle_count_in_period >= 16) // 1KHz信号，10ms内有20次翻转，这里检测到有16次就认为满足条件
+        {                                 // 在这段时间内，至少检测到   多少次翻转
             is_detected_signal = 1;
         }
-        else
+        else if (toggle_count_in_period <= 10)
         {
+            // 实际测试发现，哪怕是1KHz连续的信号，也会有大概率(50%左右)进入这里
             is_detected_signal = 0;
         }
         toggle_count_in_period = 0;
@@ -163,8 +165,8 @@ void detect_1khz_signal_100us(void)
             is_in_charging_by_charger = 1;
         }
 
-        // if (consecutive_detection_count >= 500) //  500 * 10ms 连续 5s检测到1Khz信号，说明充满电
-        if (consecutive_detection_count >= (u32)5000 * 10) //  5000 *10 * 100 us 连续 5s检测到1Khz信号，说明充满电
+        // 5000 *10 * 100 us 连续 5s检测到1Khz信号，说明充满电(实际测试可能只有3s)
+        if (consecutive_detection_count >= (u32)5000 * 10) 
         {
             is_charging_ic_stop = 1;
             // consecutive_detection_count = 500; // 限制最大值，防止溢出
@@ -173,7 +175,10 @@ void detect_1khz_signal_100us(void)
     }
     else
     {
-        consecutive_detection_count = 0;
+        if (consecutive_detection_count > 0)
+        {
+            consecutive_detection_count--;
+        }
     }
 
     last_pin_state = current_pin_state;

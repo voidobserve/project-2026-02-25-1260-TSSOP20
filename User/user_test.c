@@ -14,7 +14,8 @@ void debug_time_add(void)
 #if 1
     static u16 cnt = 0;
     cnt++;
-    if (cnt >= 5000)
+    if (cnt >= 1000)
+    // if (cnt >= 5000)
     {
         cnt = 0;
         flag_debug = 1;

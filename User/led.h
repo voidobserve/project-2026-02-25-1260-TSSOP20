@@ -96,6 +96,15 @@ extern volatile led_bat_level_sta_t led_bat_level_sta;
 
 void led_init(void);
 
+void led_yellow_on(void);
+void led_yellow_off(void);
+void led_white_on(void);
+void led_white_off(void);
+
+void led_suspend(void);
+void led_resume(void);
+
+
 void led_ctl_init(void);
 void led_status_switch(void);
 void led_status_set(led_status_t status);

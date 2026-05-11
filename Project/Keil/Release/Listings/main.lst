@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              05/09/2026 16:41:49 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              05/11/2026 17:39:08 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -62,7 +62,7 @@ line level    source
               {
                   delay_exec_array[task_id].cur_cnt = 0;
                   delay_exec_array[task_id].dest_cnt = interval_ms;
-C51 COMPILER V9.60.7.0   MAIN                                                              05/09/2026 16:41:49 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              05/11/2026 17:39:08 PAGE 2   
 
                   delay_exec_array[task_id].is_pending = 0;
                   delay_exec_array[task_id].is_enable = 1;
@@ -126,84 +126,83 @@ line level    source
  113   1          led_ctl_init();
  114   1          charge_det_init();
  115   1      
-C51 COMPILER V9.60.7.0   MAIN                                                              05/09/2026 16:41:49 PAGE 3   
+C51 COMPILER V9.60.7.0   MAIN                                                              05/11/2026 17:39:08 PAGE 3   
 
  116   1          // 需要等外设都准备好，再跑时间
  117   1          timer0_init();
  118   1          timer1_init();
  119   1      
  120   1      #if USER_DEBUG_ENABLE
- 121   1          // user_debug_pin_init();
- 122   1          // timebase_init();
- 123   1          printf("sys init\n");
- 124   1      #endif
+                  // user_debug_pin_init();
+                  // timebase_init();
+                  printf("sys init\n");
+              #endif
  125   1      }
- 126          
- 127          void main(void)
- 128          {
- 129   1          // 看门狗默认打开, 复位时间2s
- 130   1          WDT_KEY = WDT_KEY_VAL(0xDD); // 关闭看门狗 (如需配置看门狗请查看"WDT\WDT_Reset"示例)
- 131   1          system_init();
- 132   1      
- 133   1          // 关闭HCK和HDA的调试功能
- 134   1          WDT_KEY = 0x55;  // 解除写保护
- 135   1          IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除�
+ 126          void main(void)
+ 127          {
+ 128   1          // 看门狗默认打开, 复位时间2s
+ 129   1          WDT_KEY = WDT_KEY_VAL(0xDD); // 关闭看门狗 (如需配置看门狗请查看"WDT\WDT_Reset"示例)
+ 130   1          system_init();
+ 131   1      
+ 132   1          // 关闭HCK和HDA的调试功能
+ 133   1          WDT_KEY = 0x55;  // 解除写保护
+ 134   1          IO_MAP &= ~0x01; // 清除这个寄存器的值，实现关闭HCK和HDA引脚的调试功能（解除�
              -��射）
- 136   1          WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
- 137   1      
- 138   1          // 提前把未使用的、封装未引出的引脚，都配置为模拟输入模式，在低功耗模
+ 135   1          WDT_KEY = 0xBB;  // 写一个无效的数据，触发写保护
+ 136   1      
+ 137   1          // 提前把未使用的、封装未引出的引脚，都配置为模拟输入模式，在低功耗模
              -式下会使用
- 139   1          P0_MD0 = 0xFF;
- 140   1          P0_MD1 = 0xFF;
- 141   1          P1_MD0 = 0xFF;
- 142   1          P1_MD1 = 0xFF;
- 143   1          P2_MD0 = 0xFF;
- 144   1          P2_MD1 = 0xFF;
- 145   1          P3_MD0 = 0xFF;
- 146   1          P3_MD1 = 0xFF;
- 147   1      
- 148   1          user_init();
- 149   1          delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍）
- 150   1      
- 151   1          // USER_TO_DO 只在测试时使用
- 152   1          // led_status_set(LED_STATUS_YELLOW);
- 153   1          // is_in_charging = 1;
- 154   1          // is_in_charging_by_solar_panel = 1;
- 155   1          // led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN;
- 156   1          // led_status_set(LED_STATUS_OFF);
- 157   1      
- 158   1          while (1)
- 159   1          {
- 160   2              key_driver_scan(&ad_key_para);
- 161   2              ad_key_handle();
- 162   2      
- 163   2              uart_data_handle();
- 164   2      
- 165   2              battery_monitor_handle();
- 166   2      
- 167   2              // charge_det();
- 168   2      
- 169   2              // USER_TO_DO 测试时屏蔽：
- 170   2              // low_power_handle(); 
- 171   2      
- 172   2      #if USER_DEBUG_ENABLE
- 173   2              // user_test_main();
- 174   2      #endif
- 175   2          }
-C51 COMPILER V9.60.7.0   MAIN                                                              05/09/2026 16:41:49 PAGE 4   
+ 138   1          P0_MD0 = 0xFF;
+ 139   1          P0_MD1 = 0xFF;
+ 140   1          P1_MD0 = 0xFF;
+ 141   1          P1_MD1 = 0xFF;
+ 142   1          P2_MD0 = 0xFF;
+ 143   1          P2_MD1 = 0xFF;
+ 144   1          P3_MD0 = 0xFF;
+ 145   1          P3_MD1 = 0xFF;
+ 146   1      
+ 147   1          user_init();
+ 148   1          delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍）
+ 149   1      
+ 150   1          // USER_TO_DO 只在测试时使用
+ 151   1          // led_status_set(LED_STATUS_YELLOW);
+ 152   1          // is_in_charging = 1;
+ 153   1          // is_in_charging_by_solar_panel = 1;
+ 154   1          // led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN;
+ 155   1          // led_status_set(LED_STATUS_OFF);
+ 156   1      
+ 157   1          while (1)
+ 158   1          {
+ 159   2              key_driver_scan(&ad_key_para);
+ 160   2              ad_key_handle();
+ 161   2      
+ 162   2              uart_data_handle();
+ 163   2      
+ 164   2              battery_monitor_handle();
+ 165   2      
+ 166   2              charge_det();
+ 167   2      
+ 168   2              // USER_TO_DO 测试时屏蔽：
+ 169   2              low_power_handle();
+ 170   2      
+ 171   2      #if USER_DEBUG_ENABLE
+                      // user_test_main();
+              #endif
+ 174   2          }
+ 175   1      }
+C51 COMPILER V9.60.7.0   MAIN                                                              05/11/2026 17:39:08 PAGE 4   
 
- 176   1      }
- 177          
- 178          /**
- 179           * @}
- 180           */
- 181          
- 182          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
+ 176          
+ 177          /**
+ 178           * @}
+ 179           */
+ 180          
+ 181          /*************************** (C) COPYRIGHT 2022 HUGE-IC ***** END OF FILE *****/
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    113    ----
-   CONSTANT SIZE    =     10    ----
+   CODE SIZE        =    110    ----
+   CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----

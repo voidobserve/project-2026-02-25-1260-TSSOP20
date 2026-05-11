@@ -123,7 +123,6 @@ void user_init(void)
     printf("sys init\n");
 #endif
 }
-
 void main(void)
 {
     // 看门狗默认打开, 复位时间2s
@@ -164,10 +163,10 @@ void main(void)
 
         battery_monitor_handle();
 
-        // charge_det();
+        charge_det();
 
         // USER_TO_DO 测试时屏蔽：
-        // low_power_handle(); 
+        low_power_handle();
 
 #if USER_DEBUG_ENABLE
         // user_test_main();

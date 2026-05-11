@@ -19,13 +19,14 @@
 #define ADC_TO_BATTERY_VOLTAGE_MV(adc_val) \
     (((u32)(adc_val) * BATTERY_ADC_REF_VOLTAGE_MV * BATTERY_VOLTAGE_DIVIDER) / 4096)
 
-// #define VOLTAGE_HISTORY_SIZE 10
-#define VOLTAGE_HISTORY_SIZE 1
+#define VOLTAGE_HISTORY_SIZE 10
+// #define VOLTAGE_HISTORY_SIZE 1
 // 检测电池电压的周期，单位：ms
 #define BATTERY_VOLTAGE_UPDATE_PERIOD ((u16)4000)
 // 每隔多久将采集的电池电压放入缓存中，单位：ms
 // #define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER ((u32)15 * 1000)
-#define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER ((u32)4 * 1000)
+// #define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER ((u32)4 * 1000)
+#define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER ((u32)100)
 // 每隔多久将缓存中的电池电压提取出来，单位：ms
 #define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT \
     (BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER * VOLTAGE_HISTORY_SIZE)
@@ -61,8 +62,10 @@ void bat_vol_buff_get_avg_timer_callback(void);
 
 void send_low_bat_timer_callback(void); // 控制发送低电量的周期
 
+void battery_voltage_update_by_isr(void);
+
 #if USER_DEBUG_ENABLE
-void user_test_init_by_voltage_mv(u16 test_voltage_mv);
+// void user_test_init_by_voltage_mv(u16 test_voltage_mv);
 #endif
 
 #endif // __BATTERY_MONITOR_H__

@@ -71,6 +71,13 @@ void led_yellow_on(void)
     FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
 }
 
+// 只由 led_resume() 调用
+void __led_yellow_resume__(void)
+{
+    pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
+    FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
+}
+
 void led_yellow_off(void)
 {
     P30 = 1;
@@ -82,6 +89,13 @@ void led_white_on(void)
     // pwm_set_channel_1_duty(STMR1_PERIOD_30_PERCENT_VAL);
     pwm_set_channel_1_duty(STMR1_PERIOD_0_PERCENT_VAL); //
     // led_ctl.cur_pwm_duty_val = STMR1_PERIOD_0_PERCENT_VAL;
+    FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
+}
+
+// 只由 led_resume() 调用
+void __led_white_resume__(void)
+{
+    pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
     FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
 }
 
@@ -143,7 +157,9 @@ void led_status_switch(void)
 void led_status_set(led_status_t status)
 {
     // 每次切换状态时，都清空工作时间
-    led_ctl.working_time = 0; // 工作时间清零
+    led_ctl.working_time = 0;         // 工作时间清零
+    led_ctl.cur_pwm_duty_val = 0;     // PWM占空比值清零
+    led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
 
     switch (status)
     {
@@ -152,9 +168,6 @@ void led_status_set(led_status_t status)
         led_white_off();
         LED_RED_OFF();
         LED_BLUE_OFF();
-
-        led_ctl.cur_pwm_duty_val = 0;     // PWM占空比值清零
-        led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
         break;
     case LED_STATUS_YELLOW:
         led_white_off();
@@ -189,6 +202,70 @@ void led_status_set(led_status_t status)
     }
 
     led_ctl.status = status; // 需要最后再给状态赋值，否则会在定时器中断先执行了相关的操作
+}
+
+/**
+ * @brief 挂起led任务，不包括电量指示灯（在准备采集电池电压的ad值前，暂时关闭led）
+ *
+ * @attention 只能由adc的中断调用
+ *
+ */
+void led_suspend(void)
+{
+    led_yellow_off();
+    led_white_off();
+    LED_RED_OFF();
+    LED_BLUE_OFF();
+}
+
+/**
+ * @brief 恢复led任务，不包括电量指示灯（在采集电池电压的ad值之后，恢复led）
+ *
+ * @attention 只能由adc的中断调用
+ */
+void led_resume(void)
+{
+    switch (led_ctl.status)
+    {
+    case LED_STATUS_OFF: // 关灯
+        led_yellow_off();
+        led_white_off();
+        LED_RED_OFF();
+        LED_BLUE_OFF();
+
+        break;
+
+    case LED_STATUS_YELLOW:
+        led_white_off();
+        LED_RED_OFF();
+        LED_BLUE_OFF();
+
+        __led_yellow_resume__(); // 只亮黄灯
+        break;
+
+    case LED_STATUS_WHITE:
+        led_yellow_off();
+        LED_RED_OFF();
+        LED_BLUE_OFF();
+
+        __led_white_resume__(); // 只亮白灯
+        break;
+
+    case LED_STATUS_WHITE_YELLOW:
+        LED_RED_OFF();
+        LED_BLUE_OFF();
+
+        // 只亮黄灯和白灯
+        __led_yellow_resume__();
+        __led_white_resume__();
+        break;
+
+    case LED_STATUS_RED_BLUE_FLASH: // 红蓝闪烁
+        led_yellow_off();
+        led_white_off();
+
+        break;
+    }
 }
 
 /**

@@ -1,5 +1,6 @@
 #include "adc.h"
 #include "user_config.h"
+#include "user_include.h"
 
 volatile u8 cur_adc_status = ADC_STATUS_IDLE;
 
@@ -241,7 +242,10 @@ void adc_scan(void)
         cur_adc_status = ADC_STATUS_SEL_BAT_DET_WAITING;
         break;
     case ADC_STATUS_SEL_BAT_DET_WAITING:
-        // 开启转换，之后在ad中断获取ad值
+        // 准备采集电池电压对应的ad值前，先关闭led显示，不包括电量指示灯
+        led_suspend();
+
+        // 开启转换，之后在ad中断获取ad值 
         ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
         cur_adc_status = ADC_STATUS_SEL_BAT_DET;
         break;
@@ -288,6 +292,11 @@ void ADC_IRQHandler(void) interrupt ADC_IRQn
             break;
         case ADC_STATUS_SEL_BAT_DET:
             adc_update_val(ADC_CHANNEL_SEL_BAT_DET, adc_val);
+
+            // 采集完电池电压对应的ad值后，恢复led显示，不包括电量指示灯
+            led_resume();
+
+            battery_voltage_update_by_isr();
             break;
         case ADC_STATUS_SEL_SOLAR_DET:
             adc_update_val(ADC_CHANNEL_SEL_SOLAR_DET, adc_val);

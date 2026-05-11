@@ -209,6 +209,8 @@ void battery_monitor_refresh_by_adc_val(u16 adc_val)
 }
 
 #if USER_DEBUG_ENABLE
+
+#if 0
 // 测试用，手动改变得到的电池电压
 void user_test_init_by_voltage_mv(u16 test_voltage_mv)
 {
@@ -231,14 +233,17 @@ void user_test_init_by_voltage_mv(u16 test_voltage_mv)
 }
 #endif
 
-// 修改后的电池监控处理函数
-void battery_monitor_handle(void)
+#endif
+
+/**
+ * @brief 更新电池电压，由定时器调用。函数内部会更新电池电压和电池电量百分比相关的变量
+ *
+ */
+void battery_voltage_update_by_isr(void)
 {
     volatile u16 adc_val = 0;
     volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
 
-#if 1
-    // USER_TO_DO 这里可能要放在ad中断，ad值一更新就顺便调用这里
     // 获取AD值（ad值有更新才获取）
     if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
     {
@@ -246,6 +251,7 @@ void battery_monitor_handle(void)
         adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
         // printf("bat adc val == %u\n", adc_val);
         cur_voltage_mv = get_battery_voltage_by_adc(adc_val);
+        // printf("cur_voltage_mv == %u\n", cur_voltage_mv);
 
         if (0 == voltage_mv)
         {
@@ -273,12 +279,11 @@ void battery_monitor_handle(void)
             否则会更新 voltage_mv 和 max_voltage_mv，可能会被赋值为0，
             导致又进入了 电池电量相关变量的初始化
         */
-#if 1
         /*
-            @attention 这里没有判断上一次的电压值，会实时更新 voltage_mv 
+            @attention 这里没有判断上一次的电压值，会实时更新 voltage_mv
             在充电时，哪怕电压有下降，也会更新 voltage_mv
             在放电时，电压有上升，也会更新 voltage_mv
-        */  
+        */
         if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
         {
             // 如果已经采集了一段时间的电压值，则将 voltage_mv 赋值为 max_voltage_mv
@@ -298,9 +303,14 @@ void battery_monitor_handle(void)
                 max_voltage_mv = cur_voltage_mv;
             }
         }
-#endif
     }
-#endif
+}
+
+// 修改后的电池监控处理函数
+void battery_monitor_handle(void)
+{
+    // volatile u16 adc_val = 0;
+    // volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
 
     // 测试时使用：
     // if (cur_voltage_mv != 0)
@@ -331,8 +341,8 @@ void battery_monitor_handle(void)
 
         is_bat_vol_buff_get_avg_enable = 0;
     }
- 
-    // 充电中， percent 大于等于 last_percent，不让 percent 小于 last_percent
+
+    // 充电中， percent 大于等于 last_percent ，不让 percent 小于 last_percent
     if (is_in_charging)
     {
         if (percent < last_percent)
@@ -365,7 +375,7 @@ void battery_monitor_handle(void)
 #if USER_DEBUG_ENABLE
     // printf("bat_percent = %u\n", (u16)bat_percent);
 
-#if 1
+#if 0
     // USER_TO_DO 只在测试时使用：
     // 每隔一段时间打印一次滤波后得到的电压和电量百分比
     if (flag_debug)
