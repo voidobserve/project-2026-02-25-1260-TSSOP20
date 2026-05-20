@@ -36,7 +36,8 @@ void TIMR1_IRQHandler(void) interrupt TMR1_IRQn
         TMR1_CONH |= TMR_PRD_PND(0x1); // 清除pending 
 
         
-        detect_1khz_signal_100us(); // 新增：每100us调用一次1KHz信号检测函数
+        detect_1khz_signal_100us(); // 每100us调用一次1KHz信号检测函数 
+        detect_discharge_1khz_signal_100us();
     }
 
     // 退出中断设置IP，不可删除

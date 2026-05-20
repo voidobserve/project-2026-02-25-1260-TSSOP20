@@ -3,9 +3,9 @@
 
 // volatile u8 is_send_low_battery_enable = 0;
 
-// 是否发送了低电量报警（ USER_TO_DO 在第一次上电、低功耗唤醒之后、有充电之后，需要清零）
+// 是否发送了低电量报警（ @attention 在第一次上电、低功耗唤醒之后、有充电之后，需要清零）
 volatile u8 is_sent_low_bat_alert = 0;
-volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ USER_TO_DO 从低功耗唤醒，有充电之后，都清除一下该标志位）
+volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ @attention 从低功耗唤醒，有充电之后，都清除一下该标志位）
 
 // ====================================================================
 static volatile u8 is_bat_vol_buff_add_enable = 0;     // 是否允许往电池电压数组中放入数据
@@ -36,6 +36,36 @@ volatile u8 bat_percent = 0;
 // 电池电量低时，每隔 xx 时间，给蓝牙ic发送一次提示，单位：ms
 #define SEND_LOW_BAT_TIME_PERIOD ((u16)30 * 1000)
 static volatile u8 is_send_low_bat_repeatedly_enable = 0; // 是否重复发送低电量报警
+
+// 电池电量百分比更新的时间计数器
+static volatile u16 bat_percent_update_time_cnt = 0;
+
+void bat_percent_update_time_add(void)
+{
+    if (bat_percent_update_time_cnt < ((u16)-1))
+    {
+        bat_percent_update_time_cnt++;
+    }
+}
+
+// 重置电池电量百分比的更新时间
+void bat_percent_update_time_reset(void)
+{
+    bat_percent_update_time_cnt = 0;
+}
+
+// 确认电池电量百分比的更新时间是否到来
+u8 bat_percent_update_time_is_comes(void)
+{
+    if (bat_percent_update_time_cnt >= BATTERY_PERCENT_UPDATE_PERIOD)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
 
 // 控制发送低电量的周期
 void send_low_bat_timer_callback(void)
@@ -193,6 +223,7 @@ u16 bat_vol_history_buff_get_avg(void)
     return (u16)(ret / VOLTAGE_HISTORY_SIZE);
 }
 
+#if 0
 // 在低功耗唤醒后调用，由唤醒后第一次采集到的ad值来初始化相关数据
 // void battery_monitor_init_by_adc_val(u16 adc_val)
 // 强制刷新
@@ -207,6 +238,7 @@ void battery_monitor_refresh_by_adc_val(u16 adc_val)
     bat_percent = percent;
     bat_vol_update_sta = BAT_VOL_UPDATE_STA_COMPLETED;
 }
+#endif
 
 #if USER_DEBUG_ENABLE
 
@@ -274,7 +306,7 @@ void battery_voltage_update_by_isr(void)
 
         // 采集一段时间的电压值，取其中最大的值作为电池电压
         /*
-            USER_TO_DO
+            @attention
             测试时，如果需要改变电池电压和电量百分比，需要屏蔽下面这段程序。
             否则会更新 voltage_mv 和 max_voltage_mv，可能会被赋值为0，
             导致又进入了 电池电量相关变量的初始化
@@ -342,6 +374,7 @@ void battery_monitor_handle(void)
         is_bat_vol_buff_get_avg_enable = 0;
     }
 
+#if 0
     // 充电中， percent 大于等于 last_percent ，不让 percent 小于 last_percent
     if (is_in_charging)
     {
@@ -371,12 +404,34 @@ void battery_monitor_handle(void)
     }
 
     bat_percent = last_percent; // 得到稳定之后的电池电量百分比
+#endif
+
+    if (bat_percent_update_time_is_comes())
+    {
+        bat_percent_update_time_reset();
+
+        // 每次只变化1%的电池电量百分比
+        if (bat_percent > percent)
+        {
+            if (bat_percent > 0)
+            {
+                bat_percent--;
+            }
+        }
+        else if (bat_percent < percent)
+        {
+            if (bat_percent < 100)
+            {
+                bat_percent++;
+            }
+        }
+    }
 
 #if USER_DEBUG_ENABLE
     // printf("bat_percent = %u\n", (u16)bat_percent);
 
 #if 0
-    // USER_TO_DO 只在测试时使用：
+    // @attention 只在测试时使用：
     // 每隔一段时间打印一次滤波后得到的电压和电量百分比
     if (flag_debug)
     {
@@ -400,7 +455,8 @@ void battery_monitor_handle(void)
     // 不在充电、蓝牙ic不工作、灯光关闭时，关闭电量指示灯
     else if (is_in_charging == 0 &&
              ble_ic.is_working == 0 &&
-             led_ctl.status == LED_STATUS_OFF)
+             led_ctl.status == LED_STATUS_OFF &&
+             0 == is_in_discharging) // 充电ic没有输出放电的信号
     {
         led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
 
@@ -408,7 +464,9 @@ void battery_monitor_handle(void)
     }
     // 不在充电，但是蓝牙ic或者灯光打开，根据电池电量来点亮对应指示灯
     else if (is_in_charging == 0 &&
-             (ble_ic.is_working || led_ctl.status != LED_STATUS_OFF))
+             (ble_ic.is_working ||
+              led_ctl.status != LED_STATUS_OFF ||
+              is_in_discharging))
     {
         led_bat_level_sta = LED_BAT_LEVEL_STA_DISCHARGE;
 
@@ -416,7 +474,7 @@ void battery_monitor_handle(void)
         if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
         {
 #if USER_DEBUG_ENABLE
-            printf("detect bat power empty\n");
+            // printf("detect bat power empty\n");
 #endif
             if (0 == is_turn_off_by_low_bat)
             {
@@ -469,24 +527,8 @@ void battery_monitor_handle(void)
             is_send_low_bat_repeatedly_enable = 0;
 
 #if USER_DEBUG_ENABLE
-            printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
+            // printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
 #endif
         }
     }
-
-    // 测试时使用，充电动画：
-    // if (is_in_charging_by_charger)
-    // {
-    //     LED_100_PERCENT_ON();
-    //     LED_75_PERCENT_ON();
-    //     LED_50_PERCENT_ON();
-    //     LED_25_PERCENT_ON();
-    // }
-    // else
-    // {
-    //     LED_100_PERCENT_OFF();
-    //     LED_75_PERCENT_OFF();
-    //     LED_50_PERCENT_OFF();
-    //     LED_25_PERCENT_OFF();
-    // }
 }

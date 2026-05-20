@@ -408,7 +408,7 @@ void led_slow_adjust_isr(void)
         现在 30% 对应的占空比值为 STRM0_PERIOD_30_PERCENT_VAL 和 STRM1_PERIOD_30_PERCENT_VAL
         300s调节时间中，每调节单位1的占空比值要经过 PWM_DUTY_SLOW_ADJUST_UNIT 的时间
     */
-    // USER_TO_DO 测试时屏蔽，实际要恢复：
+    // @attention 测试时屏蔽，实际要恢复：
     if (led_ctl.working_time <= (u32)180 * 1000)
     {
         // 开灯的前180s不调节

@@ -7,8 +7,15 @@ static volatile is_low_power_enter_enable = 0;
 // 判断进入低功耗的条件是否成立
 u8 is_low_power_condition_establish(void)
 {
-    // 蓝牙ic正在工作、灯光打开、正在充电，返回0，表示不进入低功耗
-    return !(ble_ic.is_working || led_ctl.status != LED_STATUS_OFF || is_in_charging);
+    /*
+        蓝牙ic正在工作、灯光打开、正在充电，
+        检测到充电ic输出放电信号
+        返回0，表示不进入低功耗
+    */
+    return !(ble_ic.is_working ||
+             (led_ctl.status != LED_STATUS_OFF) ||
+             is_in_charging ||
+             is_in_discharging);
 }
 
 // 进入低功耗的条件成立，则累加时间，满足时间后进入低功耗
@@ -96,11 +103,14 @@ void low_power_in(void)
     P2_MD1 &= ~GPIO_P24_MODE_SEL(0x3); // 配置 P24 为输入模式
     FIN_S10 = GPIO_FIN_SEL_P24;        // 配置 P24 为通道0输入唤醒端口
 
-    // USER_TO_DO
     // 充电ic检测脚 ch1
     P2_MD0 &= ~GPIO_P21_MODE_SEL(0x3);
-    P2_PU &= ~GPIO_P21_PULL_UP(0x01); // 关闭上拉
-    FIN_S11 = GPIO_FIN_SEL_P21;       // 配置 P21 为通道1输入唤醒端口
+    // P2_PU &= ~GPIO_P21_PULL_UP(0x01); // 关闭上拉
+    FIN_S11 = GPIO_FIN_SEL_P21; // 配置 P21 为 通道1 输入唤醒端口
+
+    // 充电ic检测脚 ch2 检测放电信号
+    P2_MD0 &= ~GPIO_P22_MODE_SEL(0x3);
+    FIN_S13 = GPIO_FIN_SEL_P22; // 配置 P22 为 通道3 输入唤醒端口
 
     delay_ms(1); // 官方提供的低功耗SDK中，这里有延时操作
 
@@ -118,21 +128,26 @@ void low_power_in(void)
     // 1s 唤醒一次
     WUT_PRH = TMR_PERIOD_VAL_H(((((u32)64000 / 64)) >> 8) & 0xFF); // 周期值
     WUT_PRL = TMR_PERIOD_VAL_L(((((u32)64000 / 64)) >> 0) & 0xFF);
-    WUT_CONH = TMR_PRD_PND(0x1) | TMR_PRD_IRQ_EN(0x1);                           // 使能唤醒定时器
-    WUT_CONL = TMR_SOURCE_SEL(0x7) | TMR_PRESCALE_SEL(0x06) | TMR_MODE_SEL(0x1); // 选择系统时钟，64分频，计数模式
+    WUT_CONH = TMR_PRD_PND(0x1) | TMR_PRD_IRQ_EN(0x1); // 使能唤醒定时器
+    WUT_CONL = TMR_SOURCE_SEL(0x7) |
+               TMR_PRESCALE_SEL(0x06) |
+               TMR_MODE_SEL(0x1); // 选择系统时钟，64分频，计数模式
 
     LP_CON &= ~LP_ISD_DIS_LP_EN(0x1);  // 使能ISD模式下低功耗功能
     LP_WKPND |= LP_WKUP_0_PCLR(0x1);   // 清除唤醒标志位
     LP_WKCON |= (LP_WKUP_0_EDG(0x01) | // 通道0 低电平 触发唤醒
-                 LP_WKUP_0_EN(0x1));   // 唤醒通道0使能
+                 LP_WKUP_0_EN(0x1));   // 唤醒通道0 使能
 
     LP_WKCON &= ~LP_WKUP_1_EDG(0x01); // 通道1 高电平 触发唤醒
-    // LP_WKCON |= LP_WKUP_1_EDG(0x01); // 通道1 低电平 触发唤醒
-    LP_WKCON |= LP_WKUP_1_EN(0x1); // 唤醒 通道1 使能
+    LP_WKCON |= LP_WKUP_1_EN(0x1);    // 唤醒 通道1 使能
 
     LP_WKPND |= LP_WKUP_2_PCLR(0x1);  // 清除唤醒标志位
     LP_WKCON |= (LP_WKUP_2_EDG(0x0) | // 通道2高电平触发唤醒
-                 LP_WKUP_2_EN(0x1));  // 唤醒通道2使能
+                 LP_WKUP_2_EN(0x1));  // 唤醒通道2 使能
+
+    LP_WKPND |= LP_WKUP_3_PCLR(0x1);  // 清除唤醒标志位
+    LP_WKCON |= (LP_WKUP_3_EDG(0x0) | // 通道3 高电平 触发唤醒
+                 LP_WKUP_3_EN(0x1));  // 唤醒通道3 使能
 
     __EnableIRQ(WUT_IRQn); // 使能WUT中断
     IE_EA = 1;             // 使能总中断
@@ -215,6 +230,10 @@ void low_power_handle(void)
     {
         return;
     }
+
+#if USER_DEBUG_ENABLE
+    printf("low power in\n");
+#endif
 label_low_power_in:
 
     low_power_in();
@@ -233,7 +252,7 @@ label_low_power_in:
         // 有按键按下
         is_back_to_low_power = 0;
 #if USER_DEBUG_ENABLE
-        printf("key down\n");
+        // printf("key down\n");
 #endif
     }
 
@@ -249,11 +268,17 @@ label_low_power_in:
 #endif
     }
 
+#if 0
+    /*
+        如果是充电ic输出放电信号导致的唤醒，此时电池电压已经被拉低，
+        检测已经没有效果
+    */     
     adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
     delay_ms(1);
     adc_val = adc_get_val_once();
     // 从低功耗唤醒之后，需要采集一次电池对应的ad值，更新电池相关的变量
     battery_monitor_refresh_by_adc_val(adc_val);
+#endif
 
     // USER_TO_DO 需要检查type-c充电口一侧的电压，判断有没有充电
 
@@ -271,6 +296,17 @@ label_low_power_in:
         printf("wake up by charging\n");
 #endif
         LP_WKPND |= LP_WKUP_1_PCLR(0x01); // 清空唤醒标志位
+    }
+
+    if (LP_WKPND & LP_WKUP_3_PND(0x01))
+    {
+        LP_WKPND |= LP_WKUP_3_PND(0x01); // 清空唤醒标志位
+        // 如果是充电ic输出正在放电的信号，导致的唤醒
+        is_back_to_low_power = 0;
+
+#if USER_DEBUG_ENABLE
+        printf("wake up by discharge signal\n");
+#endif
     }
 
     if (is_back_to_low_power)
