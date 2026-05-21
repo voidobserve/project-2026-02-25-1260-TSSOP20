@@ -203,34 +203,20 @@ void detect_discharge_1khz_signal_100us(void)
 
     static volatile u16 toggle_count_in_period = 0;     // 一个预期的1KHz周期内的翻转次数
     static volatile u16 measurement_period_counter = 0; // 测量周期计数器
-    static volatile u8 is_detected_signal = 0;          // 标志位，是否检测到1KHz信号
 
-    // static volatile u8 last_pin_state = 0; // 上一次检测到的引脚状态
     u8 current_pin_state = CHARGE_IC_CH2; // 当前引脚状态
-    // 如果连续多次检测到1KHz信号模式，则设置充电标志
-    // static volatile u16 consecutive_detection_count = 0; // 计数器，是否连续检测到多次充电信号（用于检测是否有充电）
 
-    // 未检测到充电信号的计数器
-    // static volatile u16 undetected_discharging_count = 0;
+    // =================================================================
+    // 在最后判断是否真的有放电信号
+    static volatile u8 is_detected_signal = 0; // 标志位，是否检测到1KHz信号
+
+    static volatile u8 detect_discharge_signal_cnt = 0;   // 检测到放电信号的计数器
+    static volatile u8 undetect_discharge_signal_cnt = 0; // 未检测到放电信号的计数器
+
+    // =================================================================
 
     // 增加测量周期计数
     measurement_period_counter++;
-
-    // 检测到低电平，并且之前没有检测到1khz信号，可能不在放电
-    // if (current_pin_state == 0 && consecutive_detection_count == 0)
-    // {
-    //     undetected_discharging_count++;
-    //     if (undetected_discharging_count >= (u16)2000 * 10) // 时间单位：100us
-    //     {
-    //         // 目前至少持续1s以上，才能确认充电ic没有在放电
-    //         undetected_discharging_count = 0;
-    //         consecutive_detection_count = 0;
-    //     }
-    // }
-    // else
-    // {
-    //     undetected_discharging_count = 0;
-    // }
 
     /*
         检测低电平和高电平的持续时间，并且累计电平翻转次数
@@ -317,44 +303,36 @@ void detect_discharge_1khz_signal_100us(void)
         if (toggle_count_in_period >= 16) // 1KHz信号，10ms内有20次翻转，这里检测到有16次就认为满足条件
         {                                 // 在这段时间内，至少检测到   多少次翻转
             is_detected_signal = 1;
-            is_in_discharging = 1;
         }
         else if (toggle_count_in_period <= 8)
         {
             is_detected_signal = 0;
-            is_in_discharging = 0;
         }
 
         // 处理完成后，清空计数，给下一个检测周期继续检测
         toggle_count_in_period = 0;
+
+        if (is_detected_signal)
+        {
+            undetect_discharge_signal_cnt = 0;
+            detect_discharge_signal_cnt++;
+            if (detect_discharge_signal_cnt >= 100) // 100 * 10ms
+            {
+                detect_discharge_signal_cnt = 0;
+                is_in_discharging = 1;
+            }
+        }
+        else
+        {
+            detect_discharge_signal_cnt = 0;
+            undetect_discharge_signal_cnt++;
+            if (undetect_discharge_signal_cnt >= 100) // 100 * 10ms
+            {
+                undetect_discharge_signal_cnt = 0;
+                is_in_discharging = 0;
+            }
+        }
     }
-
-    // if (is_detected_signal)
-    // {
-    //     consecutive_detection_count++;
-    //     if (consecutive_detection_count >= 100) // 100 * 100us，连续 10ms 检测到1Khz信号
-    //     {
-    //         // USER_TO_DO 表示正在放电
-    //         // is_in_charging_by_charger = 1;
-    //     }
-
-    //     // // 5000 *10 * 100 us 连续 5s检测到1Khz信号，说明充满电(实际测试可能只有3s)
-    //     // if (consecutive_detection_count >= (u32)5000 * 10)
-    //     // {
-    //     //     is_charging_ic_stop = 1;
-    //     //     // consecutive_detection_count = 500; // 限制最大值，防止溢出
-    //     //     consecutive_detection_count = (u32)5000 * 10; // 限制最大值，防止溢出
-    //     // }
-    // }
-    // else
-    // {
-    //     if (consecutive_detection_count > 0)
-    //     {
-    //         consecutive_detection_count--;
-    //     }
-    // }
-
-    // last_pin_state = current_pin_state;
 }
 
 void charge_det_time_add(void)
@@ -391,12 +369,6 @@ void charge_det(void)
         // 检测时间没有到，直接返回
         return;
     }
-
-    // USER_TO_DO 只在测试时使用
-    // if (is_in_discharging)
-    // {
-    //     printf("is in discharge\n");
-    // }
 
     /*
         将采集到的太阳能一侧的ad值转换为实际的电压值

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 1   
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED
@@ -62,7 +62,7 @@ line level    source
   50   1          FOUT_S02 = GPIO_FOUT_AF_FUNC;
   51   1      }
   52          
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 2   
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 2   
 
   53          void led_ctl_init(void)
   54          {
@@ -126,7 +126,7 @@ line level    source
  112   1          {
  113   2          case LED_STATUS_OFF:
  114   2              // 关灯 -> 打开黄灯
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 3   
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 3   
 
  115   2              // led_ctl.status = LED_STATUS_YELLOW;
  116   2              // led_yellow_on();
@@ -190,7 +190,7 @@ line level    source
  173   2              led_white_off();
  174   2              LED_RED_OFF();
  175   2              LED_BLUE_OFF();
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 4   
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 4   
 
  176   2      
  177   2              led_yellow_on(); // 只亮黄灯
@@ -254,7 +254,7 @@ line level    source
  233   2              LED_RED_OFF();
  234   2              LED_BLUE_OFF();
  235   2      
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 5   
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 5   
 
  236   2              break;
  237   2      
@@ -318,7 +318,7 @@ line level    source
  294   2              if (time_in_cycle < 200) // 前200ms，蓝灯低电平（亮），红灯高电平（灭）
  295   2              {
  296   3                  LED_BLUE_ON(); // 蓝灯亮
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 6   
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 6   
 
  297   3                  LED_RED_OFF(); // 红灯灭
  298   3              }
@@ -382,7 +382,7 @@ line level    source
  352   4                  }
  353   3                  else
  354   3                  {
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 7   
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 7   
 
  355   4                      LED_BLUE_OFF();
  356   4                  }
@@ -446,7 +446,7 @@ line level    source
  414   2              // 开灯的前180s不调节
  415   2              return;
  416   2          }
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 8   
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 8   
 
  417   1      
  418   1          // 开灯180s之后，每 xx ms调节1单位的占空比值
@@ -510,7 +510,7 @@ line level    source
  476   3                  {
  477   4                      LED_25_PERCENT_ON();
  478   4                      led_charge_anim_phase = 1;
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 9   
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 9   
 
  479   4                  }
  480   3                  else if (led_charge_anim_phase == 1 &&
@@ -574,7 +574,7 @@ line level    source
  535   4                      // printf("detect charge end\n");
  536   4                  }
  537   3                  else if (bat_percent >= 75 &&
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 10  
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 10  
 
  538   3                           (led_charge_anim_phase == 2 || led_charge_anim_phase == 3))
  539   3                  {
@@ -638,7 +638,7 @@ line level    source
  597   2              {
  598   3                  LED_25_PERCENT_ON();
  599   3              }
-C51 COMPILER V9.60.7.0   LED                                                               05/20/2026 19:00:48 PAGE 11  
+C51 COMPILER V9.60.7.0   LED                                                               05/21/2026 09:27:13 PAGE 11  
 
  600   2          }
  601   1      }
