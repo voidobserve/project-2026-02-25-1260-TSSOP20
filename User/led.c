@@ -380,6 +380,7 @@ void led_red_blue_flash_1ms_isr(void)
 // 黄灯、白灯、黄白灯缓慢调节的动画效果
 void led_slow_adjust_isr(void)
 {
+#if 0
     if ((led_ctl.status == LED_STATUS_YELLOW ||
          led_ctl.status == LED_STATUS_WHITE ||
          led_ctl.status == LED_STATUS_WHITE_YELLOW) &&
@@ -441,6 +442,92 @@ void led_slow_adjust_isr(void)
             }
         }
     }
+#endif
+
+    // USER_TO_DO 需要检查一下
+    if (is_in_charging)
+    {
+        // 正在充电，但是占空比没有调节至目标占空比
+        led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(100 - 35);
+
+        // 每 xx ms调节1单位的占空比值
+        led_ctl.adjust_time_cnt++;
+        if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
+        {
+            led_ctl.adjust_time_cnt = 0;
+            if (led_ctl.cur_pwm_duty_val < led_ctl.dest_pwm_duty_val)
+            {
+                led_ctl.cur_pwm_duty_val++;
+                if (led_ctl.status == LED_STATUS_YELLOW ||
+                    led_ctl.status == LED_STATUS_WHITE_YELLOW)
+                {
+                    pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
+                }
+
+                if (led_ctl.status == LED_STATUS_WHITE ||
+                    led_ctl.status == LED_STATUS_WHITE_YELLOW)
+                {
+                    pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
+                }
+            }
+        }
+    }
+    else
+    {
+        // 没有在充电
+        led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(100 - 70);
+        led_ctl.adjust_time_cnt++;
+
+        if (led_ctl.cur_pwm_duty_val < led_ctl.dest_pwm_duty_val)
+        {
+            // 如果当前占空比 小于 目标占空比
+            // 要按照 正常工作 的缓慢速度进行调节
+            if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT)
+            {
+                led_ctl.adjust_time_cnt = 0;
+                // if (led_ctl.cur_pwm_duty_val < led_ctl.dest_pwm_duty_val)
+                // {
+                led_ctl.cur_pwm_duty_val++;
+                if (led_ctl.status == LED_STATUS_YELLOW ||
+                    led_ctl.status == LED_STATUS_WHITE_YELLOW)
+                {
+                    pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
+                }
+
+                if (led_ctl.status == LED_STATUS_WHITE ||
+                    led_ctl.status == LED_STATUS_WHITE_YELLOW)
+                {
+                    pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
+                }
+                // }
+            }
+        }
+        else if (led_ctl.cur_pwm_duty_val > led_ctl.dest_pwm_duty_val)
+        {
+            // 如果当前占空比 大于 目标占空比
+            // 要按照 充电期间 的速度进行调节
+            if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
+            {
+                led_ctl.adjust_time_cnt = 0;
+                led_ctl.cur_pwm_duty_val--;
+                if (led_ctl.status == LED_STATUS_YELLOW ||
+                    led_ctl.status == LED_STATUS_WHITE_YELLOW)
+                {
+                    pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
+                }
+
+                if (led_ctl.status == LED_STATUS_WHITE ||
+                    led_ctl.status == LED_STATUS_WHITE_YELLOW)
+                {
+                    pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
+                }
+            }
+        }
+    }
+
+#if USER_DEBUG_ENABLE
+    // USER_TO_DO 每隔一段时间，再打印一次占空比
+#endif
 }
 
 // 充电或放电时，电池电量指示灯的动画

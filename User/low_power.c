@@ -125,7 +125,8 @@ void low_power_in(void)
     // 200ms 唤醒一次
     // WUT_PRH = TMR_PERIOD_VAL_H(((((u32)64000 / 64 / 5 - 1)) >> 8) & 0xFF); // 周期值
     // WUT_PRL = TMR_PERIOD_VAL_L(((((u32)64000 / 64 / 5 - 1)) >> 0) & 0xFF);
-    // 1s 唤醒一次
+
+    // 1s 唤醒一次：
     WUT_PRH = TMR_PERIOD_VAL_H(((((u32)64000 / 64)) >> 8) & 0xFF); // 周期值
     WUT_PRL = TMR_PERIOD_VAL_L(((((u32)64000 / 64)) >> 0) & 0xFF);
     WUT_CONH = TMR_PRD_PND(0x1) | TMR_PRD_IRQ_EN(0x1); // 使能唤醒定时器
@@ -239,6 +240,11 @@ label_low_power_in:
     low_power_in();
     low_power_out();
 
+#if USER_DEBUG_ENABLE
+    uart0_init();
+    printf("low power out\n");
+#endif
+
     // 唤醒后，检测有没有按键操作、有没有充电，有则恢复工作，没有则回到低功耗
     adc_pin_init();
     adc_init_when_low_pwr_out();
@@ -260,11 +266,11 @@ label_low_power_in:
     delay_ms(1);
     adc_val = adc_get_val_once();
     // 如果检测到大于4.5V，认为有太阳能充电
-    if (((u32)adc_val * 4096 / 2400 / 2) >= 4500)
+    if (((u32)adc_val * 2 * 2400 / 4096) >= 4500)
     {
         is_back_to_low_power = 0;
 #if USER_DEBUG_ENABLE
-        printf("charge by solar panel\n");
+        // printf("charge by solar panel\n");
 #endif
     }
 

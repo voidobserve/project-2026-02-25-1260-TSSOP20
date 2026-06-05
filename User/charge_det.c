@@ -16,7 +16,9 @@ volatile u8 is_not_charging_by_charger_cnt = 0;
 volatile u8 is_charging_by_solar_panel_cnt = 0;
 volatile u8 is_not_charging_by_solar_panel_cnt = 0;
 
-volatile u8 is_in_discharging = 0; // 充电ic是否在输出正在放电的信号
+// volatile u8 is_detect_discharge_signal = 0; // 是否检测到了连续的放电信号
+
+volatile u8 is_in_discharging = 0; // 是否正在放电
 
 void charge_det_init(void)
 {
@@ -24,9 +26,11 @@ void charge_det_init(void)
     // P22 CH2 , P21 CH1
     P2_MD0 &= ~GPIO_P22_MODE_SEL(0x03); // 输入模式
     P2_PU |= GPIO_P22_PULL_UP(0x01);
+    // P2_PD |= GPIO_P22_PULL_PD(0x01);
 
     P2_MD0 &= ~GPIO_P21_MODE_SEL(0x03); // 输入模式
     P2_PU |= GPIO_P21_PULL_UP(0x01);
+    // P2_PD |= GPIO_P21_PULL_PD(0x01);
 }
 
 // 新增：专门用于检测1KHz信号的函数
@@ -320,6 +324,7 @@ void detect_discharge_1khz_signal_100us(void)
             {
                 detect_discharge_signal_cnt = 0;
                 is_in_discharging = 1;
+                // is_detect_discharge_signal = 1;
             }
         }
         else
@@ -330,6 +335,7 @@ void detect_discharge_1khz_signal_100us(void)
             {
                 undetect_discharge_signal_cnt = 0;
                 is_in_discharging = 0;
+                // is_detect_discharge_signal = 0;
             }
         }
     }
@@ -369,6 +375,45 @@ void charge_det(void)
         // 检测时间没有到，直接返回
         return;
     }
+
+// // 放电检测的电压插值阈值，单位：mV
+// #define DISCHARGE_VOLTAGE_DIFF_THRESHOLD (50)
+
+//     if (is_detect_discharge_signal)
+//     {
+
+//         // 如果刚拔出充电器，会有30s的放电信号，这个时间内不检测放电
+//         if (last_avg_voltage_mv > avg_voltage_mv &&
+//             ((last_avg_voltage_mv - avg_voltage_mv) >= DISCHARGE_VOLTAGE_DIFF_THRESHOLD))
+//         // if (last_avg_voltage_mv > avg_voltage_mv)
+//         {
+//             /*
+//                 有放电信号，并且上次检测到的电压值比当前检测的电压值相差过大，则认为在放电
+//             */
+//             is_in_discharging = 1;
+//             USER_DEBUG_PIN = 1;
+//         }
+//         else
+//         {
+//             is_in_discharging = 0;
+//             USER_DEBUG_PIN = 0;
+//         }
+//     }
+//     else
+//     {
+//         is_in_discharging = 0;
+//         USER_DEBUG_PIN = 0;
+//         last_avg_voltage_mv = avg_voltage_mv;
+//     }
+
+#if USER_DEBUG_ENABLE
+    // printf("last_avg_voltage_mv == %u\n", last_avg_voltage_mv);
+    // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+    // if (last_avg_voltage_mv > avg_voltage_mv)
+    // {
+    //     printf("diff val == %u\n", last_avg_voltage_mv - avg_voltage_mv);
+    // }
+#endif
 
     /*
         将采集到的太阳能一侧的ad值转换为实际的电压值
@@ -433,7 +478,7 @@ void charge_det(void)
         is_not_charging_by_charger_cnt = 0;
     }
 
-    // printf("adc_type_c_det_val == %u\n", adc_type_c_det_val);
+    // printf("adc_val_of_solar_panel == %u\n", adc_val_of_solar_panel);
 
     if (is_in_charging_by_charger || is_in_charging_by_solar_panel)
     {
@@ -448,18 +493,19 @@ void charge_det(void)
         is_in_charging = 0;
     }
 
+    // USER_TO_DO 充电时，不关机
     // 检测到正在充电时，关闭蓝牙，关闭灯光
-    if (is_in_charging)
-    {
-        if (led_ctl.status != LED_STATUS_OFF)
-        {
-            led_status_set(LED_STATUS_OFF); // 关闭灯光
-        }
+    // if (is_in_charging)
+    // {
+    //     if (led_ctl.status != LED_STATUS_OFF)
+    //     {
+    //         led_status_set(LED_STATUS_OFF); // 关闭灯光
+    //     }
 
-        if (ble_ic.is_working)
-        {
-            ble_ic_disable_pre();
-            // delay_ms(30); // 等待蓝牙关闭
-        }
-    }
+    //     if (ble_ic.is_working)
+    //     {
+    //         ble_ic_disable_pre();
+    //         // delay_ms(30); // 等待蓝牙关闭
+    //     }
+    // }
 }

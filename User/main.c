@@ -118,7 +118,7 @@ void user_init(void)
     timer1_init();
 
 #if USER_DEBUG_ENABLE
-    // user_debug_pin_init();
+    user_debug_pin_init();
     // timebase_init();
     printf("sys init\n");
 #endif

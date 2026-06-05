@@ -507,7 +507,7 @@ void battery_monitor_handle(void)
         {
             // u8 i; // 循环计数值，控制连续发送低电量报警的次数
 #if USER_DEBUG_ENABLE
-            printf("detect low power\n");
+            // printf("detect low power\n");
 #endif
             if (ble_ic.is_working == 0)
             {
