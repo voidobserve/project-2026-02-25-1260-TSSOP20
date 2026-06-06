@@ -160,7 +160,8 @@ void ad_key_handle(void)
 
     // 充电时、或者电池电量低于 xx 时，不执行按键操作
     // if (is_in_charging || avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
-    if (is_in_charging || bat_percent <= 0)
+    // if (is_in_charging || bat_percent <= 0)
+    if (bat_percent <= 0) // 电池电量低于 xx 时，不执行按键操作
     {
         /*
             这里需要清空按键事件，否则在充电期间按下了按键，

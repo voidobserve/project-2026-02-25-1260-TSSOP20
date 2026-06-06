@@ -11,7 +11,7 @@ volatile u8 is_charging_ic_stop = 0; // 充电ic是否停止充电
 // USER_TO_DO 充电检测和断开充电检测都要加上防抖动处理
 volatile bit flag_is_time_to_det_charge = 0; // 是否到了检测充电状态的时机
 
-volatile u8 is_not_charging_by_charger_cnt = 0;
+// volatile u8 is_not_charging_by_charger_cnt = 0;
 
 volatile u8 is_charging_by_solar_panel_cnt = 0;
 volatile u8 is_not_charging_by_solar_panel_cnt = 0;
@@ -463,20 +463,22 @@ void charge_det(void)
      *    USER_TO_DO 如果在旧的板子上测试，
      *    没有引出这个检测脚，需要屏蔽这里的检测程序
      *    @attention 测试完成后，需要恢复这部分程序
+     * 
+     *   
      */
-    if (adc_val_of_type_c <= 2000)
-    {
-        is_not_charging_by_charger_cnt++;
-        if (is_not_charging_by_charger_cnt >= 200) // 目前单位：ms
-        {
-            is_not_charging_by_charger_cnt = 0;
-            is_in_charging_by_charger = 0;
-        }
-    }
-    else if (adc_val_of_type_c >= 4000)
-    {
-        is_not_charging_by_charger_cnt = 0;
-    }
+    // if (adc_val_of_type_c <= 2000)
+    // {
+    //     is_not_charging_by_charger_cnt++;
+    //     if (is_not_charging_by_charger_cnt >= 200) // 目前单位：ms
+    //     {
+    //         is_not_charging_by_charger_cnt = 0;
+    //         is_in_charging_by_charger = 0;
+    //     }
+    // }
+    // else if (adc_val_of_type_c >= 4000)
+    // {
+    //     is_not_charging_by_charger_cnt = 0;
+    // }
 
     // printf("adc_val_of_solar_panel == %u\n", adc_val_of_solar_panel);
 

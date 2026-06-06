@@ -157,9 +157,10 @@ void led_status_switch(void)
 void led_status_set(led_status_t status)
 {
     // 每次切换状态时，都清空工作时间
-    led_ctl.working_time = 0;         // 工作时间清零
-    led_ctl.cur_pwm_duty_val = 0;     // PWM占空比值清零
-    led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
+    led_ctl.working_time = 0;     // 工作时间清零
+    led_ctl.cur_pwm_duty_val = 0; // PWM占空比值清零（表示当前灯光为最亮）
+    // led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
+    led_ctl.adjust_time_cnt = 0;
 
     switch (status)
     {
@@ -444,7 +445,26 @@ void led_slow_adjust_isr(void)
     }
 #endif
 
-    // USER_TO_DO 需要检查一下
+    if ((led_ctl.status == LED_STATUS_YELLOW ||
+         led_ctl.status == LED_STATUS_WHITE ||
+         led_ctl.status == LED_STATUS_WHITE_YELLOW))
+    {
+        /*
+            黄灯、白灯、黄白灯模式下，
+            并且缓慢调节灯光的操作没有结束，
+            记录灯光工作时间，进行缓慢调节
+        */
+        if (led_ctl.working_time < ((u32)-1)) // 防止计数溢出
+        {
+            led_ctl.working_time++;
+        }
+    }
+    else
+    {
+        // 不在黄灯、白灯、黄白灯模式，或者缓慢调节已经结束
+        return;
+    }
+
     if (is_in_charging)
     {
         // 正在充电，但是占空比没有调节至目标占空比
@@ -475,18 +495,27 @@ void led_slow_adjust_isr(void)
     else
     {
         // 没有在充电
+
+        // 180s 之后，每 xx ms调节1单位的占空比值
         led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(100 - 70);
         led_ctl.adjust_time_cnt++;
 
+        // 占空比越小，灯光亮度越高
         if (led_ctl.cur_pwm_duty_val < led_ctl.dest_pwm_duty_val)
         {
-            // 如果当前占空比 小于 目标占空比
+            // 如果当前占空比 小于 目标占空比（当前灯光亮度大于目标亮度）
             // 要按照 正常工作 的缓慢速度进行调节
+
+            if (led_ctl.working_time <= (u32)180 * 1000)
+            {
+                // 开灯的前180s不调节
+                led_ctl.adjust_time_cnt = 0;
+                return;
+            }
+
             if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT)
             {
                 led_ctl.adjust_time_cnt = 0;
-                // if (led_ctl.cur_pwm_duty_val < led_ctl.dest_pwm_duty_val)
-                // {
                 led_ctl.cur_pwm_duty_val++;
                 if (led_ctl.status == LED_STATUS_YELLOW ||
                     led_ctl.status == LED_STATUS_WHITE_YELLOW)
@@ -499,12 +528,11 @@ void led_slow_adjust_isr(void)
                 {
                     pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
                 }
-                // }
             }
         }
         else if (led_ctl.cur_pwm_duty_val > led_ctl.dest_pwm_duty_val)
         {
-            // 如果当前占空比 大于 目标占空比
+            // 如果当前占空比 大于 目标占空（当前灯光亮度小于目标亮度值）
             // 要按照 充电期间 的速度进行调节
             if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
             {
@@ -527,6 +555,18 @@ void led_slow_adjust_isr(void)
 
 #if USER_DEBUG_ENABLE
     // USER_TO_DO 每隔一段时间，再打印一次占空比
+    {
+        static u8 cnt = 0;
+        cnt++;
+        if (cnt >= 100)
+        {
+            cnt = 0;
+
+            // printf("PWM_DUTY_VAL_PERCENT_X(100 - 70) == %u\n", PWM_DUTY_VAL_PERCENT_X(100 - 70));
+            // printf("led_ctl.dest_pwm_duty_val == %u\n", led_ctl.dest_pwm_duty_val);
+            // printf("cur_pwm_duty_val = %u\n", led_ctl.cur_pwm_duty_val);
+        }
+    }
 #endif
 }
 

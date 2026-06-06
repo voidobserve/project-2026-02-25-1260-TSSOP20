@@ -80,7 +80,7 @@ typedef struct
     led_status_t status; // 状态（红灯、蓝灯、黄灯和白灯）
 
     // 用于控制黄灯和白灯的pwm占空比：
-    u8 is_slowly_adjust_end; // 灯光缓慢调节是否结束
+    // u8 is_slowly_adjust_end; // 灯光缓慢调节是否结束
     u8 adjust_time_cnt;      // 灯光缓慢调节的时间计数（用来控制每隔 xx ms调节1单位的占空比值）
     u16 cur_pwm_duty_val;    // 当前的PWM占空比数值
 

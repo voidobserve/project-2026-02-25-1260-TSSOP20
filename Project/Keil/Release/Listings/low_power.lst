@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/05/2026 18:30:53 PAGE 1   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/06/2026 14:59:51 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LOW_POWER
@@ -52,8 +52,8 @@ line level    source
   41          void low_power_in(void)
   42          {
   43   1      #if USER_DEBUG_ENABLE
-  44   1          // printf("stop in\n");
-  45   1      #endif
+                  // printf("stop in\n");
+              #endif
   46   1      
   47   1          __DisableIRQ(TMR1_IRQn);  // 禁止 定时器 1 中断
   48   1          __DisableIRQ(TMR0_IRQn);  // 禁止 定时器 0 中断
@@ -62,7 +62,7 @@ line level    source
   51   1      
   52   1          TMR1_CONL &= ~(TMR_MODE_SEL(0x03)); // 不使能计数
   53   1          TMR0_CONL &= ~(TMR_MODE_SEL(0x03)); // 不使能计数
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/05/2026 18:30:53 PAGE 2   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/06/2026 14:59:51 PAGE 2   
 
   54   1      
   55   1          ADC_ACON0 &= ~(ADC_CMP_EN(0x01) |  // 不使能内部比较器
@@ -126,7 +126,7 @@ line level    source
  113   1          FIN_S13 = GPIO_FIN_SEL_P22; // 配置 P22 为 通道3 输入唤醒端口
  114   1      
  115   1          delay_ms(1); // 官方提供的低功耗SDK中，这里有延时操作
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/05/2026 18:30:53 PAGE 3   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/06/2026 14:59:51 PAGE 3   
 
  116   1      
  117   1          /*
@@ -190,7 +190,7 @@ line level    source
  172   1          CLK_ACON0 &= ~CLK_AIP_HRC_EN(0x1); // 关闭HRC时钟
  173   1      
  174   1          // P17 = 1; // 用该引脚测试低功耗的时间
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/05/2026 18:30:53 PAGE 4   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/06/2026 14:59:51 PAGE 4   
 
  175   1          // =============================================================
  176   1          // 进入 sleep 低功耗模式
@@ -235,9 +235,9 @@ line level    source
  213   1          CLK_CON0 |= CLK_SYSCLK_SEL(0x3); // 系统时钟选择hirc_clk
  214   1      
  215   1      #if USER_DEBUG_ENABLE
- 216   1          uart0_init();
- 217   1          // printf("stop out\n");
- 218   1      #endif
+                  uart0_init();
+                  // printf("stop out\n");
+              #endif
  219   1      }
  220          
  221          void low_power_handle(void)
@@ -254,20 +254,20 @@ line level    source
  232   2              return;
  233   2          }
  234   1      
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/05/2026 18:30:53 PAGE 5   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/06/2026 14:59:51 PAGE 5   
 
  235   1      #if USER_DEBUG_ENABLE
- 236   1          printf("low power in\n");
- 237   1      #endif
+                  printf("low power in\n");
+              #endif
  238   1      label_low_power_in:
  239   1      
  240   1          low_power_in();
  241   1          low_power_out();
  242   1      
  243   1      #if USER_DEBUG_ENABLE
- 244   1          uart0_init();
- 245   1          printf("low power out\n");
- 246   1      #endif
+                  uart0_init();
+                  printf("low power out\n");
+              #endif
  247   1      
  248   1          // 唤醒后，检测有没有按键操作、有没有充电，有则恢复工作，没有则回到低
              -功耗
@@ -283,8 +283,8 @@ line level    source
  258   2              // 有按键按下
  259   2              is_back_to_low_power = 0;
  260   2      #if USER_DEBUG_ENABLE
- 261   2              // printf("key down\n");
- 262   2      #endif
+                      // printf("key down\n");
+              #endif
  263   2          }
  264   1      
  265   1          adc_channel_sel(ADC_CHANNEL_SEL_SOLAR_DET);
@@ -295,8 +295,8 @@ line level    source
  270   1          {
  271   2              is_back_to_low_power = 0;
  272   2      #if USER_DEBUG_ENABLE
- 273   2              // printf("charge by solar panel\n");
- 274   2      #endif
+                      // printf("charge by solar panel\n");
+              #endif
  275   2          }
  276   1      
  277   1      #if 0
@@ -318,7 +318,7 @@ line level    source
  292   1          // charge_det();
  293   1          // if (is_in_charging)
  294   1          // {
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/05/2026 18:30:53 PAGE 6   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/06/2026 14:59:51 PAGE 6   
 
  295   1          //     is_back_to_low_power = 0;
  296   1          // }
@@ -327,8 +327,8 @@ line level    source
  299   1          {
  300   2              is_back_to_low_power = 0;
  301   2      #if USER_DEBUG_ENABLE
- 302   2              printf("wake up by charging\n");
- 303   2      #endif
+                      printf("wake up by charging\n");
+              #endif
  304   2              LP_WKPND |= LP_WKUP_1_PCLR(0x01); // 清空唤醒标志位
  305   2          }
  306   1      
@@ -339,15 +339,15 @@ line level    source
  311   2              is_back_to_low_power = 0;
  312   2      
  313   2      #if USER_DEBUG_ENABLE
- 314   2              printf("wake up by discharge signal\n");
- 315   2      #endif
+                      printf("wake up by discharge signal\n");
+              #endif
  316   2          }
  317   1      
  318   1          if (is_back_to_low_power)
  319   1          {
  320   2      #if USER_DEBUG_ENABLE
- 321   2              // printf("goto low power in\n");
- 322   2      #endif
+                      // printf("goto low power in\n");
+              #endif
  323   2              goto label_low_power_in;
  324   2          }
  325   1      
@@ -377,12 +377,12 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    646    ----
-   CONSTANT SIZE    =     79    ----
+   CODE SIZE        =    599    ----
+   CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =      4       1
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/05/2026 18:30:53 PAGE 7   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         06/06/2026 14:59:51 PAGE 7   
 
    IDATA SIZE       =   ----    ----
    BIT SIZE         =   ----    ----

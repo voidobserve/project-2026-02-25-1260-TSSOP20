@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/05/2026 18:30:53 PAGE 1   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/06/2026 14:59:51 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE CHARGE_DET
@@ -22,7 +22,7 @@ line level    source
   11          // USER_TO_DO 充电检测和断开充电检测都要加上防抖动处理
   12          volatile bit flag_is_time_to_det_charge = 0; // 是否到了检测充电状态的时机
   13          
-  14          volatile u8 is_not_charging_by_charger_cnt = 0;
+  14          // volatile u8 is_not_charging_by_charger_cnt = 0;
   15          
   16          volatile u8 is_charging_by_solar_panel_cnt = 0;
   17          volatile u8 is_not_charging_by_solar_panel_cnt = 0;
@@ -62,7 +62,7 @@ line level    source
   50   1          // static volatile u8 last_pin_state = 0; // 上一次检测到的引脚状态
   51   1          u8 current_pin_state = CHARGE_IC_CH1; // 当前引脚状态
   52   1          // 如果连续多次检测到1KHz信号模式，则设置充电标志
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/05/2026 18:30:53 PAGE 2   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/06/2026 14:59:51 PAGE 2   
 
   53   1          static volatile u16 consecutive_detection_count = 0; // 计数器，是否连续检测到多次充电�
              -��号（用于检测是否有充电）
@@ -126,7 +126,7 @@ line level    source
  111   3                  // 检查高电平持续时间是否接近1KHz的半个周期（即0.5ms == 500us = 5个100us�
              -��期）
  112   3                  // 允许一定误差范围，比如3 ~ 5 个 100us 周期之间
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/05/2026 18:30:53 PAGE 3   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/06/2026 14:59:51 PAGE 3   
 
  113   3                  // user_debug_val_u16 = signal_high_duration; // 获取得到的计数值（测试时使用）
  114   3                  if (signal_high_duration >= 3 && signal_high_duration <= 5)
@@ -190,7 +190,7 @@ line level    source
  170   2              {
  171   3                  is_in_charging_by_charger = 1;
  172   3              }
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/05/2026 18:30:53 PAGE 4   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/06/2026 14:59:51 PAGE 4   
 
  173   2      
  174   2              // 5000 *10 * 100 us 连续 5s检测到1Khz信号，说明充满电(实际测试可能只有3s)
@@ -254,7 +254,7 @@ line level    source
  232   2              {
  233   3                  /*
  234   3                      检测到高电平
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/05/2026 18:30:53 PAGE 5   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/06/2026 14:59:51 PAGE 5   
 
  235   3                      进入高电平检测状态
  236   3                  */
@@ -318,7 +318,7 @@ line level    source
  293   3      
  294   3                  signal_low_duration = 0;
  295   3              }
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/05/2026 18:30:53 PAGE 6   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/06/2026 14:59:51 PAGE 6   
 
  296   2              break;
  297   2          }
@@ -382,7 +382,7 @@ line level    source
  354   1          static u16 adc_val_of_type_c = 0;
  355   1          u16 voltage_mv = 0;
  356   1      
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/05/2026 18:30:53 PAGE 7   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/06/2026 14:59:51 PAGE 7   
 
  357   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_SOLAR_DET))
  358   1          {
@@ -438,15 +438,15 @@ line level    source
  407   1      //     }
  408   1      
  409   1      #if USER_DEBUG_ENABLE
- 410   1          // printf("last_avg_voltage_mv == %u\n", last_avg_voltage_mv);
- 411   1          // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
- 412   1          // if (last_avg_voltage_mv > avg_voltage_mv)
- 413   1          // {
- 414   1          //     printf("diff val == %u\n", last_avg_voltage_mv - avg_voltage_mv);
- 415   1          // }
- 416   1      #endif
+                  // printf("last_avg_voltage_mv == %u\n", last_avg_voltage_mv);
+                  // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+                  // if (last_avg_voltage_mv > avg_voltage_mv)
+                  // {
+                  //     printf("diff val == %u\n", last_avg_voltage_mv - avg_voltage_mv);
+                  // }
+              #endif
  417   1      
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/05/2026 18:30:53 PAGE 8   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/06/2026 14:59:51 PAGE 8   
 
  418   1          /*
  419   1              将采集到的太阳能一侧的ad值转换为实际的电压值
@@ -466,8 +466,8 @@ line level    source
  433   3                  is_in_charging_by_solar_panel = 1;
  434   3      
  435   3      #if USER_DEBUG_ENABLE
- 436   3                  // printf("is charging by solar panel\n");
- 437   3      #endif
+                          // printf("is charging by solar panel\n");
+              #endif
  438   3              }
  439   2          }
  440   1          else
@@ -481,8 +481,8 @@ line level    source
  448   3                  is_in_charging_by_solar_panel = 0;
  449   3      
  450   3      #if USER_DEBUG_ENABLE
- 451   3                  // printf("is not charging by solar panel\n");
- 452   3      #endif
+                          // printf("is not charging by solar panel\n");
+              #endif
  453   3              }
  454   2          }
  455   1      
@@ -496,60 +496,62 @@ line level    source
  463   1           *    USER_TO_DO 如果在旧的板子上测试，
  464   1           *    没有引出这个检测脚，需要屏蔽这里的检测程序
  465   1           *    @attention 测试完成后，需要恢复这部分程序
- 466   1           */
- 467   1          if (adc_val_of_type_c <= 2000)
- 468   1          {
- 469   2              is_not_charging_by_charger_cnt++;
- 470   2              if (is_not_charging_by_charger_cnt >= 200) // 目前单位：ms
- 471   2              {
- 472   3                  is_not_charging_by_charger_cnt = 0;
- 473   3                  is_in_charging_by_charger = 0;
- 474   3              }
- 475   2          }
- 476   1          else if (adc_val_of_type_c >= 4000)
- 477   1          {
- 478   2              is_not_charging_by_charger_cnt = 0;
- 479   2          }
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/05/2026 18:30:53 PAGE 9   
+ 466   1           * 
+ 467   1           *   
+ 468   1           */
+ 469   1          // if (adc_val_of_type_c <= 2000)
+ 470   1          // {
+ 471   1          //     is_not_charging_by_charger_cnt++;
+ 472   1          //     if (is_not_charging_by_charger_cnt >= 200) // 目前单位：ms
+ 473   1          //     {
+ 474   1          //         is_not_charging_by_charger_cnt = 0;
+ 475   1          //         is_in_charging_by_charger = 0;
+ 476   1          //     }
+ 477   1          // }
+ 478   1          // else if (adc_val_of_type_c >= 4000)
+ 479   1          // {
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        06/06/2026 14:59:51 PAGE 9   
 
- 480   1      
- 481   1          // printf("adc_val_of_solar_panel == %u\n", adc_val_of_solar_panel);
+ 480   1          //     is_not_charging_by_charger_cnt = 0;
+ 481   1          // }
  482   1      
- 483   1          if (is_in_charging_by_charger || is_in_charging_by_solar_panel)
- 484   1          {
- 485   2              is_in_charging = 1;
- 486   2      
- 487   2              // 有充电之后，清空低电量相关标志位
- 488   2              is_sent_low_bat_alert = 0;
- 489   2              is_turn_off_by_low_bat = 0;
- 490   2          }
- 491   1          else if (is_in_charging_by_charger == 0 && is_in_charging_by_solar_panel == 0)
- 492   1          {
- 493   2              is_in_charging = 0;
- 494   2          }
- 495   1      
- 496   1          // USER_TO_DO 充电时，不关机
- 497   1          // 检测到正在充电时，关闭蓝牙，关闭灯光
- 498   1          // if (is_in_charging)
- 499   1          // {
- 500   1          //     if (led_ctl.status != LED_STATUS_OFF)
- 501   1          //     {
- 502   1          //         led_status_set(LED_STATUS_OFF); // 关闭灯光
- 503   1          //     }
- 504   1      
- 505   1          //     if (ble_ic.is_working)
- 506   1          //     {
- 507   1          //         ble_ic_disable_pre();
- 508   1          //         // delay_ms(30); // 等待蓝牙关闭
- 509   1          //     }
- 510   1          // }
- 511   1      }
+ 483   1          // printf("adc_val_of_solar_panel == %u\n", adc_val_of_solar_panel);
+ 484   1      
+ 485   1          if (is_in_charging_by_charger || is_in_charging_by_solar_panel)
+ 486   1          {
+ 487   2              is_in_charging = 1;
+ 488   2      
+ 489   2              // 有充电之后，清空低电量相关标志位
+ 490   2              is_sent_low_bat_alert = 0;
+ 491   2              is_turn_off_by_low_bat = 0;
+ 492   2          }
+ 493   1          else if (is_in_charging_by_charger == 0 && is_in_charging_by_solar_panel == 0)
+ 494   1          {
+ 495   2              is_in_charging = 0;
+ 496   2          }
+ 497   1      
+ 498   1          // USER_TO_DO 充电时，不关机
+ 499   1          // 检测到正在充电时，关闭蓝牙，关闭灯光
+ 500   1          // if (is_in_charging)
+ 501   1          // {
+ 502   1          //     if (led_ctl.status != LED_STATUS_OFF)
+ 503   1          //     {
+ 504   1          //         led_status_set(LED_STATUS_OFF); // 关闭灯光
+ 505   1          //     }
+ 506   1      
+ 507   1          //     if (ble_ic.is_working)
+ 508   1          //     {
+ 509   1          //         ble_ic_disable_pre();
+ 510   1          //         // delay_ms(30); // 等待蓝牙关闭
+ 511   1          //     }
+ 512   1          // }
+ 513   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1078    ----
+   CODE SIZE        =   1028    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     38       4
+   XDATA SIZE       =     37       4
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
