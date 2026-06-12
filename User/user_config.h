@@ -12,7 +12,7 @@
 /*
     测试引脚： 
 */
-#define USE_MY_TEST_PIN 1 // 是否使用测试用的引脚（开发板没有相关的引脚，用其他空闲的引脚来代替）
+#define USE_MY_TEST_PIN 0 // 是否使用测试用的引脚（开发板没有相关的引脚，用其他空闲的引脚来代替）
 #if USE_MY_TEST_PIN
 #define USER_DEBUG_PIN P17
 #endif

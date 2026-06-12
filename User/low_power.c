@@ -15,7 +15,8 @@ u8 is_low_power_condition_establish(void)
     return !(ble_ic.is_working ||
              (led_ctl.status != LED_STATUS_OFF) ||
              is_in_charging ||
-             is_in_discharging);
+             is_in_discharging ||
+             is_detect_discharge_signal);
 }
 
 // 进入低功耗的条件成立，则累加时间，满足时间后进入低功耗
