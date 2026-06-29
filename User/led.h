@@ -46,7 +46,7 @@
 /**
  * @brief 占空比值小于调节时间，每 xx ms调节1单位的占空比值
  *      目前值 == 33
- *      目标占空比值是 70 %，但是LED是低电平驱动，写成 100 - 70  
+ *      目标占空比值是 70 %，但是LED是引脚给低电平驱动，写成 100 - 70  
  */
 #define PWM_DUTY_SLOW_ADJUST_UNIT \
     ((u32)PWM_DUTY_SLOW_ADJUST_TIME / PWM_DUTY_VAL_PERCENT_X(100 - 70))
@@ -55,7 +55,7 @@
 #define PWM_DUTY_SLOW_ADJUST_TIME_DURING_CHARGING ((u32)2 * 60 * 1000)
 /**
  * @brief 充电期间，每 xx ms 调节1单位的占空比值
- *      目标占空比值是 35 %，但是LED是低电平驱动，写成 100 - 35
+ *      目标占空比值是 35 %，但是LED是引脚给低电平驱动，写成 100 - 35
  *      目前值 == 6
  */
 #define PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING \
@@ -116,8 +116,10 @@ void led_yellow_off(void);
 void led_white_on(void);
 void led_white_off(void);
 
+#if 0
 void led_suspend(void);
 void led_resume(void);
+#endif
 
 void led_ctl_init(void);
 void led_status_switch(void);

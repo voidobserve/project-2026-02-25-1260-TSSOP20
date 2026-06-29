@@ -243,7 +243,7 @@ void adc_scan(void)
         break;
     case ADC_STATUS_SEL_BAT_DET_WAITING:
         // 准备采集电池电压对应的ad值前，先关闭led显示，不包括电量指示灯
-        led_suspend();
+        // led_suspend();
 
         // 开启转换，之后在ad中断获取ad值 
         ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
@@ -294,7 +294,7 @@ void ADC_IRQHandler(void) interrupt ADC_IRQn
             adc_update_val(ADC_CHANNEL_SEL_BAT_DET, adc_val);
 
             // 采集完电池电压对应的ad值后，恢复led显示，不包括电量指示灯
-            led_resume();
+            // led_resume();
 
             battery_voltage_update_by_isr();
             break;

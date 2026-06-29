@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   UART0                                                             06/11/2026 14:37:31 PAGE 1   
+C51 COMPILER V9.60.7.0   UART0                                                             06/29/2026 17:29:38 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART0
@@ -15,15 +15,15 @@ line level    source
    4          volatile uart_rx_buffer_t uart0_rx_buffer = {0};
    5          
    6          #if USER_DEBUG_ENABLE
-              // 重写puchar()函数
-              char putchar(char c)
-              {
-                  while (!(UART0_STA & UART_TX_DONE(0x01)))
-                      ;
-                  UART0_DATA = c;
-                  return c;
-              }
-              #endif
+   7          // 重写puchar()函数
+   8          char putchar(char c)
+   9          {
+  10   1          while (!(UART0_STA & UART_TX_DONE(0x01)))
+  11   1              ;
+  12   1          UART0_DATA = c;
+  13   1          return c;
+  14   1      }
+  15          #endif
   16          
   17          void uart0_init(void)
   18          {
@@ -62,7 +62,7 @@ line level    source
   51          {
   52   1          u8 i = 0;
   53   1          for (; i < len; i++)
-C51 COMPILER V9.60.7.0   UART0                                                             06/11/2026 14:37:31 PAGE 2   
+C51 COMPILER V9.60.7.0   UART0                                                             06/29/2026 17:29:38 PAGE 2   
 
   54   1          {
   55   2              uart0_sendbyte(buf[i]);
@@ -126,7 +126,7 @@ line level    source
  113          
  114          // UART0中断服务函数（接收中断）
  115          void UART0_IRQHandler(void) interrupt UART0_IRQn
-C51 COMPILER V9.60.7.0   UART0                                                             06/11/2026 14:37:31 PAGE 3   
+C51 COMPILER V9.60.7.0   UART0                                                             06/29/2026 17:29:38 PAGE 3   
 
  116          {
  117   1          // 进入中断设置IP，不可删除
@@ -146,7 +146,7 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    294    ----
+   CODE SIZE        =    302    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =    518       4
    PDATA SIZE       =   ----    ----

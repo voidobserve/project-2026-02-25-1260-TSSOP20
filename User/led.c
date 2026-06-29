@@ -71,12 +71,14 @@ void led_yellow_on(void)
     FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
 }
 
+#if 0
 // 只由 led_resume() 调用
 void __led_yellow_resume__(void)
 {
     pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
     FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
 }
+#endif
 
 void led_yellow_off(void)
 {
@@ -92,12 +94,14 @@ void led_white_on(void)
     FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
 }
 
+#if 0
 // 只由 led_resume() 调用
 void __led_white_resume__(void)
 {
     pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
     FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
 }
+#endif
 
 void led_white_off(void)
 {
@@ -205,6 +209,7 @@ void led_status_set(led_status_t status)
     led_ctl.status = status; // 需要最后再给状态赋值，否则会在定时器中断先执行了相关的操作
 }
 
+#if 0
 /**
  * @brief 挂起led任务，不包括电量指示灯（在准备采集电池电压的ad值前，暂时关闭led）
  *
@@ -268,6 +273,7 @@ void led_resume(void)
         break;
     }
 }
+#endif
 
 /**
  * @brief 红灯、蓝灯闪烁的动画效果，由定时器调用
@@ -381,70 +387,6 @@ void led_red_blue_flash_1ms_isr(void)
 // 黄灯、白灯、黄白灯缓慢调节的动画效果
 void led_slow_adjust_isr(void)
 {
-#if 0
-    if ((led_ctl.status == LED_STATUS_YELLOW ||
-         led_ctl.status == LED_STATUS_WHITE ||
-         led_ctl.status == LED_STATUS_WHITE_YELLOW) &&
-        (led_ctl.is_slowly_adjust_end != 1))
-    {
-        /*
-            黄灯、白灯、黄白灯模式下，
-            并且缓慢调节灯光的操作没有结束，
-            记录灯光工作时间，进行缓慢调节
-        */
-        if (led_ctl.working_time < ((u32)-1)) // 防止计数溢出
-        {
-            led_ctl.working_time++;
-        }
-    }
-    else
-    {
-        // 不在黄灯、白灯、黄白灯模式，或者缓慢调节已经结束
-        return;
-    }
-
-    /*
-        假设每1ms调节一次占空比
-        总共 480s，前180s不调节，后面300s缓慢调节占空比至 30%
-
-        现在 30% 对应的占空比值为 STRM0_PERIOD_30_PERCENT_VAL 和 STRM1_PERIOD_30_PERCENT_VAL
-        300s调节时间中，每调节单位1的占空比值要经过 PWM_DUTY_SLOW_ADJUST_UNIT 的时间
-    */
-    // @attention 测试时屏蔽，实际要恢复：
-    if (led_ctl.working_time <= (u32)180 * 1000)
-    {
-        // 开灯的前180s不调节
-        return;
-    }
-
-    // 开灯180s之后，每 xx ms调节1单位的占空比值
-    led_ctl.adjust_time_cnt++;
-    if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT)
-    {
-        led_ctl.adjust_time_cnt = 0;
-        if (led_ctl.cur_pwm_duty_val < PWM_DUTY_VAL_PERCENT_X(30))
-        {
-            led_ctl.cur_pwm_duty_val++;
-            if (led_ctl.status == LED_STATUS_YELLOW ||
-                led_ctl.status == LED_STATUS_WHITE_YELLOW)
-            {
-                pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
-            }
-
-            if (led_ctl.status == LED_STATUS_WHITE ||
-                led_ctl.status == LED_STATUS_WHITE_YELLOW)
-            {
-                pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
-            }
-
-            if (led_ctl.cur_pwm_duty_val >= PWM_DUTY_VAL_PERCENT_X(30))
-            {
-                led_ctl.is_slowly_adjust_end = 1; // 表示缓慢调节结束
-            }
-        }
-    }
-#endif
-
     if ((led_ctl.status == LED_STATUS_YELLOW ||
          led_ctl.status == LED_STATUS_WHITE ||
          led_ctl.status == LED_STATUS_WHITE_YELLOW))

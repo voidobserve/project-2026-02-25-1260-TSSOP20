@@ -221,7 +221,13 @@ void low_power_out(void)
 
 void low_power_handle(void)
 {
-    u8 is_back_to_low_power = 1; // 默认从低功耗唤醒后，又返回低功耗
+    // u8 is_back_to_low_power = 1;  // 默认从低功耗唤醒后，又返回低功耗
+
+    // USER_TO_DO 待添加该变量对应的功能
+    u8 is_wkup_enable = 0; // 默认从低功耗唤醒后，又返回低功耗
+    u8 is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
+    u8 is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
+    u8 is_key_sig_wkup = 0;       // 是否由ad按键唤醒
     u16 adc_val;
 
     if (is_low_power_enter_enable)
@@ -257,7 +263,8 @@ label_low_power_in:
     if (adc_val < AD_KEY_INDEX_MAX_VAL)
     {
         // 有按键按下
-        is_back_to_low_power = 0;
+        // is_back_to_low_power = 0;
+        is_key_sig_wkup = 1;
 #if USER_DEBUG_ENABLE
         // printf("key down\n");
 #endif
@@ -269,7 +276,9 @@ label_low_power_in:
     // 如果检测到大于4.5V，认为有太阳能充电
     if (((u32)adc_val * 2 * 2400 / 4096) >= 4500)
     {
-        is_back_to_low_power = 0;
+        // is_back_to_low_power = 0;
+        is_wkup_enable = 1;
+        is_charge_sig_wkup = 1;
 #if USER_DEBUG_ENABLE
         // printf("charge by solar panel\n");
 #endif
@@ -287,40 +296,56 @@ label_low_power_in:
     battery_monitor_refresh_by_adc_val(adc_val);
 #endif
 
-    // USER_TO_DO 需要检查type-c充电口一侧的电压，判断有没有充电
-
-    // USER_TO_DO 旧版的pcb，需要打开定时器1，看看充电ic有没有信号，判断是不是正在充电
-    // charge_det();
-    // if (is_in_charging)
-    // {
-    //     is_back_to_low_power = 0;
-    // }
     // 如果是充电ic输出正在充电的信号，导致的唤醒
     if (LP_WKPND & LP_WKUP_1_PND(0x01))
     {
-        is_back_to_low_power = 0;
+        // is_back_to_low_power = 0;
 #if USER_DEBUG_ENABLE
         printf("wake up by charging\n");
 #endif
         LP_WKPND |= LP_WKUP_1_PCLR(0x01); // 清空唤醒标志位
+        is_wkup_enable = 1;
+        is_charge_sig_wkup = 1;
     }
 
     if (LP_WKPND & LP_WKUP_3_PND(0x01))
     {
         LP_WKPND |= LP_WKUP_3_PND(0x01); // 清空唤醒标志位
         // 如果是充电ic输出正在放电的信号，导致的唤醒
-        is_back_to_low_power = 0;
+        // is_back_to_low_power = 0;
+        is_wkup_enable = 1;
+        is_discharge_sig_wkup = 1;
 
 #if USER_DEBUG_ENABLE
         printf("wake up by discharge signal\n");
 #endif
     }
 
-    if (is_back_to_low_power)
+    // USER_TO_DO 如果充电ic输出了放电的信号，要有对应的指示灯，但是不能通过AD按键进行开机
+    // 正在充电，但是电池电压比较低，有电池电量指示灯功能，但是不能通过AD按键开机
+    // 不在充电，也不在放电，电池电压低，不开机，直接回到低功耗
+
+    adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
+    delay_ms(1);
+    adc_val = adc_get_val_once();
+    avg_voltage_mv = get_battery_voltage_by_adc(adc_val);
+    // if (avg_voltage_mv < BATTERY_EMPTY_VOLTAGE && 0 == is_charge_sig_wkup)
+    // {
+    //     // 电池电压低于 xxV，并且没有在充电，返回低功耗
+    //     // is_back_to_low_power = 1;
+    // }
+
+    // USER_TO_DO 还需要修改逻辑
+    // if (is_back_to_low_power)
+    if (is_key_sig_wkup && 
+        avg_voltage_mv < BATTERY_EMPTY_VOLTAGE && 
+        0 == is_charge_sig_wkup && 
+        0 == is_discharge_sig_wkup) 
     {
 #if USER_DEBUG_ENABLE
         // printf("goto low power in\n");
 #endif
+
         goto label_low_power_in;
     }
 

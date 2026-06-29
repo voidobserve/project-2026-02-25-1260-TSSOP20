@@ -136,17 +136,20 @@ void bat_vol_update_timer_callback(void)
     }
 }
 
-// 根据ad值，转换成对应的电池电压值
+// 根据ad值，转换成对应的电池电压值(单位：mV)
 u16 get_battery_voltage_by_adc(u16 adc_val)
 {
     u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
-    // printf("voltage_mv == %u\n", voltage_mv); // 打印转换好的电压值（发现实际打印的电压比万用表量出的电压大了0.13V）
+    // 打印转换好的电压值（发现实际打印的电压比万用表量出的电压大了0.13V）
+    // printf("voltage_mv == %u\n", voltage_mv);
     if (voltage_mv > 130)
     {
-        voltage_mv -= 130; // 这里做电压补偿（减去0.13V）
+        // 这里做电压补偿（实际打印的电压比万用表量出的电压大了0.13V，需要减去0.13V）
+        voltage_mv -= 130;
     }
     // printf("voltage_mv == %u\n", voltage_mv); //
 
+#if 0
     if (is_in_charging)
     {
         //  // 充电时，减去 0.1 V，作为补偿。如果电压接近 4.2V 时，不用补偿
@@ -155,6 +158,7 @@ u16 get_battery_voltage_by_adc(u16 adc_val)
             voltage_mv -= 100;
         }
     }
+#endif
 
     return voltage_mv;
 }
@@ -181,6 +185,14 @@ u8 get_battery_percentage_by_voltage(u16 voltage_mv)
     else if (voltage_mv <= BATTERY_EMPTY_VOLTAGE)
     {
         return 0;
+    }
+    else if (voltage_mv >= BATTERY_EMPTY_VOLTAGE &&
+             voltage_mv <= (BATTERY_LOW_WARNING_VOLTAGE + 100))
+    {
+        // 大于 空电电压 2.9V ， 小于 (低电量电压+100mV) == 3.3 V
+        percentage = ((u32)(voltage_mv - BATTERY_EMPTY_VOLTAGE) * 25) /
+                     ((u16)BATTERY_LOW_WARNING_VOLTAGE + 100 - BATTERY_EMPTY_VOLTAGE);
+        return (u8)percentage;
     }
 
     // 线性插值计算百分比
@@ -298,9 +310,11 @@ void battery_voltage_update_by_isr(void)
             bat_percent = percent; // 初始化全局变量，电池电量百分比
 
 #if USER_DEBUG_ENABLE
+            printf("bat monitor init\n");
             // printf("bat monitor init\n");
             // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
             // printf("percent == %u\n", (u16)percent);
+            printf("bat percent == %u\n", (u16)bat_percent);
 #endif
         }
 
@@ -427,6 +441,9 @@ void battery_monitor_handle(void)
                 bat_percent++;
             }
         }
+
+        printf("bat percent == %u\n", (u16)bat_percent);
+        printf("avg_voltage_mv == %u\n", avg_voltage_mv);
     }
 
 #if USER_DEBUG_ENABLE
@@ -478,6 +495,7 @@ void battery_monitor_handle(void)
 #if USER_DEBUG_ENABLE
             // printf("detect bat power empty\n");
 #endif
+
             if (0 == is_turn_off_by_low_bat)
             {
                 // 关闭灯光
@@ -496,6 +514,8 @@ void battery_monitor_handle(void)
                     delay_ms(100);
                 }
 
+                // USER_TO_DO 可能需要加回来
+                // bat_percent = 0;
                 is_turn_off_by_low_bat = 1;
             }
         }
