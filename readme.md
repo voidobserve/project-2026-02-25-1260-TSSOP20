@@ -20,4 +20,14 @@ WUT 唤醒通道2，有高电平触发唤醒
 如果都不成立，则回到低功耗
 
 
+---
+
+编译之后，编译器会提示如下警告：
+```text
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?_GET_BATTERY_PERCENTAGE_BY_VOLTAGE?BATTERY_MONITOR
+    CALLER1: ?C_C51STARTUP
+    CALLER2: ?PR?ADC_IRQHANDLER?ADC
+```
+可以不用理会，get_battery_percentage_by_voltage()函数一个是在低功耗刚唤醒，要不要再回到低功耗的判断期间会调用，另一个是在adc中断内调用。两种调用不会同时调用产生冲突
   

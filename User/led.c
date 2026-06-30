@@ -541,19 +541,19 @@ void led_bat_instruction_timer_callback(void)
             led_charge_anim_cnt = 0;
 
             if (led_charge_anim_phase == 0 &&
-                bat_percent >= 25)
+                bat_percent > 25)
             {
                 LED_25_PERCENT_ON();
                 led_charge_anim_phase = 1;
             }
             else if (led_charge_anim_phase == 1 &&
-                     bat_percent >= 50)
+                     bat_percent > 50)
             {
                 LED_50_PERCENT_ON();
                 led_charge_anim_phase = 2;
             }
             else if (led_charge_anim_phase == 2 &&
-                     bat_percent >= 75)
+                     bat_percent > 75)
             {
                 LED_75_PERCENT_ON();
                 led_charge_anim_phase = 3;
@@ -603,19 +603,19 @@ void led_bat_instruction_timer_callback(void)
                 led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
                 // printf("detect charge end\n");
             }
-            else if (bat_percent >= 75 &&
+            else if (bat_percent > 75 &&
                      (led_charge_anim_phase == 2 || led_charge_anim_phase == 3))
             {
                 led_charge_anim_phase = 3;
                 LED_75_PERCENT_ON(); //
             }
-            else if (bat_percent >= 50 &&
+            else if (bat_percent > 50 &&
                      (led_charge_anim_phase == 1 || led_charge_anim_phase == 2))
             {
                 led_charge_anim_phase = 2;
                 LED_50_PERCENT_ON(); //
             }
-            else if (bat_percent >= 25 &&
+            else if (bat_percent > 25 &&
                      (led_charge_anim_phase == 0 || led_charge_anim_phase == 1))
             {
                 led_charge_anim_phase = 1;
@@ -635,7 +635,7 @@ void led_bat_instruction_timer_callback(void)
     else if (led_bat_level_sta == LED_BAT_LEVEL_STA_DISCHARGE)
     {
         // 放电中
-        if (bat_percent >= 75)
+        if (bat_percent > 75)
         {
             LED_100_PERCENT_ON();
         }
@@ -644,7 +644,7 @@ void led_bat_instruction_timer_callback(void)
             LED_100_PERCENT_OFF();
         }
 
-        if (bat_percent >= 50)
+        if (bat_percent > 50)
         {
             LED_75_PERCENT_ON();
         }
@@ -653,7 +653,7 @@ void led_bat_instruction_timer_callback(void)
             LED_75_PERCENT_OFF();
         }
 
-        if (bat_percent >= 25)
+        if (bat_percent > 25)
         {
             LED_50_PERCENT_ON();
         }

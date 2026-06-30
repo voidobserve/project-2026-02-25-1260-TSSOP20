@@ -8,15 +8,14 @@
 // 电池模型参数
 #define BATTERY_FULL_VOLTAGE 4200 // 满电电压 (mV)
 /*
-    空电电压 (mV)(填2.9V，实际测试是2.7V关机)
-    这里加上 200mV 作为补偿，才是客户那边测试到的 2.9V
+    空电电压 (mV)
 */
-#define BATTERY_EMPTY_VOLTAGE ((u16)2900 + 200)
+// #define BATTERY_EMPTY_VOLTAGE ((u16)2900)
+#define BATTERY_EMPTY_VOLTAGE ((u16)3000)
 /*
-    低电量警告电压 (mV)(填3.2V，实际测试是3V低压)
-    这里加上 200mV 作为补偿，才是客户那边测得的 3.2V
+    低电量警告电压 (mV)
 */
-#define BATTERY_LOW_WARNING_VOLTAGE ((u16)3200 + 200)
+#define BATTERY_LOW_WARNING_VOLTAGE ((u16)3200)
 
 // ADC相关参数 (电池检测使用内部2.0V参考电压，VDD 1/5分压)
 #define BATTERY_ADC_REF_VOLTAGE_MV 2000 // 内部参考电压 2.0V
@@ -94,6 +93,7 @@ void bat_vol_buff_get_avg_timer_callback(void);
 void send_low_bat_timer_callback(void); // 控制发送低电量的周期
 
 void battery_voltage_update_by_isr(void);
+void bat_vol_history_buff_init(u16 voltage_mv);
 
 void bat_percent_update_time_add(void);
 void bat_percent_update_time_reset(void);

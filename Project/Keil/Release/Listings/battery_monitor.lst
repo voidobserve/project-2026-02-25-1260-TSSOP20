@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 1   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BATTERY_MONITOR
@@ -14,11 +14,11 @@ line level    source
    3          
    4          // volatile u8 is_send_low_battery_enable = 0;
    5          
-   6          // 是否发送了低电量报警（ @attention 在第一次上电、低功耗唤醒之后、有充电之�
-             -��，需要清零）
+   6          // 是否发送了低电量报警（ @NOTE 在第一次上电、低功耗唤醒之后、有充电之后，
+             -需要清零）
    7          volatile u8 is_sent_low_bat_alert = 0;
-   8          volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ @attention 从低功耗唤醒，有充
-             -电之后，都清除一下该标志位）
+   8          volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ @NOTE 从低功耗唤醒，有充电�
+             -�后，都清除一下该标志位）
    9          
   10          // ====================================================================
   11          static volatile u8 is_bat_vol_buff_add_enable = 0;     // 是否允许往电池电压数组中放入数据
@@ -40,7 +40,7 @@ line level    source
              -使用，不能作为最终的判断使用）
   26          
   27          // 最后得到的、稳定的电池电压
-  28          volatile u16 avg_voltage_mv = 0; // @attention 在当前文件外调用时，慎用
+  28          volatile u16 avg_voltage_mv = 0; // @ATTENTION 在当前文件外调用时，慎用
   29          
   30          static volatile u8 percent = 0; // 电池电量百分比
   31          // static volatile u8 last_percent = 0; // 记录上一次采集到的电量百分比，用来控制电量
@@ -51,217 +51,237 @@ line level    source
   35          
   36          // 电池电量低时，每隔 xx 时间，给蓝牙ic发送一次提示，单位：ms
   37          #define SEND_LOW_BAT_TIME_PERIOD ((u32)120 * 1000)
-  38          static volatile u8 is_send_low_bat_repeatedly_enable = 0; // 是否重复发送低电量报警
-  39          
-  40          // 电池电量百分比更新的时间计数器
-  41          static volatile u16 bat_percent_update_time_cnt = 0;
-  42          
-  43          void bat_percent_update_time_add(void)
-  44          {
-  45   1          if (bat_percent_update_time_cnt < ((u16)-1))
-  46   1          {
-  47   2              bat_percent_update_time_cnt++;
-  48   2          }
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 2   
+  38          // #define SEND_LOW_BAT_TIME_PERIOD ((u32)10 * 1000)         // @USER_TO_DO  测试使用
+  39          static volatile u8 is_send_low_bat_repeatedly_enable = 0; // 是否重复发送低电量报警
+  40          
+  41          // 电池电量百分比更新的时间计数器
+  42          static volatile u16 bat_percent_update_time_cnt = 0;
+  43          
+  44          void bat_percent_update_time_add(void)
+  45          {
+  46   1          if (bat_percent_update_time_cnt < ((u16)-1))
+  47   1          {
+  48   2              bat_percent_update_time_cnt++;
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 2   
 
-  49   1      }
-  50          
-  51          // 重置电池电量百分比的更新时间
-  52          void bat_percent_update_time_reset(void)
-  53          {
-  54   1          bat_percent_update_time_cnt = 0;
-  55   1      }
-  56          
-  57          // 确认电池电量百分比的更新时间是否到来
-  58          u8 bat_percent_update_time_is_comes(void)
-  59          {
-  60   1          if (bat_percent_update_time_cnt >= BATTERY_PERCENT_UPDATE_PERIOD)
-  61   1          {
-  62   2              return 1;
-  63   2          }
-  64   1          else
-  65   1          {
-  66   2              return 0;
-  67   2          }
-  68   1      }
-  69          
-  70          // 控制发送低电量的周期
-  71          void send_low_bat_timer_callback(void)
-  72          {
-  73   1          static volatile u32 cnt = 0;
-  74   1          if (is_sent_low_bat_alert)
-  75   1          {
-  76   2              cnt++;
-  77   2              if (cnt >= SEND_LOW_BAT_TIME_PERIOD)
-  78   2              {
-  79   3                  cnt = 0;
-  80   3                  is_send_low_bat_repeatedly_enable = 1;
-  81   3              }
-  82   2          }
-  83   1          else
-  84   1          {
-  85   2              cnt = 0;
-  86   2          }
-  87   1      }
-  88          
-  89          // 由定时器调用，控制一段时间内，往数组中放入数据的时间
-  90          void bat_vol_buff_add_timer_callback(void)
-  91          {
-  92   1          static u32 cnt = 0;
-  93   1          cnt++;
-  94   1          if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER)
-  95   1          {
-  96   2              cnt = 0;
-  97   2              is_bat_vol_buff_add_enable = 1;
-  98   2          }
-  99   1      }
- 100          
- 101          // 由定时器调用，控制一段时间内，从数组中获取平均值的时间
- 102          void bat_vol_buff_get_avg_timer_callback(void)
- 103          {
- 104   1          static u32 cnt = 0;
- 105   1          cnt++;
- 106   1          if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT)
- 107   1          {
- 108   2              cnt = 0;
- 109   2              is_bat_vol_buff_get_avg_enable = 1;
- 110   2          }
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 3   
+  49   2          }
+  50   1      }
+  51          
+  52          // 重置电池电量百分比的更新时间
+  53          void bat_percent_update_time_reset(void)
+  54          {
+  55   1          bat_percent_update_time_cnt = 0;
+  56   1      }
+  57          
+  58          // 确认电池电量百分比的更新时间是否到来
+  59          u8 bat_percent_update_time_is_comes(void)
+  60          {
+  61   1          if (bat_percent_update_time_cnt >= BATTERY_PERCENT_UPDATE_PERIOD)
+  62   1          {
+  63   2              return 1;
+  64   2          }
+  65   1          else
+  66   1          {
+  67   2              return 0;
+  68   2          }
+  69   1      }
+  70          
+  71          // 控制发送低电量的周期
+  72          void send_low_bat_timer_callback(void)
+  73          {
+  74   1          static volatile u32 cnt = 0;
+  75   1          /*
+  76   1             刚打开蓝牙，发送低电量报警，
+  77   1             需要隔一时间再发送，又不能隔太长时间，否则蓝牙会自动关机
+  78   1             这里控制刚打开蓝牙之后，发送低电量报警
+  79   1          */
+  80   1          static volatile u8 is_first_time_to_send = 0;
+  81   1      
+  82   1          if (is_sent_low_bat_alert)
+  83   1          {
+  84   2              cnt++;
+  85   2              if ((is_first_time_to_send && cnt >= (u16)3 * 1000) ||
+  86   2                  (cnt >= SEND_LOW_BAT_TIME_PERIOD))
+  87   2              {
+  88   3                  if (is_first_time_to_send)
+  89   3                  {
+  90   4                      is_first_time_to_send = 0;
+  91   4                  }
+  92   3      
+  93   3                  cnt = 0;
+  94   3                  is_send_low_bat_repeatedly_enable = 1;
+  95   3              }
+  96   2          }
+  97   1          else
+  98   1          {
+  99   2              cnt = 0;
+ 100   2      
+ 101   2              // 低电量报警标志没有使能，给标志位置一
+ 102   2              is_first_time_to_send = 1;
+ 103   2          }
+ 104   1      }
+ 105          
+ 106          // 由定时器调用，控制一段时间内，往数组中放入数据的时间
+ 107          void bat_vol_buff_add_timer_callback(void)
+ 108          {
+ 109   1          static u32 cnt = 0;
+ 110   1          cnt++;
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 3   
 
- 111   1      }
- 112          
- 113          // 由定时器调用，控制一段时间，获取电池电压的最大值（测试发现在充电和放�
+ 111   1          if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER)
+ 112   1          {
+ 113   2              cnt = 0;
+ 114   2              is_bat_vol_buff_add_enable = 1;
+ 115   2          }
+ 116   1      }
+ 117          
+ 118          // 由定时器调用，控制一段时间内，从数组中获取平均值的时间
+ 119          void bat_vol_buff_get_avg_timer_callback(void)
+ 120          {
+ 121   1          static u32 cnt = 0;
+ 122   1          cnt++;
+ 123   1          if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT)
+ 124   1          {
+ 125   2              cnt = 0;
+ 126   2              is_bat_vol_buff_get_avg_enable = 1;
+ 127   2          }
+ 128   1      }
+ 129          
+ 130          // 由定时器调用，控制一段时间，获取电池电压的最大值（测试发现在充电和放�
              -��时，一段时间内电池电压的最大值是最接近电池电压实际值的）
- 114          void bat_vol_update_timer_callback(void)
- 115          {
- 116   1          if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_IDLE)
- 117   1          {
- 118   2              bat_vol_update_cnt = 0;
- 119   2              bat_vol_update_sta = BAT_VOL_UPDATE_STA_CAPTURING;
- 120   2          }
- 121   1          else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
- 122   1          {
- 123   2              // 已经采集完成，直接返回
- 124   2              return;
- 125   2          }
- 126   1      
- 127   1          bat_vol_update_cnt++;
- 128   1          if (bat_vol_update_cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD)
- 129   1          {
- 130   2              /*
- 131   2                  这里可以不用清零，只有 bat_vol_update_sta
- 132   2                  刚进入 BAT_VOL_UPDATE_STA_IDLE 时清零
- 133   2              */
- 134   2              // bat_vol_update_cnt = 0;
- 135   2              bat_vol_update_sta = BAT_VOL_UPDATE_STA_COMPLETED;
- 136   2          }
- 137   1      }
- 138          
- 139          // 根据ad值，转换成对应的电池电压值(单位：mV)
- 140          u16 get_battery_voltage_by_adc(u16 adc_val)
- 141          {
- 142   1          u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
- 143   1          // 打印转换好的电压值（发现实际打印的电压比万用表量出的电压大了0.13V）
- 144   1          // printf("voltage_mv == %u\n", voltage_mv);
- 145   1          if (voltage_mv > 130)
+ 131          void bat_vol_update_timer_callback(void)
+ 132          {
+ 133   1          if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_IDLE)
+ 134   1          {
+ 135   2              bat_vol_update_cnt = 0;
+ 136   2              bat_vol_update_sta = BAT_VOL_UPDATE_STA_CAPTURING;
+ 137   2          }
+ 138   1          else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
+ 139   1          {
+ 140   2              // 已经采集完成，直接返回
+ 141   2              return;
+ 142   2          }
+ 143   1      
+ 144   1          bat_vol_update_cnt++;
+ 145   1          if (bat_vol_update_cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD)
  146   1          {
- 147   2              // 这里做电压补偿（实际打印的电压比万用表量出的电压大了0.13V，需要减
+ 147   2              /*
+ 148   2                  这里可以不用清零，只有 bat_vol_update_sta
+ 149   2                  刚进入 BAT_VOL_UPDATE_STA_IDLE 时清零
+ 150   2              */
+ 151   2              // bat_vol_update_cnt = 0;
+ 152   2              bat_vol_update_sta = BAT_VOL_UPDATE_STA_COMPLETED;
+ 153   2          }
+ 154   1      }
+ 155          
+ 156          // 根据ad值，转换成对应的电池电压值(单位：mV)
+ 157          u16 get_battery_voltage_by_adc(u16 adc_val)
+ 158          {
+ 159   1          u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
+ 160   1          // 打印转换好的电压值（发现实际打印的电压比万用表量出的电压大了0.13V）
+ 161   1      
+ 162   1      #if 0
+                  // printf("voltage_mv == %u\n", voltage_mv);
+                  if (voltage_mv > 130)
+                  {
+                      // 这里做电压补偿（实际打印的电压比万用表量出的电压大了0.13V，需要减
              -去0.13V）
- 148   2              voltage_mv -= 130;
- 149   2          }
- 150   1          // printf("voltage_mv == %u\n", voltage_mv); //
- 151   1      
- 152   1      #if 0
+                      voltage_mv -= 130;
+                  }
+                  // printf("voltage_mv == %u\n", voltage_mv);
+              #endif
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 4   
+
+ 171   1      
+ 172   1      #if 0
                   if (is_in_charging)
                   {
-                      //  // 充电时，减去 0.1 V，作为补偿。如果电压接近 4.2V 时，不用补偿
+                      // 充电时，减去 0.1 V，作为补偿。如果电压接近 4.2V 时，不用补偿
                       if ((voltage_mv <= 4000) && voltage_mv > 100)
                       {
                           voltage_mv -= 100;
                       }
                   }
               #endif
- 162   1      
- 163   1          return voltage_mv;
- 164   1      }
- 165          
- 166          // void send_low_battery_timer_callback(void)
- 167          // {
- 168          //     static u32 cnt = 0;
- 169          //     cnt++;
- 170          //     if (cnt >= (u32)30 * 1000)
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 4   
+ 182   1      
+ 183   1          return voltage_mv;
+ 184   1      }
+ 185          
+ 186          // void send_low_battery_timer_callback(void)
+ 187          // {
+ 188          //     static u32 cnt = 0;
+ 189          //     cnt++;
+ 190          //     if (cnt >= (u32)30 * 1000)
+ 191          //     {
+ 192          //         is_send_low_battery_enable = 1;
+ 193          //         cnt = 0;
+ 194          //     }
+ 195          // }
+ 196          
+ 197          // 根据电压值计算初始电量百分比 (线性估算)
+ 198          u8 get_battery_percentage_by_voltage(u16 voltage_mv)
+ 199          {
+ 200   1          u32 percentage;
+ 201   1          if (voltage_mv >= BATTERY_FULL_VOLTAGE)
+ 202   1          {
+ 203   2              return 100;
+ 204   2          }
+ 205   1          else if (voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+ 206   1          {
+ 207   2              return 0;
+ 208   2          }
+ 209   1          else if (voltage_mv >= BATTERY_EMPTY_VOLTAGE &&
+ 210   1                   voltage_mv <= (BATTERY_LOW_WARNING_VOLTAGE + 100))
+ 211   1          {
+ 212   2              // 大于 空电电压 2.9V ， 小于 (低电量电压+100mV) == 3.3 V
+ 213   2              percentage = ((u32)(voltage_mv - BATTERY_EMPTY_VOLTAGE) * 25) /
+ 214   2                           ((u16)BATTERY_LOW_WARNING_VOLTAGE + 100 - BATTERY_EMPTY_VOLTAGE);
+ 215   2              return (u8)percentage;
+ 216   2          }
+ 217   1      
+ 218   1          // 线性插值计算百分比
+ 219   1          percentage = ((u32)(voltage_mv - BATTERY_EMPTY_VOLTAGE) * 100) /
+ 220   1                       (BATTERY_FULL_VOLTAGE - BATTERY_EMPTY_VOLTAGE);
+ 221   1      
+ 222   1          return (u8)percentage > 100 ? 100 : (u8)percentage;
+ 223   1      }
+ 224          
+ 225          void bat_vol_history_buff_init(u16 voltage_mv)
+ 226          {
+ 227   1          u8 i;
+ 228   1          for (i = 0; i < VOLTAGE_HISTORY_SIZE; i++)
+ 229   1          {
+ 230   2              bat_vol_history_buff[i] = voltage_mv;
+ 231   2          }
+ 232   1          bat_vol_history_buff_idx = 0;
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 5   
 
- 171          //     {
- 172          //         is_send_low_battery_enable = 1;
- 173          //         cnt = 0;
- 174          //     }
- 175          // }
- 176          
- 177          // 根据电压值计算初始电量百分比 (线性估算)
- 178          u8 get_battery_percentage_by_voltage(u16 voltage_mv)
- 179          {
- 180   1          u32 percentage;
- 181   1          if (voltage_mv >= BATTERY_FULL_VOLTAGE)
- 182   1          {
- 183   2              return 100;
- 184   2          }
- 185   1          else if (voltage_mv <= BATTERY_EMPTY_VOLTAGE)
- 186   1          {
- 187   2              return 0;
- 188   2          }
- 189   1          else if (voltage_mv >= BATTERY_EMPTY_VOLTAGE &&
- 190   1                   voltage_mv <= (BATTERY_LOW_WARNING_VOLTAGE + 100))
- 191   1          {
- 192   2              // 大于 空电电压 2.9V ， 小于 (低电量电压+100mV) == 3.3 V
- 193   2              percentage = ((u32)(voltage_mv - BATTERY_EMPTY_VOLTAGE) * 25) /
- 194   2                           ((u16)BATTERY_LOW_WARNING_VOLTAGE + 100 - BATTERY_EMPTY_VOLTAGE);
- 195   2              return (u8)percentage;
- 196   2          }
- 197   1      
- 198   1          // 线性插值计算百分比
- 199   1          percentage = ((u32)(voltage_mv - BATTERY_EMPTY_VOLTAGE) * 100) /
- 200   1                       (BATTERY_FULL_VOLTAGE - BATTERY_EMPTY_VOLTAGE);
- 201   1      
- 202   1          return (u8)percentage > 100 ? 100 : (u8)percentage;
- 203   1      }
- 204          
- 205          void bat_vol_history_buff_init(u16 voltage_mv)
- 206          {
- 207   1          u8 i;
- 208   1          for (i = 0; i < VOLTAGE_HISTORY_SIZE; i++)
- 209   1          {
- 210   2              bat_vol_history_buff[i] = voltage_mv;
- 211   2          }
- 212   1          bat_vol_history_buff_idx = 0;
- 213   1      }
- 214          
- 215          void bat_vol_history_buff_add(u16 voltage_mv)
- 216          {
- 217   1          bat_vol_history_buff[bat_vol_history_buff_idx] = voltage_mv;
- 218   1          bat_vol_history_buff_idx = (bat_vol_history_buff_idx + 1) % VOLTAGE_HISTORY_SIZE;
- 219   1          // bat_vol_history_buff_idx++;
- 220   1          // if (bat_vol_history_buff_idx >= VOLTAGE_HISTORY_SIZE)
- 221   1          // {
- 222   1          //     bat_vol_history_buff_idx = 0;
- 223   1          // }
- 224   1      }
- 225          
- 226          // 获取缓冲区中所有元素的平均值
- 227          u16 bat_vol_history_buff_get_avg(void)
- 228          {
- 229   1          u8 i;
- 230   1          u32 ret = 0;
- 231   1          for (i = 0; i < VOLTAGE_HISTORY_SIZE; i++)
- 232   1          {
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 5   
-
- 233   2              ret += bat_vol_history_buff[i];
- 234   2          }
- 235   1          return (u16)(ret / VOLTAGE_HISTORY_SIZE);
- 236   1      }
- 237          
- 238          #if 0
+ 233   1      }
+ 234          
+ 235          void bat_vol_history_buff_add(u16 voltage_mv)
+ 236          {
+ 237   1          bat_vol_history_buff[bat_vol_history_buff_idx] = voltage_mv;
+ 238   1          bat_vol_history_buff_idx = (bat_vol_history_buff_idx + 1) % VOLTAGE_HISTORY_SIZE;
+ 239   1          // bat_vol_history_buff_idx++;
+ 240   1          // if (bat_vol_history_buff_idx >= VOLTAGE_HISTORY_SIZE)
+ 241   1          // {
+ 242   1          //     bat_vol_history_buff_idx = 0;
+ 243   1          // }
+ 244   1      }
+ 245          
+ 246          // 获取缓冲区中所有元素的平均值
+ 247          u16 bat_vol_history_buff_get_avg(void)
+ 248          {
+ 249   1          u8 i;
+ 250   1          u32 ret = 0;
+ 251   1          for (i = 0; i < VOLTAGE_HISTORY_SIZE; i++)
+ 252   1          {
+ 253   2              ret += bat_vol_history_buff[i];
+ 254   2          }
+ 255   1          return (u16)(ret / VOLTAGE_HISTORY_SIZE);
+ 256   1      }
+ 257          
+ 258          #if 0
               // 在低功耗唤醒后调用，由唤醒后第一次采集到的ad值来初始化相关数据
               // void battery_monitor_init_by_adc_val(u16 adc_val)
               // 强制刷新
@@ -277,10 +297,10 @@ line level    source
                   bat_vol_update_sta = BAT_VOL_UPDATE_STA_COMPLETED;
               }
               #endif
- 254          
- 255          #if USER_DEBUG_ENABLE
- 256          
- 257          #if 0
+ 274          
+ 275          #if USER_DEBUG_ENABLE
+              
+              #if 0
               // 测试用，手动改变得到的电池电压
               void user_test_init_by_voltage_mv(u16 test_voltage_mv)
               {
@@ -298,193 +318,165 @@ line level    source
                   // printf("max_voltage_mv == %u\n", max_voltage_mv);
                   // printf("avg_voltage_mv == %u\n", voltage_mv);
                   // printf("percent == %u\n", (u16)percent);
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 6   
+
                   // printf("last_percent == %u\n", (u16)last_percent);
                   // printf("bat_percent == %u\n", (u16)bat_percent);
               }
               #endif
- 279          
- 280          #endif
- 281          
- 282          /**
- 283           * @brief 更新电池电压，由定时器调用。函数内部会更新电池电压和电池电量百分
-             -比相关的变量
- 284           *
- 285           */
- 286          void battery_voltage_update_by_isr(void)
- 287          {
- 288   1          volatile u16 adc_val = 0;
- 289   1          volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
- 290   1      
- 291   1          // 获取AD值（ad值有更新才获取）
- 292   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
- 293   1          {
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 6   
-
- 294   2              adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
- 295   2              adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
- 296   2              // printf("bat adc val == %u\n", adc_val);
- 297   2              cur_voltage_mv = get_battery_voltage_by_adc(adc_val);
- 298   2              // printf("cur_voltage_mv == %u\n", cur_voltage_mv);
- 299   2      
- 300   2              if (0 == voltage_mv)
- 301   2              {
- 302   3                  // 如果还没有采集过电池电压，直接将第一次采集到的ad值转换成电池�
-             -�压
- 303   3                  voltage_mv = cur_voltage_mv;
- 304   3      
- 305   3                  bat_vol_history_buff_init(voltage_mv);
- 306   3                  // avg_voltage_mv = bat_vol_history_buff_get_avg();
- 307   3                  avg_voltage_mv = cur_voltage_mv;
- 308   3                  percent = get_battery_percentage_by_voltage(avg_voltage_mv);
- 309   3                  // last_percent = percent;
- 310   3                  bat_percent = percent; // 初始化全局变量，电池电量百分比
- 311   3      
- 312   3      #if USER_DEBUG_ENABLE
- 313   3                  printf("bat monitor init\n");
- 314   3                  // printf("bat monitor init\n");
- 315   3                  // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
- 316   3                  // printf("percent == %u\n", (u16)percent);
- 317   3                  printf("bat percent == %u\n", (u16)bat_percent);
- 318   3      #endif
- 319   3              }
- 320   2      
- 321   2              // 采集一段时间的电压值，取其中最大的值作为电池电压
- 322   2              /*
- 323   2                  @attention
- 324   2                  测试时，如果需要改变电池电压和电量百分比，需要屏蔽下面这段程序�
-             -��
- 325   2                  否则会更新 voltage_mv 和 max_voltage_mv，可能会被赋值为0，
- 326   2                  导致又进入了 电池电量相关变量的初始化
- 327   2              */
- 328   2              /*
- 329   2                  @attention 这里没有判断上一次的电压值，会实时更新 voltage_mv
- 330   2                  在充电时，哪怕电压有下降，也会更新 voltage_mv
- 331   2                  在放电时，电压有上升，也会更新 voltage_mv
- 332   2              */
- 333   2              if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
- 334   2              {
- 335   3                  // 如果已经采集了一段时间的电压值，则将 voltage_mv 赋值为 max_voltage_mv
- 336   3                  voltage_mv = max_voltage_mv;
- 337   3      
- 338   3                  max_voltage_mv = 0; // 清零，准备下一轮采集
- 339   3                  bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
- 340   3      
- 341   3                  // 输出计算结果 (调试用)
- 342   3                  // printf("Voltage: %umV\n", voltage_mv);
- 343   3              }
- 344   2              else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_CAPTURING)
- 345   2              {
- 346   3                  // 如果还在采集时间内，更新采集到的最大电压值 max_voltage_mv
- 347   3                  if (max_voltage_mv < cur_voltage_mv)
- 348   3                  {
- 349   4                      max_voltage_mv = cur_voltage_mv;
- 350   4                  }
- 351   3              }
- 352   2          }
- 353   1      }
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 7   
-
- 354          
- 355          // 修改后的电池监控处理函数
- 356          void battery_monitor_handle(void)
- 357          {
- 358   1          // volatile u16 adc_val = 0;
- 359   1          // volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
- 360   1      
- 361   1          // 测试时使用：
- 362   1          // if (cur_voltage_mv != 0)
- 363   1          // {
- 364   1          //     printf("cur_voltage_mv == %u\n", cur_voltage_mv);
- 365   1          // }
- 366   1      
- 367   1          if (voltage_mv == 0)
- 368   1          {
- 369   2              return; // 尚未获取到电压值，不执行以下操作
- 370   2          }
- 371   1      
- 372   1          // 每隔一段时间，将采集到的电压值放入数组
- 373   1          if (is_bat_vol_buff_add_enable)
- 374   1          {
- 375   2              bat_vol_history_buff_add(voltage_mv);
- 376   2              is_bat_vol_buff_add_enable = 0;
- 377   2          }
- 378   1      
- 379   1          // 每隔一段时间，将数组中的数据进行平均
- 380   1          if (is_bat_vol_buff_get_avg_enable)
- 381   1          {
- 382   2              avg_voltage_mv = bat_vol_history_buff_get_avg();
- 383   2              // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
- 384   2      
- 385   2              percent = get_battery_percentage_by_voltage(avg_voltage_mv);
- 386   2              // printf("percent == %u\n", (u16)percent);
- 387   2      
- 388   2              is_bat_vol_buff_get_avg_enable = 0;
- 389   2          }
- 390   1      
- 391   1      #if 0
-                  // 充电中， percent 大于等于 last_percent ，不让 percent 小于 last_percent
-                  if (is_in_charging)
-                  {
-                      if (percent < last_percent)
-                      {
-                          // 如果当前计算出的电量百分比小于上一次的
-                          percent = last_percent;
-                      }
-                      else
-                      {
-                          // 如果当前计算出的电量百分比 大于等于 上一次，更新 last_percent
-                          last_percent = percent;
-                      }
-                  }
-                  // 放电中， percent 小于等于 last_percent，不让 percent 大于 last_percent
-                  else
-                  {
-                      if (percent > last_percent)
-                      {
-                          percent = last_percent;
-                      }
-                      else
-                      {
-                          // 如果当前计算出的电量百分比 小于等于 上一次，更新 last_percent
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 8   
-
-                          last_percent = percent;
-                      }
-                  }
               
-                  bat_percent = last_percent; // 得到稳定之后的电池电量百分比
               #endif
- 422   1      
- 423   1          if (bat_percent_update_time_is_comes())
- 424   1          {
- 425   2              bat_percent_update_time_reset();
- 426   2      
- 427   2              // 每次只变化1%的电池电量百分比
- 428   2              if (bat_percent > percent && is_in_charging == 0)
- 429   2              {
- 430   3                  // 只有在放电时，才允许最后得到的电池电量百分比减少
- 431   3                  if (bat_percent > 0)
- 432   3                  {
- 433   4                      bat_percent--;
- 434   4                  }
- 435   3              }
- 436   2              else if (bat_percent < percent && is_in_charging == 1)
- 437   2              {
- 438   3                  // 只有在充电时，才允许最后得到的电池电量百分比增加
- 439   3                  if (bat_percent < 100)
- 440   3                  {
- 441   4                      bat_percent++;
- 442   4                  }
- 443   3              }
- 444   2      
- 445   2              printf("bat percent == %u\n", (u16)bat_percent);
- 446   2              printf("avg_voltage_mv == %u\n", avg_voltage_mv);
- 447   2          }
- 448   1      
- 449   1      #if USER_DEBUG_ENABLE
- 450   1          // printf("bat_percent = %u\n", (u16)bat_percent);
- 451   1      
- 452   1      #if 0
+ 301          
+ 302          /**
+ 303           * @brief 更新电池电压，由定时器调用。函数内部会更新电池电压和电池电量百分
+             -比相关的变量
+ 304           *
+ 305           */
+ 306          void battery_voltage_update_by_isr(void)
+ 307          {
+ 308   1          volatile u16 adc_val = 0;
+ 309   1          volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
+ 310   1      
+ 311   1          // 获取AD值（ad值有更新才获取）
+ 312   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
+ 313   1          {
+ 314   2              adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
+ 315   2              adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
+ 316   2              // printf("bat adc val == %u\n", adc_val);
+ 317   2              cur_voltage_mv = get_battery_voltage_by_adc(adc_val);
+ 318   2              // printf("cur_voltage_mv == %u\n", cur_voltage_mv);
+ 319   2      
+ 320   2              if (0 == voltage_mv)
+ 321   2              {
+ 322   3                  // 如果还没有采集过电池电压，直接将第一次采集到的ad值转换成电池�
+             -�压
+ 323   3                  voltage_mv = cur_voltage_mv;
+ 324   3      
+ 325   3                  bat_vol_history_buff_init(voltage_mv);
+ 326   3                  // avg_voltage_mv = bat_vol_history_buff_get_avg();
+ 327   3                  avg_voltage_mv = cur_voltage_mv;
+ 328   3                  percent = get_battery_percentage_by_voltage(avg_voltage_mv);
+ 329   3                  // last_percent = percent;
+ 330   3                  bat_percent = percent; // 初始化全局变量，电池电量百分比
+ 331   3      
+ 332   3      #if USER_DEBUG_ENABLE
+                          printf("bat monitor init\n");
+                          // printf("bat monitor init\n");
+                          printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+                          // printf("percent == %u\n", (u16)percent);
+                          printf("bat percent == %u\n", (u16)bat_percent);
+              #endif
+ 339   3              }
+ 340   2      
+ 341   2              // 采集一段时间的电压值，取其中最大的值作为电池电压
+ 342   2              /*
+ 343   2                  @attention
+ 344   2                  测试时，如果需要改变电池电压和电量百分比，需要屏蔽下面这段程序�
+             -��
+ 345   2                  否则会更新 voltage_mv 和 max_voltage_mv，可能会被赋值为0，
+ 346   2                  导致又进入了 电池电量相关变量的初始化
+ 347   2              */
+ 348   2              /*
+ 349   2                  @attention 这里没有判断上一次的电压值，会实时更新 voltage_mv
+ 350   2                  在充电时，哪怕电压有下降，也会更新 voltage_mv
+ 351   2                  在放电时，电压有上升，也会更新 voltage_mv
+ 352   2              */
+ 353   2              if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 7   
+
+ 354   2              {
+ 355   3                  // 如果已经采集了一段时间的电压值，则将 voltage_mv 赋值为 max_voltage_mv
+ 356   3                  voltage_mv = max_voltage_mv;
+ 357   3      
+ 358   3                  max_voltage_mv = 0; // 清零，准备下一轮采集
+ 359   3                  bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
+ 360   3      
+ 361   3                  // 输出计算结果 (调试用)
+ 362   3                  // printf("Voltage: %umV\n", voltage_mv);
+ 363   3              }
+ 364   2              else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_CAPTURING)
+ 365   2              {
+ 366   3                  // 如果还在采集时间内，更新采集到的最大电压值 max_voltage_mv
+ 367   3                  if (max_voltage_mv < cur_voltage_mv)
+ 368   3                  {
+ 369   4                      max_voltage_mv = cur_voltage_mv;
+ 370   4                  }
+ 371   3              }
+ 372   2          }
+ 373   1      }
+ 374          
+ 375          // 修改后的电池监控处理函数
+ 376          void battery_monitor_handle(void)
+ 377          {
+ 378   1          // volatile u16 adc_val = 0;
+ 379   1          // volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
+ 380   1      
+ 381   1          // 测试时使用：
+ 382   1          // if (cur_voltage_mv != 0)
+ 383   1          // {
+ 384   1          //     printf("cur_voltage_mv == %u\n", cur_voltage_mv);
+ 385   1          // }
+ 386   1      
+ 387   1          if (voltage_mv == 0)
+ 388   1          {
+ 389   2              return; // 尚未获取到电压值，不执行以下操作
+ 390   2          }
+ 391   1      
+ 392   1          // 每隔一段时间，将采集到的电压值放入数组
+ 393   1          if (is_bat_vol_buff_add_enable)
+ 394   1          {
+ 395   2              bat_vol_history_buff_add(voltage_mv);
+ 396   2              is_bat_vol_buff_add_enable = 0;
+ 397   2          }
+ 398   1      
+ 399   1          // 每隔一段时间，将数组中的数据进行平均
+ 400   1          if (is_bat_vol_buff_get_avg_enable)
+ 401   1          {
+ 402   2              avg_voltage_mv = bat_vol_history_buff_get_avg();
+ 403   2      #if USER_DEBUG_ENABLE
+                      printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+              #endif
+ 406   2      
+ 407   2              percent = get_battery_percentage_by_voltage(avg_voltage_mv);
+ 408   2              // printf("percent == %u\n", (u16)percent);
+ 409   2      
+ 410   2              is_bat_vol_buff_get_avg_enable = 0;
+ 411   2          }
+ 412   1      
+ 413   1          if (bat_percent_update_time_is_comes())
+ 414   1          {
+ 415   2              bat_percent_update_time_reset();
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 8   
+
+ 416   2      
+ 417   2              // 每次只变化1%的电池电量百分比
+ 418   2              if (bat_percent > percent && is_in_charging == 0)
+ 419   2              {
+ 420   3                  // 只有在放电时，才允许最后得到的电池电量百分比减少
+ 421   3                  if (bat_percent > 0)
+ 422   3                  {
+ 423   4                      bat_percent--;
+ 424   4                  }
+ 425   3              }
+ 426   2              else if (bat_percent < percent && is_in_charging == 1)
+ 427   2              {
+ 428   3                  // 只有在充电时，才允许最后得到的电池电量百分比增加
+ 429   3                  if (bat_percent < 100)
+ 430   3                  {
+ 431   4                      bat_percent++;
+ 432   4                  }
+ 433   3              }
+ 434   2      
+ 435   2      #if USER_DEBUG_ENABLE
+                      printf("bat percent == %u\n", (u16)bat_percent);
+                      printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+              #endif
+ 439   2          }
+ 440   1      
+ 441   1      #if USER_DEBUG_ENABLE
+                  // printf("bat_percent = %u\n", (u16)bat_percent);
+              
+              #if 0
                   // @attention 只在测试时使用：
                   // 每隔一段时间打印一次滤波后得到的电压和电量百分比
                   if (flag_debug)
@@ -495,111 +487,106 @@ line level    source
                       printf("bat_percent == %u\n", (u16)bat_percent); //
                   }
               #endif
- 463   1      #endif
- 464   1      
- 465   1          // 控制电池电量指示灯
- 466   1          if (is_in_charging &&
- 467   1              (led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_BEGIN &&
- 468   1               led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM &&
- 469   1               led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGING &&
- 470   1               led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_END))
+              #endif
+ 456   1      
+ 457   1          // 控制电池电量指示灯
+ 458   1          if (is_in_charging &&
+ 459   1              (led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_BEGIN &&
+ 460   1               led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM &&
+ 461   1               led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGING &&
+ 462   1               led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_END))
+ 463   1          {
+ 464   2              led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN;
+ 465   2          }
+ 466   1          // 不在充电、蓝牙ic不工作、灯光关闭时，关闭电量指示灯
+ 467   1          else if (is_in_charging == 0 &&
+ 468   1                   ble_ic.is_working == 0 &&
+ 469   1                   led_ctl.status == LED_STATUS_OFF &&
+ 470   1                   0 == is_in_discharging) // 充电ic没有输出放电的信号
  471   1          {
- 472   2              led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN;
- 473   2          }
- 474   1          // 不在充电、蓝牙ic不工作、灯光关闭时，关闭电量指示灯
- 475   1          else if (is_in_charging == 0 &&
- 476   1                   ble_ic.is_working == 0 &&
- 477   1                   led_ctl.status == LED_STATUS_OFF &&
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 9   
+ 472   2              led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
+ 473   2      
+ 474   2              // 关机后（不在工作），需要在这里清空对应标志位
+ 475   2          }
+ 476   1          // 不在充电，但是蓝牙ic或者灯光打开，根据电池电量来点亮对应指示灯
+ 477   1          else if (is_in_charging == 0 &&
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 9   
 
- 478   1                   0 == is_in_discharging) // 充电ic没有输出放电的信号
- 479   1          {
- 480   2              led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
- 481   2      
- 482   2              // 关机后（不在工作），需要在这里清空对应标志位
- 483   2          }
- 484   1          // 不在充电，但是蓝牙ic或者灯光打开，根据电池电量来点亮对应指示灯
- 485   1          else if (is_in_charging == 0 &&
- 486   1                   (ble_ic.is_working ||
- 487   1                    led_ctl.status != LED_STATUS_OFF ||
- 488   1                    is_in_discharging))
- 489   1          {
- 490   2              led_bat_level_sta = LED_BAT_LEVEL_STA_DISCHARGE;
- 491   2      
- 492   2              // 到了关机对应的电压
- 493   2              if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
- 494   2              {
- 495   3      #if USER_DEBUG_ENABLE
- 496   3                  // printf("detect bat power empty\n");
- 497   3      #endif
- 498   3      
- 499   3                  if (0 == is_turn_off_by_low_bat)
- 500   3                  {
- 501   4                      // 关闭灯光
- 502   4                      if (led_ctl.status != LED_STATUS_OFF)
- 503   4                      {
- 504   5                          led_status_set(LED_STATUS_OFF);
- 505   5                      }
- 506   4      
- 507   4                      // 关闭蓝牙
- 508   4                      if (ble_ic.is_working)
- 509   4                      {
- 510   5                          uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
- 511   5                          // delay_ms(5000); // 这里要等蓝牙播报完成
- 512   5                          delay_ms(30);
- 513   5                          ble_ic_disable_pre();
- 514   5                          delay_ms(100);
- 515   5                      }
- 516   4      
- 517   4                      // USER_TO_DO 可能需要加回来
- 518   4                      // bat_percent = 0;
- 519   4                      is_turn_off_by_low_bat = 1;
- 520   4                  }
- 521   3              }
- 522   2              /*
- 523   2                  低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
- 524   2              */
- 525   2              else if (is_sent_low_bat_alert == 0 &&
- 526   2                       avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
- 527   2              {
- 528   3                  // u8 i; // 循环计数值，控制连续发送低电量报警的次数
- 529   3      #if USER_DEBUG_ENABLE
- 530   3                  // printf("detect low power\n");
- 531   3      #endif
- 532   3                  if (ble_ic.is_working == 0)
- 533   3                  {
- 534   4                      ble_ic_enable();
- 535   4                  }
- 536   3      
- 537   3                  // for (i = 0; i < 1; i++)
- 538   3                  {
- 539   4                      uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/29/2026 18:02:35 PAGE 10  
-
- 540   4                  }
- 541   3      
- 542   3                  is_sent_low_bat_alert = 1;
- 543   3              }
- 544   2      
- 545   2              // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间�
+ 478   1                   (ble_ic.is_working ||
+ 479   1                    led_ctl.status != LED_STATUS_OFF ||
+ 480   1                    is_in_discharging))
+ 481   1          {
+ 482   2              led_bat_level_sta = LED_BAT_LEVEL_STA_DISCHARGE;
+ 483   2      
+ 484   2              // 到了关机对应的电压
+ 485   2              if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+ 486   2              { 
+ 487   3      #if USER_DEBUG_ENABLE   
+                          printf("detect bat power empty\n");
+              #endif
+ 490   3      
+ 491   3                  if (0 == is_turn_off_by_low_bat)
+ 492   3                  {
+ 493   4                      // 关闭灯光
+ 494   4                      if (led_ctl.status != LED_STATUS_OFF)
+ 495   4                      {
+ 496   5                          led_status_set(LED_STATUS_OFF);
+ 497   5                      }
+ 498   4      
+ 499   4                      // 关闭蓝牙
+ 500   4                      if (ble_ic.is_working)
+ 501   4                      {
+ 502   5                          uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
+ 503   5                          // delay_ms(5000); // 这里要等蓝牙播报完成
+ 504   5                          delay_ms(30);
+ 505   5                          ble_ic_disable_pre();
+ 506   5                          delay_ms(100);
+ 507   5                      }
+ 508   4       
+ 509   4                      // bat_percent = 0; // USER_TO_DO 可能需要加回来
+ 510   4                      is_turn_off_by_low_bat = 1;
+ 511   4                  }
+ 512   3              }
+ 513   2              /*
+ 514   2                  低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
+ 515   2              */
+ 516   2              else if (is_sent_low_bat_alert == 0 &&
+ 517   2                       avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
+ 518   2              {
+ 519   3                  // u8 i; // 循环计数值，控制连续发送低电量报警的次数
+ 520   3      #if USER_DEBUG_ENABLE
+                          // printf("detect low power\n");
+              #endif
+ 523   3                  if (ble_ic.is_working == 0)
+ 524   3                  {
+ 525   4                      ble_ic_enable();
+ 526   4                  }
+ 527   3      
+ 528   3                  uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
+ 529   3                  is_sent_low_bat_alert = 1;
+ 530   3              }
+ 531   2      
+ 532   2              // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间�
              -�送一次低电量报警：
- 546   2              if (is_send_low_bat_repeatedly_enable)
- 547   2              {
- 548   3                  uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
- 549   3                  is_send_low_bat_repeatedly_enable = 0;
- 550   3      
- 551   3      #if USER_DEBUG_ENABLE
- 552   3                  // printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
- 553   3      #endif
- 554   3              }
- 555   2          }
- 556   1      }
+ 533   2              if (is_send_low_bat_repeatedly_enable)
+ 534   2              {
+ 535   3                  uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
+ 536   3                  is_send_low_bat_repeatedly_enable = 0;
+ 537   3      
+ 538   3      #if USER_DEBUG_ENABLE
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 10  
+
+                          printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
+              #endif
+ 541   3              }
+ 542   2          }
+ 543   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1239    ----
-   CONSTANT SIZE    =     59    ----
-   XDATA SIZE       =     51      15
+   CODE SIZE        =   1192    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =     52      15
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

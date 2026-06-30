@@ -221,13 +221,11 @@ void low_power_out(void)
 
 void low_power_handle(void)
 {
-    // u8 is_back_to_low_power = 1;  // 默认从低功耗唤醒后，又返回低功耗
-
-    // USER_TO_DO 待添加该变量对应的功能
-    u8 is_wkup_enable = 0; // 默认从低功耗唤醒后，又返回低功耗
-    u8 is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
-    u8 is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
-    u8 is_key_sig_wkup = 0;       // 是否由ad按键唤醒
+    static volatile u16 update_bat_percent_cnt = 0; // 计数值，计满一定次数后，更新电池电量信息
+    u8 tmp_bat_percent;                             // 临时存放的电池电量百分比
+    u8 is_charge_sig_wkup = 0;                      // 是否由充电信号唤醒
+    u8 is_discharge_sig_wkup = 0;                   // 是否由放电信号唤醒
+    u8 is_key_sig_wkup = 0;                         // 是否由ad按键唤醒
     u16 adc_val;
 
     if (is_low_power_enter_enable)
@@ -243,6 +241,10 @@ void low_power_handle(void)
     printf("low power in\n");
 #endif
 label_low_power_in:
+
+    is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
+    is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
+    is_key_sig_wkup = 0;       // 是否由ad按键唤醒
 
     low_power_in();
     low_power_out();
@@ -263,7 +265,6 @@ label_low_power_in:
     if (adc_val < AD_KEY_INDEX_MAX_VAL)
     {
         // 有按键按下
-        // is_back_to_low_power = 0;
         is_key_sig_wkup = 1;
 #if USER_DEBUG_ENABLE
         // printf("key down\n");
@@ -276,8 +277,6 @@ label_low_power_in:
     // 如果检测到大于4.5V，认为有太阳能充电
     if (((u32)adc_val * 2 * 2400 / 4096) >= 4500)
     {
-        // is_back_to_low_power = 0;
-        is_wkup_enable = 1;
         is_charge_sig_wkup = 1;
 #if USER_DEBUG_ENABLE
         // printf("charge by solar panel\n");
@@ -299,21 +298,18 @@ label_low_power_in:
     // 如果是充电ic输出正在充电的信号，导致的唤醒
     if (LP_WKPND & LP_WKUP_1_PND(0x01))
     {
-        // is_back_to_low_power = 0;
 #if USER_DEBUG_ENABLE
         printf("wake up by charging\n");
 #endif
         LP_WKPND |= LP_WKUP_1_PCLR(0x01); // 清空唤醒标志位
-        is_wkup_enable = 1;
         is_charge_sig_wkup = 1;
     }
 
     if (LP_WKPND & LP_WKUP_3_PND(0x01))
     {
-        LP_WKPND |= LP_WKUP_3_PND(0x01); // 清空唤醒标志位
         // 如果是充电ic输出正在放电的信号，导致的唤醒
-        // is_back_to_low_power = 0;
-        is_wkup_enable = 1;
+        LP_WKPND |= LP_WKUP_3_PND(0x01); // 清空唤醒标志位
+
         is_discharge_sig_wkup = 1;
 
 #if USER_DEBUG_ENABLE
@@ -321,37 +317,78 @@ label_low_power_in:
 #endif
     }
 
-    // USER_TO_DO 如果充电ic输出了放电的信号，要有对应的指示灯，但是不能通过AD按键进行开机
-    // 正在充电，但是电池电压比较低，有电池电量指示灯功能，但是不能通过AD按键开机
-    // 不在充电，也不在放电，电池电压低，不开机，直接回到低功耗
-
     adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
     delay_ms(1);
     adc_val = adc_get_val_once();
     avg_voltage_mv = get_battery_voltage_by_adc(adc_val);
-    // if (avg_voltage_mv < BATTERY_EMPTY_VOLTAGE && 0 == is_charge_sig_wkup)
-    // {
-    //     // 电池电压低于 xxV，并且没有在充电，返回低功耗
-    //     // is_back_to_low_power = 1;
-    // }
 
-    // USER_TO_DO 还需要修改逻辑
-    // if (is_back_to_low_power)
-    if (is_key_sig_wkup && 
-        avg_voltage_mv < BATTERY_EMPTY_VOLTAGE && 
-        0 == is_charge_sig_wkup && 
-        0 == is_discharge_sig_wkup) 
+    update_bat_percent_cnt++;
+    if (update_bat_percent_cnt >= (BATTERY_PERCENT_UPDATE_PERIOD / 1000))
+    {
+        /*
+            目前 wake up timer 1s 唤醒一次，
+            按键唤醒、充电唤醒和放电唤醒不频繁，可以忽略，
+            按照 1s 的时基进行计数，按周期对电池电量百分比进行更新
+        */
+        update_bat_percent_cnt = 0;
+        tmp_bat_percent = get_battery_percentage_by_voltage(avg_voltage_mv);
+        if (bat_percent > tmp_bat_percent)
+        {
+            if (bat_percent > 0)
+            {
+                bat_percent--;
+            }
+        }
+        else if (bat_percent < tmp_bat_percent)
+        {
+            if (bat_percent < 100)
+            {
+                bat_percent++;
+            }
+        }
+
+#if USER_DEBUG_ENABLE
+        printf("low_power_handle()\n");
+        printf("bat percent: %u\n", (u16)bat_percent);
+#endif
+    }
+
+    /*
+        - 按键唤醒，电池电压低，并且没有在充电，返回低功耗
+        - 没有按键唤醒，并且没有在充电，返回低功耗
+    */
+    if ((is_key_sig_wkup &&
+         avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE &&
+         0 == is_charge_sig_wkup &&
+         0 == is_discharge_sig_wkup) ||
+        (0 == is_key_sig_wkup &&
+         0 == is_charge_sig_wkup &&
+         0 == is_discharge_sig_wkup))
     {
 #if USER_DEBUG_ENABLE
+        if ((is_key_sig_wkup &&
+             avg_voltage_mv < BATTERY_EMPTY_VOLTAGE &&
+             0 == is_charge_sig_wkup &&
+             0 == is_discharge_sig_wkup))
+        {
+            printf("key press, but bat is low\n");
+        }
+
         // printf("goto low power in\n");
 #endif
 
         goto label_low_power_in;
     }
+    // else if (is_charge_sig_wkup || is_discharge_sig_wkup)
+    // {
+    //     // 充电ic输出充电或放电信号，唤醒，不返回低功耗
+    // }
 
-    // 成功退出低功耗之后，清除低电量报警和低电量关机的标志位
+    // 成功退出低功耗之后，清除低电量报警和低电量关机的标志位 
+    // 通过按键退出低功耗，也会清除这些标志位
     is_sent_low_bat_alert = 0;
     is_turn_off_by_low_bat = 0;
+    bat_vol_history_buff_init(avg_voltage_mv);
     user_init();
 }
 

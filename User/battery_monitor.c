@@ -3,9 +3,9 @@
 
 // volatile u8 is_send_low_battery_enable = 0;
 
-// 是否发送了低电量报警（ @attention 在第一次上电、低功耗唤醒之后、有充电之后，需要清零）
+// 是否发送了低电量报警（ @NOTE 在第一次上电、低功耗唤醒之后、有充电之后，需要清零）
 volatile u8 is_sent_low_bat_alert = 0;
-volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ @attention 从低功耗唤醒，有充电之后，都清除一下该标志位）
+volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ @NOTE 从低功耗唤醒，有充电之后，都清除一下该标志位）
 
 // ====================================================================
 static volatile u8 is_bat_vol_buff_add_enable = 0;     // 是否允许往电池电压数组中放入数据
@@ -25,7 +25,7 @@ static volatile u16 voltage_mv = 0;     //
 static volatile u16 max_voltage_mv = 0; // 存放一段时间内采集到的最大电压值（只在采集使用，不能作为最终的判断使用）
 
 // 最后得到的、稳定的电池电压
-volatile u16 avg_voltage_mv = 0; // @attention 在当前文件外调用时，慎用
+volatile u16 avg_voltage_mv = 0; // @ATTENTION 在当前文件外调用时，慎用
 
 static volatile u8 percent = 0; // 电池电量百分比
 // static volatile u8 last_percent = 0; // 记录上一次采集到的电量百分比，用来控制电量百分比更新，充电时百分比不能下降，放电时百分比不能上升
@@ -35,6 +35,7 @@ volatile u8 bat_percent = 0;
 
 // 电池电量低时，每隔 xx 时间，给蓝牙ic发送一次提示，单位：ms
 #define SEND_LOW_BAT_TIME_PERIOD ((u32)120 * 1000)
+// #define SEND_LOW_BAT_TIME_PERIOD ((u32)10 * 1000)         // @USER_TO_DO  测试使用
 static volatile u8 is_send_low_bat_repeatedly_enable = 0; // 是否重复发送低电量报警
 
 // 电池电量百分比更新的时间计数器
@@ -71,11 +72,24 @@ u8 bat_percent_update_time_is_comes(void)
 void send_low_bat_timer_callback(void)
 {
     static volatile u32 cnt = 0;
+    /*
+       刚打开蓝牙，发送低电量报警，
+       需要隔一时间再发送，又不能隔太长时间，否则蓝牙会自动关机
+       这里控制刚打开蓝牙之后，发送低电量报警
+    */
+    static volatile u8 is_first_time_to_send = 0;
+
     if (is_sent_low_bat_alert)
     {
         cnt++;
-        if (cnt >= SEND_LOW_BAT_TIME_PERIOD)
+        if ((is_first_time_to_send && cnt >= (u16)3 * 1000) ||
+            (cnt >= SEND_LOW_BAT_TIME_PERIOD))
         {
+            if (is_first_time_to_send)
+            {
+                is_first_time_to_send = 0;
+            }
+
             cnt = 0;
             is_send_low_bat_repeatedly_enable = 1;
         }
@@ -83,6 +97,9 @@ void send_low_bat_timer_callback(void)
     else
     {
         cnt = 0;
+
+        // 低电量报警标志没有使能，给标志位置一
+        is_first_time_to_send = 1;
     }
 }
 
@@ -141,18 +158,21 @@ u16 get_battery_voltage_by_adc(u16 adc_val)
 {
     u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
     // 打印转换好的电压值（发现实际打印的电压比万用表量出的电压大了0.13V）
+
+#if 0
     // printf("voltage_mv == %u\n", voltage_mv);
     if (voltage_mv > 130)
     {
         // 这里做电压补偿（实际打印的电压比万用表量出的电压大了0.13V，需要减去0.13V）
         voltage_mv -= 130;
     }
-    // printf("voltage_mv == %u\n", voltage_mv); //
+    // printf("voltage_mv == %u\n", voltage_mv);
+#endif
 
 #if 0
     if (is_in_charging)
     {
-        //  // 充电时，减去 0.1 V，作为补偿。如果电压接近 4.2V 时，不用补偿
+        // 充电时，减去 0.1 V，作为补偿。如果电压接近 4.2V 时，不用补偿
         if ((voltage_mv <= 4000) && voltage_mv > 100)
         {
             voltage_mv -= 100;
@@ -312,7 +332,7 @@ void battery_voltage_update_by_isr(void)
 #if USER_DEBUG_ENABLE
             printf("bat monitor init\n");
             // printf("bat monitor init\n");
-            // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+            printf("avg_voltage_mv == %u\n", avg_voltage_mv);
             // printf("percent == %u\n", (u16)percent);
             printf("bat percent == %u\n", (u16)bat_percent);
 #endif
@@ -380,45 +400,15 @@ void battery_monitor_handle(void)
     if (is_bat_vol_buff_get_avg_enable)
     {
         avg_voltage_mv = bat_vol_history_buff_get_avg();
-        // printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+#if USER_DEBUG_ENABLE
+        printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+#endif
 
         percent = get_battery_percentage_by_voltage(avg_voltage_mv);
         // printf("percent == %u\n", (u16)percent);
 
         is_bat_vol_buff_get_avg_enable = 0;
     }
-
-#if 0
-    // 充电中， percent 大于等于 last_percent ，不让 percent 小于 last_percent
-    if (is_in_charging)
-    {
-        if (percent < last_percent)
-        {
-            // 如果当前计算出的电量百分比小于上一次的
-            percent = last_percent;
-        }
-        else
-        {
-            // 如果当前计算出的电量百分比 大于等于 上一次，更新 last_percent
-            last_percent = percent;
-        }
-    }
-    // 放电中， percent 小于等于 last_percent，不让 percent 大于 last_percent
-    else
-    {
-        if (percent > last_percent)
-        {
-            percent = last_percent;
-        }
-        else
-        {
-            // 如果当前计算出的电量百分比 小于等于 上一次，更新 last_percent
-            last_percent = percent;
-        }
-    }
-
-    bat_percent = last_percent; // 得到稳定之后的电池电量百分比
-#endif
 
     if (bat_percent_update_time_is_comes())
     {
@@ -442,8 +432,10 @@ void battery_monitor_handle(void)
             }
         }
 
+#if USER_DEBUG_ENABLE
         printf("bat percent == %u\n", (u16)bat_percent);
         printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+#endif
     }
 
 #if USER_DEBUG_ENABLE
@@ -491,9 +483,9 @@ void battery_monitor_handle(void)
 
         // 到了关机对应的电压
         if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
-        {
-#if USER_DEBUG_ENABLE
-            // printf("detect bat power empty\n");
+        { 
+#if USER_DEBUG_ENABLE   
+            printf("detect bat power empty\n");
 #endif
 
             if (0 == is_turn_off_by_low_bat)
@@ -513,9 +505,8 @@ void battery_monitor_handle(void)
                     ble_ic_disable_pre();
                     delay_ms(100);
                 }
-
-                // USER_TO_DO 可能需要加回来
-                // bat_percent = 0;
+ 
+                // bat_percent = 0; // USER_TO_DO 可能需要加回来
                 is_turn_off_by_low_bat = 1;
             }
         }
@@ -534,11 +525,7 @@ void battery_monitor_handle(void)
                 ble_ic_enable();
             }
 
-            // for (i = 0; i < 1; i++)
-            {
-                uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
-            }
-
+            uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
             is_sent_low_bat_alert = 1;
         }
 
@@ -549,7 +536,7 @@ void battery_monitor_handle(void)
             is_send_low_bat_repeatedly_enable = 0;
 
 #if USER_DEBUG_ENABLE
-            // printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
+            printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
 #endif
         }
     }
