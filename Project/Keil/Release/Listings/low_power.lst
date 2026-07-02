@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:46:32 PAGE 1   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:57:12 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LOW_POWER
@@ -62,7 +62,7 @@ line level    source
   51   1          __DisableIRQ(UART0_IRQn); // 禁止 串口 0 中断
   52   1      
   53   1          TMR1_CONL &= ~(TMR_MODE_SEL(0x03)); // 不使能计数
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:46:32 PAGE 2   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:57:12 PAGE 2   
 
   54   1          TMR0_CONL &= ~(TMR_MODE_SEL(0x03)); // 不使能计数
   55   1      
@@ -126,7 +126,7 @@ line level    source
  113   1          P2_MD0 &= ~GPIO_P22_MODE_SEL(0x3);
  114   1          FIN_S13 = GPIO_FIN_SEL_P22; // 配置 P22 为 通道3 输入唤醒端口
  115   1      
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:46:32 PAGE 3   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:57:12 PAGE 3   
 
  116   1          delay_ms(1); // 官方提供的低功耗SDK中，这里有延时操作
  117   1      
@@ -190,7 +190,7 @@ line level    source
  172   1          PMU_CON0 &= ~0x60;                 // 关闭VDD POR模块, 关闭VBG06_REF输出
  173   1          CLK_ACON0 &= ~CLK_AIP_HRC_EN(0x1); // 关闭HRC时钟
  174   1      
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:46:32 PAGE 4   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:57:12 PAGE 4   
 
  175   1          // P17 = 1; // 用该引脚测试低功耗的时间
  176   1          // =============================================================
@@ -254,7 +254,7 @@ line level    source
  231   1          if (is_low_power_enter_enable)
  232   1          {
  233   2              is_low_power_enter_enable = 0;
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:46:32 PAGE 5   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:57:12 PAGE 5   
 
  234   2          }
  235   1          else
@@ -318,7 +318,7 @@ line level    source
                   delay_ms(1);
                   adc_val = adc_get_val_once();
                   // 从低功耗唤醒之后，需要采集一次电池对应的ad值，更新电池相关的变量
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:46:32 PAGE 6   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:57:12 PAGE 6   
 
                   battery_monitor_refresh_by_adc_val(adc_val);
               #endif
@@ -382,7 +382,7 @@ line level    source
  354   2          }
  355   1      
  356   1          /*
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:46:32 PAGE 7   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:57:12 PAGE 7   
 
  357   1              - 按键唤醒，电池电压低，并且没有在充电，返回低功耗
  358   1              - 没有按键唤醒，并且没有在充电，返回低功耗
@@ -446,7 +446,7 @@ MODULE INFORMATION:   STATIC OVERLAYABLE
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =      6       5
    PDATA SIZE       =   ----    ----
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:46:32 PAGE 8   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 13:57:12 PAGE 8   
 
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
