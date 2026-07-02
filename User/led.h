@@ -51,7 +51,7 @@
 #define PWM_DUTY_SLOW_ADJUST_UNIT \
     ((u32)PWM_DUTY_SLOW_ADJUST_TIME / PWM_DUTY_VAL_PERCENT_X(100 - 70))
 
-// 进入充电 或 退出充电，缓慢调节黄灯和白灯亮度的总时间
+// 进入充电 或 退出充电，缓慢调节黄灯和白灯亮度的总时间。单位：ms
 #define PWM_DUTY_SLOW_ADJUST_TIME_DURING_CHARGING ((u32)2 * 60 * 1000)
 /**
  * @brief 充电期间，每 xx ms 调节1单位的占空比值

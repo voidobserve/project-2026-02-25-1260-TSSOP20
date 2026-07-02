@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 1   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BATTERY_MONITOR
@@ -62,7 +62,7 @@ line level    source
   46   1          if (bat_percent_update_time_cnt < ((u16)-1))
   47   1          {
   48   2              bat_percent_update_time_cnt++;
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 2   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 2   
 
   49   2          }
   50   1      }
@@ -126,7 +126,7 @@ line level    source
  108          {
  109   1          static u32 cnt = 0;
  110   1          cnt++;
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 3   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 3   
 
  111   1          if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER)
  112   1          {
@@ -190,7 +190,7 @@ line level    source
                   }
                   // printf("voltage_mv == %u\n", voltage_mv);
               #endif
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 4   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 4   
 
  171   1      
  172   1      #if 0
@@ -254,7 +254,7 @@ line level    source
  230   2              bat_vol_history_buff[i] = voltage_mv;
  231   2          }
  232   1          bat_vol_history_buff_idx = 0;
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 5   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 5   
 
  233   1      }
  234          
@@ -318,7 +318,7 @@ line level    source
                   // printf("max_voltage_mv == %u\n", max_voltage_mv);
                   // printf("avg_voltage_mv == %u\n", voltage_mv);
                   // printf("percent == %u\n", (u16)percent);
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 6   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 6   
 
                   // printf("last_percent == %u\n", (u16)last_percent);
                   // printf("bat_percent == %u\n", (u16)bat_percent);
@@ -382,7 +382,7 @@ line level    source
  351   2                  在放电时，电压有上升，也会更新 voltage_mv
  352   2              */
  353   2              if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 7   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 7   
 
  354   2              {
  355   3                  // 如果已经采集了一段时间的电压值，则将 voltage_mv 赋值为 max_voltage_mv
@@ -446,7 +446,7 @@ line level    source
  413   1          if (bat_percent_update_time_is_comes())
  414   1          {
  415   2              bat_percent_update_time_reset();
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 8   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 8   
 
  416   2      
  417   2              // 每次只变化1%的电池电量百分比
@@ -510,7 +510,7 @@ line level    source
  475   2          }
  476   1          // 不在充电，但是蓝牙ic或者灯光打开，根据电池电量来点亮对应指示灯
  477   1          else if (is_in_charging == 0 &&
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 9   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 9   
 
  478   1                   (ble_ic.is_working ||
  479   1                    led_ctl.status != LED_STATUS_OFF ||
@@ -574,7 +574,7 @@ line level    source
  536   3                  is_send_low_bat_repeatedly_enable = 0;
  537   3      
  538   3      #if USER_DEBUG_ENABLE
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   06/30/2026 16:21:08 PAGE 10  
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/02/2026 13:46:32 PAGE 10  
 
                           printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
               #endif
