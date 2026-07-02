@@ -358,7 +358,7 @@ label_low_power_in:
         - 没有按键唤醒，并且没有在充电，返回低功耗
     */
     if ((is_key_sig_wkup &&
-         avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE &&
+         avg_voltage_mv <= BATTERY_VOLTAGE_TURN_OFF_LOW_POWER &&
          0 == is_charge_sig_wkup &&
          0 == is_discharge_sig_wkup) ||
         (0 == is_key_sig_wkup &&
@@ -367,7 +367,7 @@ label_low_power_in:
     {
 #if USER_DEBUG_ENABLE
         if ((is_key_sig_wkup &&
-             avg_voltage_mv < BATTERY_EMPTY_VOLTAGE &&
+             avg_voltage_mv < BATTERY_VOLTAGE_TURN_OFF_LOW_POWER &&
              0 == is_charge_sig_wkup &&
              0 == is_discharge_sig_wkup))
         {

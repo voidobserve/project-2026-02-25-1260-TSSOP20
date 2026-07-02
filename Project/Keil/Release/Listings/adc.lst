@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 13:57:10 PAGE 1   
+C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 15:05:07 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE ADC
@@ -62,7 +62,7 @@ line level    source
   50   1          delay_ms(1); // 等待ADC模块配置稳定，需要等待20us以上
   51   1      }
   52          
-C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 13:57:10 PAGE 2   
+C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 15:05:07 PAGE 2   
 
   53          /**
   54           * @brief 更新通道对应的ad值（由ad中断更新）
@@ -126,7 +126,7 @@ line level    source
  112   1          {
  113   2          case ADC_CHANNEL_SEL_AD_KEY:
  114   2              ret = (u8)flag_is_adkey_val_update;
-C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 13:57:10 PAGE 3   
+C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 15:05:07 PAGE 3   
 
  115   2              break;
  116   2          case ADC_CHANNEL_SEL_BAT_DET:
@@ -190,7 +190,7 @@ line level    source
  174   2              ADC_CHS0 = ADC_EXT_SEL(0x01) |    // 选择内部通道
  175   2                         ADC_ANALOG_CHAN(0x03); // 选择 VDD 1/5 分压的通道
  176   2              break;
-C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 13:57:10 PAGE 4   
+C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 15:05:07 PAGE 4   
 
  177   2          case ADC_CHANNEL_SEL_SOLAR_DET:
  178   2              //  0 ~ 5 V， 经过二极管0.3V后，实际的充电电压范围：0 ~ 4.7V
@@ -254,7 +254,7 @@ line level    source
  235   2          case ADC_STATUS_SEL_AD_KEY_WAITING:
  236   2              // 开启转换，之后在ad中断获取ad值
  237   2              ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
-C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 13:57:10 PAGE 5   
+C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 15:05:07 PAGE 5   
 
  238   2              cur_adc_status = ADC_STATUS_SEL_AD_KEY;
  239   2              break;
@@ -318,7 +318,7 @@ line level    source
  297   3                  // led_resume();
  298   3      
  299   3                  battery_voltage_update_by_isr();
-C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 13:57:10 PAGE 6   
+C51 COMPILER V9.60.7.0   ADC                                                               07/02/2026 15:05:07 PAGE 6   
 
  300   3                  break;
  301   3              case ADC_STATUS_SEL_SOLAR_DET:

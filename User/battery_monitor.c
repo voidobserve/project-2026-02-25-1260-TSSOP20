@@ -3,9 +3,9 @@
 
 // volatile u8 is_send_low_battery_enable = 0;
 
-// 是否发送了低电量报警（ @NOTE 在第一次上电、低功耗唤醒之后、有充电之后，需要清零）
+// 是否发送了低电量报警（ REVIEW 在第一次上电、低功耗唤醒之后、有充电之后，需要清零）
 volatile u8 is_sent_low_bat_alert = 0;
-volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ @NOTE 从低功耗唤醒，有充电之后，都清除一下该标志位）
+volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ REVIEW 从低功耗唤醒，有充电之后，都清除一下该标志位）
 
 // ====================================================================
 static volatile u8 is_bat_vol_buff_add_enable = 0;     // 是否允许往电池电压数组中放入数据
@@ -66,6 +66,12 @@ u8 bat_percent_update_time_is_comes(void)
     {
         return 0;
     }
+}
+
+// 判断当前电压是否允许重新打开蓝牙
+u8 battery_bluetooth_enable_is_allowed(void)
+{
+    return (avg_voltage_mv > BATTERY_VOLTAGE_TURN_OFF_BLUETOOTH);
 }
 
 // 控制发送低电量的周期
@@ -202,22 +208,25 @@ u8 get_battery_percentage_by_voltage(u16 voltage_mv)
     {
         return 100;
     }
-    else if (voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+    else if (voltage_mv <= BATTERY_VOLTAGE_TURN_OFF_LOW_POWER)
     {
         return 0;
     }
-    else if (voltage_mv >= BATTERY_EMPTY_VOLTAGE &&
+    else if (voltage_mv >= BATTERY_VOLTAGE_TURN_OFF_LOW_POWER &&
              voltage_mv <= (BATTERY_LOW_WARNING_VOLTAGE + 100))
     {
-        // 大于 空电电压 2.9V ， 小于 (低电量电压+100mV) == 3.3 V
-        percentage = ((u32)(voltage_mv - BATTERY_EMPTY_VOLTAGE) * 25) /
-                     ((u16)BATTERY_LOW_WARNING_VOLTAGE + 100 - BATTERY_EMPTY_VOLTAGE);
+        /*
+            大于 空电电压  xx V ， 小于 (低电量提示电压+100mV) == xx V
+            映射到 0-25% 的电量百分比
+        */ 
+        percentage = ((u32)(voltage_mv - BATTERY_VOLTAGE_TURN_OFF_LOW_POWER) * 25) /
+                     ((u16)BATTERY_LOW_WARNING_VOLTAGE + 100 - BATTERY_VOLTAGE_TURN_OFF_LOW_POWER);
         return (u8)percentage;
     }
 
     // 线性插值计算百分比
-    percentage = ((u32)(voltage_mv - BATTERY_EMPTY_VOLTAGE) * 100) /
-                 (BATTERY_FULL_VOLTAGE - BATTERY_EMPTY_VOLTAGE);
+    percentage = ((u32)(voltage_mv - BATTERY_VOLTAGE_TURN_OFF_LOW_POWER) * 100) /
+                 (BATTERY_FULL_VOLTAGE - BATTERY_VOLTAGE_TURN_OFF_LOW_POWER);
 
     return (u8)percentage > 100 ? 100 : (u8)percentage;
 }
@@ -482,9 +491,9 @@ void battery_monitor_handle(void)
         led_bat_level_sta = LED_BAT_LEVEL_STA_DISCHARGE;
 
         // 到了关机对应的电压
-        if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
-        { 
-#if USER_DEBUG_ENABLE   
+        if (avg_voltage_mv <= BATTERY_VOLTAGE_TURN_OFF_LOW_POWER)
+        {
+#if USER_DEBUG_ENABLE
             printf("detect bat power empty\n");
 #endif
 
@@ -505,9 +514,22 @@ void battery_monitor_handle(void)
                     ble_ic_disable_pre();
                     delay_ms(100);
                 }
- 
+
                 // bat_percent = 0; // USER_TO_DO 可能需要加回来
                 is_turn_off_by_low_bat = 1;
+            }
+        }
+        // 到了 关闭蓝牙的阈值电压
+        else if (avg_voltage_mv <= BATTERY_VOLTAGE_TURN_OFF_BLUETOOTH)
+        {
+            // 关闭蓝牙
+            if (ble_ic.is_working)
+            {
+                uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
+                // delay_ms(5000); // 这里要等蓝牙播报完成
+                delay_ms(30);
+                ble_ic_disable_pre();
+                delay_ms(100);
             }
         }
         /*
@@ -520,13 +542,17 @@ void battery_monitor_handle(void)
 #if USER_DEBUG_ENABLE
             // printf("detect low power\n");
 #endif
-            if (ble_ic.is_working == 0)
+            // 电池电量过低时，不打开低电量报警提示（不打开蓝牙）
+            if (battery_bluetooth_enable_is_allowed())
             {
-                ble_ic_enable();
-            }
+                if (ble_ic.is_working == 0)
+                {
+                    ble_ic_enable();
+                }
 
-            uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
-            is_sent_low_bat_alert = 1;
+                uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
+                is_sent_low_bat_alert = 1;
+            }
         }
 
         // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间发送一次低电量报警：

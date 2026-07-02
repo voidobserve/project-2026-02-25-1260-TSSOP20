@@ -11,7 +11,14 @@
     空电电压 (mV)
 */
 // #define BATTERY_EMPTY_VOLTAGE ((u16)2900)
-#define BATTERY_EMPTY_VOLTAGE ((u16)3000)
+// #define BATTERY_EMPTY_VOLTAGE ((u16)3000)
+
+// 低电量关机的阈值电压
+#define BATTERY_VOLTAGE_TURN_OFF_LOW_POWER ((u16)2700)
+
+// 关闭蓝牙的阈值电压
+#define BATTERY_VOLTAGE_TURN_OFF_BLUETOOTH ((u16)3000)
+
 /*
     低电量警告电压 (mV)
 */
@@ -75,6 +82,8 @@ extern volatile u8 is_sent_low_bat_alert;
 extern volatile u8 is_turn_off_by_low_bat; // 是否低电量关机
 
 extern volatile u16 avg_voltage_mv; // @attention 在当前.c文件外调用时，慎用
+
+u8 battery_bluetooth_enable_is_allowed(void);
 
 // void send_low_battery_timer_callback(void);
 

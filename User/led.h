@@ -51,9 +51,12 @@
  * 
  *      占空比值是 60 %，但是LED是引脚给低电平驱动，写成 100 - 60
  *      值 == 25
+ * 
+ *      占空比值是 65 %，但是LED是引脚给低电平驱动，写成 100 - 65
+ *      值 == 28
  */
 #define PWM_DUTY_SLOW_ADJUST_UNIT \
-    ((u32)PWM_DUTY_SLOW_ADJUST_TIME / PWM_DUTY_VAL_PERCENT_X(100 - 60))
+    ((u32)PWM_DUTY_SLOW_ADJUST_TIME / PWM_DUTY_VAL_PERCENT_X(100 - 65))
 
 // enum
 // {
