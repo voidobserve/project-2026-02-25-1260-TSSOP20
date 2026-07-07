@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 15:05:09 PAGE 1   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/07/2026 17:35:16 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LOW_POWER
@@ -53,8 +53,8 @@ line level    source
   42          void low_power_in(void)
   43          {
   44   1      #if USER_DEBUG_ENABLE
-                  // printf("stop in\n");
-              #endif
+  45   1          // printf("stop in\n");
+  46   1      #endif
   47   1      
   48   1          __DisableIRQ(TMR1_IRQn);  // 禁止 定时器 1 中断
   49   1          __DisableIRQ(TMR0_IRQn);  // 禁止 定时器 0 中断
@@ -62,7 +62,7 @@ line level    source
   51   1          __DisableIRQ(UART0_IRQn); // 禁止 串口 0 中断
   52   1      
   53   1          TMR1_CONL &= ~(TMR_MODE_SEL(0x03)); // 不使能计数
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 15:05:09 PAGE 2   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/07/2026 17:35:16 PAGE 2   
 
   54   1          TMR0_CONL &= ~(TMR_MODE_SEL(0x03)); // 不使能计数
   55   1      
@@ -126,7 +126,7 @@ line level    source
  113   1          P2_MD0 &= ~GPIO_P22_MODE_SEL(0x3);
  114   1          FIN_S13 = GPIO_FIN_SEL_P22; // 配置 P22 为 通道3 输入唤醒端口
  115   1      
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 15:05:09 PAGE 3   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/07/2026 17:35:16 PAGE 3   
 
  116   1          delay_ms(1); // 官方提供的低功耗SDK中，这里有延时操作
  117   1      
@@ -190,7 +190,7 @@ line level    source
  172   1          PMU_CON0 &= ~0x60;                 // 关闭VDD POR模块, 关闭VBG06_REF输出
  173   1          CLK_ACON0 &= ~CLK_AIP_HRC_EN(0x1); // 关闭HRC时钟
  174   1      
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 15:05:09 PAGE 4   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/07/2026 17:35:16 PAGE 4   
 
  175   1          // P17 = 1; // 用该引脚测试低功耗的时间
  176   1          // =============================================================
@@ -236,9 +236,9 @@ line level    source
  214   1          CLK_CON0 |= CLK_SYSCLK_SEL(0x3); // 系统时钟选择hirc_clk
  215   1      
  216   1      #if USER_DEBUG_ENABLE
-                  uart0_init();
-                  // printf("stop out\n");
-              #endif
+ 217   1          uart0_init();
+ 218   1          // printf("stop out\n");
+ 219   1      #endif
  220   1      }
  221          
  222          void low_power_handle(void)
@@ -254,7 +254,7 @@ line level    source
  231   1          if (is_low_power_enter_enable)
  232   1          {
  233   2              is_low_power_enter_enable = 0;
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 15:05:09 PAGE 5   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/07/2026 17:35:16 PAGE 5   
 
  234   2          }
  235   1          else
@@ -263,8 +263,8 @@ line level    source
  238   2          }
  239   1      
  240   1      #if USER_DEBUG_ENABLE
-                  printf("low power in\n");
-              #endif
+ 241   1          printf("low power in\n");
+ 242   1      #endif
  243   1      label_low_power_in:
  244   1      
  245   1          is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
@@ -275,9 +275,9 @@ line level    source
  250   1          low_power_out();
  251   1      
  252   1      #if USER_DEBUG_ENABLE
-                  uart0_init();
-                  printf("low power out\n");
-              #endif
+ 253   1          uart0_init();
+ 254   1          printf("low power out\n");
+ 255   1      #endif
  256   1      
  257   1          // 唤醒后，检测有没有按键操作、有没有充电，有则恢复工作，没有则回到低
              -功耗
@@ -293,8 +293,8 @@ line level    source
  267   2              // 有按键按下
  268   2              is_key_sig_wkup = 1;
  269   2      #if USER_DEBUG_ENABLE
-                      // printf("key down\n");
-              #endif
+ 270   2              // printf("key down\n");
+ 271   2      #endif
  272   2          }
  273   1      
  274   1          adc_channel_sel(ADC_CHANNEL_SEL_SOLAR_DET);
@@ -305,8 +305,8 @@ line level    source
  279   1          {
  280   2              is_charge_sig_wkup = 1;
  281   2      #if USER_DEBUG_ENABLE
-                      // printf("charge by solar panel\n");
-              #endif
+ 282   2              // printf("charge by solar panel\n");
+ 283   2      #endif
  284   2          }
  285   1      
  286   1      #if 0
@@ -318,7 +318,7 @@ line level    source
                   delay_ms(1);
                   adc_val = adc_get_val_once();
                   // 从低功耗唤醒之后，需要采集一次电池对应的ad值，更新电池相关的变量
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 15:05:09 PAGE 6   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/07/2026 17:35:16 PAGE 6   
 
                   battery_monitor_refresh_by_adc_val(adc_val);
               #endif
@@ -327,8 +327,8 @@ line level    source
  299   1          if (LP_WKPND & LP_WKUP_1_PND(0x01))
  300   1          {
  301   2      #if USER_DEBUG_ENABLE
-                      printf("wake up by charging\n");
-              #endif
+ 302   2              printf("wake up by charging\n");
+ 303   2      #endif
  304   2              LP_WKPND |= LP_WKUP_1_PCLR(0x01); // 清空唤醒标志位
  305   2              is_charge_sig_wkup = 1;
  306   2          }
@@ -341,8 +341,8 @@ line level    source
  313   2              is_discharge_sig_wkup = 1;
  314   2      
  315   2      #if USER_DEBUG_ENABLE
-                      printf("wake up by discharge signal\n");
-              #endif
+ 316   2              printf("wake up by discharge signal\n");
+ 317   2      #endif
  318   2          }
  319   1      
  320   1          adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
@@ -376,19 +376,19 @@ line level    source
  348   3              }
  349   2      
  350   2      #if USER_DEBUG_ENABLE
-                      printf("low_power_handle()\n");
-                      printf("bat percent: %u\n", (u16)bat_percent);
-              #endif
+ 351   2              printf("low_power_handle()\n");
+ 352   2              printf("bat percent: %u\n", (u16)bat_percent);
+ 353   2      #endif
  354   2          }
  355   1      
  356   1          /*
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 15:05:09 PAGE 7   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/07/2026 17:35:16 PAGE 7   
 
  357   1              - 按键唤醒，电池电压低，并且没有在充电，返回低功耗
  358   1              - 没有按键唤醒，并且没有在充电，返回低功耗
  359   1          */
  360   1          if ((is_key_sig_wkup &&
- 361   1               avg_voltage_mv <= BATTERY_VOLTAGE_TURN_OFF_LOW_POWER &&
+ 361   1               avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE &&
  362   1               0 == is_charge_sig_wkup &&
  363   1               0 == is_discharge_sig_wkup) ||
  364   1              (0 == is_key_sig_wkup &&
@@ -396,16 +396,16 @@ line level    source
  366   1               0 == is_discharge_sig_wkup))
  367   1          {
  368   2      #if USER_DEBUG_ENABLE
-                      if ((is_key_sig_wkup &&
-                           avg_voltage_mv < BATTERY_VOLTAGE_TURN_OFF_LOW_POWER &&
-                           0 == is_charge_sig_wkup &&
-                           0 == is_discharge_sig_wkup))
-                      {
-                          printf("key press, but bat is low\n");
-                      }
-              
-                      // printf("goto low power in\n");
-              #endif
+ 369   2              if ((is_key_sig_wkup &&
+ 370   2                   avg_voltage_mv < BATTERY_EMPTY_VOLTAGE &&
+ 371   2                   0 == is_charge_sig_wkup &&
+ 372   2                   0 == is_discharge_sig_wkup))
+ 373   2              {
+ 374   3                  printf("key press, but bat is low\n");
+ 375   3              }
+ 376   2      
+ 377   2              // printf("goto low power in\n");
+ 378   2      #endif
  379   2      
  380   2              goto label_low_power_in;
  381   2          }
@@ -442,11 +442,11 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    808    ----
-   CONSTANT SIZE    =   ----    ----
+   CODE SIZE        =    924    ----
+   CONSTANT SIZE    =    143    ----
    XDATA SIZE       =      6       5
    PDATA SIZE       =   ----    ----
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/02/2026 15:05:09 PAGE 8   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/07/2026 17:35:16 PAGE 8   
 
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

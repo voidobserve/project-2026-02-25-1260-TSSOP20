@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 1   
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED
@@ -62,7 +62,7 @@ line level    source
   50   1          FOUT_S02 = GPIO_FOUT_AF_FUNC;
   51   1      }
   52          
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 2   
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 2   
 
   53          void led_ctl_init(void)
   54          {
@@ -126,7 +126,7 @@ line level    source
  112          void led_status_switch(void)
  113          {
  114   1          // printf("led_ctl.status == %u\n", (u16)led_ctl.status);
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 3   
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 3   
 
  115   1          switch (led_ctl.status)
  116   1          {
@@ -190,7 +190,7 @@ line level    source
  173   2              led_white_off();
  174   2              LED_RED_OFF();
  175   2              LED_BLUE_OFF();
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 4   
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 4   
 
  176   2              break;
  177   2          case LED_STATUS_YELLOW:
@@ -254,7 +254,7 @@ line level    source
               {
                   switch (led_ctl.status)
                   {
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 5   
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 5   
 
                   case LED_STATUS_OFF: // 关灯
                       led_yellow_off();
@@ -318,7 +318,7 @@ line level    source
  295   1          // 小动画1：红灯和蓝灯的波形错位400ms，最开始蓝灯先点亮，低电平200ms，高�
              -��平600ms，持续 7.8s
  296   1          if (led_ctl.red_blue_flash_time_cnt <= (u32)7800) // 7.8秒 = 7800毫秒
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 6   
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 6   
 
  297   1          {
  298   2              time_in_cycle = led_ctl.red_blue_flash_time_cnt % 800; // 800ms周期 (200ms低+600ms高)
@@ -382,7 +382,7 @@ line level    source
  352   2              // 蓝灯循环：点亮40ms，熄灭60ms，重复3次
  353   2              if (time_in_cycle < ((u16)40 + 60) * 3)
  354   2              {
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 7   
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 7   
 
  355   3                  LED_RED_OFF();
  356   3                  if ((time_in_cycle % (40 + 60)) < 40)
@@ -442,11 +442,11 @@ line level    source
  410   1          if (is_in_charging)
  411   1          {
  412   2              // 正在充电，但是占空比没有调节至目标占空比
- 413   2              led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(100 - 35);
+ 413   2              led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT_DURING_CHARGING);
  414   2      
  415   2              // 每 xx ms调节1单位的占空比值
  416   2              led_ctl.adjust_time_cnt++;
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 8   
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 8   
 
  417   2              if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
  418   2              {
@@ -473,7 +473,7 @@ line level    source
  439   2              // 没有在充电
  440   2      
  441   2              // 180s 之后，每 xx ms调节1单位的占空比值
- 442   2              led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(100 - 70);
+ 442   2              led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT);
  443   2              led_ctl.adjust_time_cnt++;
  444   2      
  445   2              // 占空比越小，灯光亮度越高
@@ -510,7 +510,7 @@ line level    source
  476   2              {
  477   3                  // 如果当前占空比 大于 目标占空（当前灯光亮度小于目标亮度值）
  478   3                  // 要按照 充电期间 的速度进行调节
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 9   
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 9   
 
  479   3                  if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
  480   3                  {
@@ -532,20 +532,20 @@ line level    source
  496   2          }
  497   1      
  498   1      #if USER_DEBUG_ENABLE
-                  // USER_TO_DO 每隔一段时间，再打印一次占空比
-                  {
-                      static u8 cnt = 0;
-                      cnt++;
-                      if (cnt >= 100)
-                      {
-                          cnt = 0;
-              
-                          // printf("PWM_DUTY_VAL_PERCENT_X(100 - 70) == %u\n", PWM_DUTY_VAL_PERCENT_X(100 - 70));
-                          // printf("led_ctl.dest_pwm_duty_val == %u\n", led_ctl.dest_pwm_duty_val);
-                          // printf("cur_pwm_duty_val = %u\n", led_ctl.cur_pwm_duty_val);
-                      }
-                  }
-              #endif
+ 499   1          // USER_TO_DO 每隔一段时间，再打印一次占空比
+ 500   1          {
+ 501   2              static u8 cnt = 0;
+ 502   2              cnt++;
+ 503   2              if (cnt >= 100)
+ 504   2              {
+ 505   3                  cnt = 0;
+ 506   3      
+ 507   3                  // printf("PWM_DUTY_VAL_PERCENT_X(100 - 70) == %u\n", PWM_DUTY_VAL_PERCENT_X(100 - 70));
+ 508   3                  // printf("led_ctl.dest_pwm_duty_val == %u\n", led_ctl.dest_pwm_duty_val);
+ 509   3                  // printf("cur_pwm_duty_val = %u\n", led_ctl.cur_pwm_duty_val);
+ 510   3              }
+ 511   2          }
+ 512   1      #endif
  513   1      }
  514          
  515          // 充电或放电时，电池电量指示灯的动画
@@ -574,7 +574,7 @@ line level    source
  538   2              led_charge_anim_cnt++;
  539   2              if (led_charge_anim_cnt >= 500)
  540   2              {
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 10  
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 10  
 
  541   3                  led_charge_anim_cnt = 0;
  542   3      
@@ -638,7 +638,7 @@ line level    source
  598   3                  if ((is_in_charging_by_charger && is_charging_ic_stop && led_charge_anim_phase == 3) ||
  599   3                      (is_in_charging_by_solar_panel &&
  600   3                       bat_percent >= 99 &&     // 可能充电充不到100%
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 11  
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 11  
 
  601   3                       avg_voltage_mv >= 4195)) // 可能充不到4.2V，这里检测到大于4.195就认为充�
              -��
@@ -702,7 +702,7 @@ line level    source
  659   3              }
  660   2              else
  661   2              {
-C51 COMPILER V9.60.7.0   LED                                                               07/02/2026 15:05:08 PAGE 12  
+C51 COMPILER V9.60.7.0   LED                                                               07/07/2026 17:35:16 PAGE 12  
 
  662   3                  LED_50_PERCENT_OFF();
  663   3              }
@@ -716,9 +716,9 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1419    ----
+   CODE SIZE        =   1433    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     18       3
+   XDATA SIZE       =     19       3
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

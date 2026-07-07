@@ -42,22 +42,26 @@
     缓慢调整黄灯和白灯的亮度，由定时器调用
 */
 #define PWM_DUTY_SLOW_ADJUST_TIME ((u32)300 * 1000) // 黄灯和白灯的pwm占空比缓慢调节时间，单位：ms
- 
+
+// 缓慢调节完成后，最终要调节到的占空比值，单位：百分比
+#define PWM_DEST_DUTY_PERCENT ((u8)100 - 60)
+// 充电期间，最终要调节到的占空比值，单位：百分比
+#define PWM_DEST_DUTY_PERCENT_DURING_CHARGING ((u8)100 - 35)
+
 /**
  * @brief 每 xx ms调节1单位的占空比值。前提条件：占空比值小于调节时间
- *      
- *      占空比值是 70 %，但是LED是引脚给低电平驱动，写成 100 - 70  
+ *
+ *      占空比值是 70 %，但是LED是引脚给低电平驱动，写成 100 - 70
  *      值 == 33
- * 
+ *
  *      占空比值是 60 %，但是LED是引脚给低电平驱动，写成 100 - 60
  *      值 == 25
- * 
- *      占空比值是 65 %，但是LED是引脚给低电平驱动，写成 100 - 65
- *      值 == 28
  */
-#define PWM_DUTY_SLOW_ADJUST_UNIT \
-    ((u32)PWM_DUTY_SLOW_ADJUST_TIME / PWM_DUTY_VAL_PERCENT_X(100 - 65))
+#define PWM_DUTY_SLOW_ADJUST_UNIT     \
+    ((u32)PWM_DUTY_SLOW_ADJUST_TIME / \
+     PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT))
 
+// TEST_ONLY
 // enum
 // {
 //     val = PWM_DUTY_SLOW_ADJUST_UNIT,
@@ -70,8 +74,15 @@
  *      目标占空比值是 35 %，但是LED是引脚给低电平驱动，写成 100 - 35
  *      目前值 == 6
  */
-#define PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING \
-    ((u32)PWM_DUTY_SLOW_ADJUST_TIME_DURING_CHARGING / PWM_DUTY_VAL_PERCENT_X(100 - 35))
+#define PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING     \
+    ((u32)PWM_DUTY_SLOW_ADJUST_TIME_DURING_CHARGING / \
+     PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT_DURING_CHARGING))
+
+// TEST_ONLY
+// enum
+// {
+//     val = PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING,
+// };
 
 /*
     灯光状态：
@@ -93,8 +104,8 @@ typedef struct
 
     // 用于控制黄灯和白灯的pwm占空比：
     // u8 is_slowly_adjust_end; // 灯光缓慢调节是否结束
-    u8 adjust_time_cnt;      // 灯光缓慢调节的时间计数（用来控制每隔 xx ms调节1单位的占空比值）
-    u16 cur_pwm_duty_val;    // 当前的PWM占空比数值
+    u8 adjust_time_cnt;   // 灯光缓慢调节的时间计数（用来控制每隔 xx ms调节1单位的占空比值）
+    u16 cur_pwm_duty_val; // 当前的PWM占空比数值
 
     u16 dest_pwm_duty_val; // 目标 PWM 占空比
 

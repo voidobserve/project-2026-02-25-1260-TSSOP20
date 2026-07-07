@@ -158,17 +158,12 @@ void ad_key_handle(void)
     ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
     ad_key_para.latest_key_event = KEY_EVENT_NONE;
 
-    if ((avg_voltage_mv <= BATTERY_VOLTAGE_TURN_OFF_LOW_POWER) ||
-        (!battery_bluetooth_enable_is_allowed() &&
-         AD_KEY_EVENT_ID_1_CLICK != ad_key_event))
-    {
-        /*
-            - 电池电压小于等于低电量关机时的电压，不处理按键事件
-
-            - 电池电压小于等于关闭蓝牙的电压，除了按键1（切换灯模式的按键），
-            其余按键（控制蓝牙）不处理
-        */
-
+    // 充电时、或者电池电量低于 xx 时，不执行按键操作
+    // if (is_in_charging || avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+    // if (is_in_charging || bat_percent <= 0)
+    // if (bat_percent <= 0) // 电池电量低于 xx 时，不执行按键操作
+    if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+    { 
 #if USER_DEBUG_ENABLE
         printf("ad_key_handle()\n");
         printf("bat is low\n");
@@ -192,7 +187,6 @@ void ad_key_handle(void)
         led_status_switch();
         break;
 
-#if 0
     case AD_KEY_EVENT_ID_1_LONG:
 #if USER_DEBUG_ENABLE
         // printf("key 1 long\n");
@@ -211,7 +205,7 @@ void ad_key_handle(void)
         // printf("key 1 loose\n");
 #endif
         break;
-#endif
+
         // ================================================================
         // key 2，对应的丝印是 上一曲
     case AD_KEY_EVENT_ID_2_CLICK:

@@ -410,7 +410,7 @@ void led_slow_adjust_isr(void)
     if (is_in_charging)
     {
         // 正在充电，但是占空比没有调节至目标占空比
-        led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(100 - 35);
+        led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT_DURING_CHARGING);
 
         // 每 xx ms调节1单位的占空比值
         led_ctl.adjust_time_cnt++;
@@ -439,7 +439,7 @@ void led_slow_adjust_isr(void)
         // 没有在充电
 
         // 180s 之后，每 xx ms调节1单位的占空比值
-        led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(100 - 70);
+        led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT);
         led_ctl.adjust_time_cnt++;
 
         // 占空比越小，灯光亮度越高
