@@ -58,8 +58,11 @@
 */
 // #define BATTERY_PERCENT_UPDATE_PERIOD ((u16)240 * 1000)
 // #define BATTERY_PERCENT_UPDATE_PERIOD ((u16)30 * 1000)
-// TEST ONLY 
+// TEST ONLY
 #define BATTERY_PERCENT_UPDATE_PERIOD ((u16)1 * 1000)
+// 低功耗期间，电池电量百分比的更新时间周期（要比开机期间的更新周期还要长）
+#define BATTERY_PERCENT_UPDATE_PERIOD_DURING_LOW_POWER \
+    ((u16)10 * BATTERY_PERCENT_UPDATE_PERIOD)
 
 // 电池电量更新模块的状态
 enum
@@ -74,7 +77,6 @@ typedef u8 bat_vol_update_sta_t;
 
 extern volatile u8 bat_percent;
 extern volatile u8 is_sent_low_bat_alert;
-extern volatile u8 is_turn_off_by_low_bat; // 是否低电量关机
 
 extern volatile u16 avg_voltage_mv; // @attention 在当前.c文件外调用时，慎用
 

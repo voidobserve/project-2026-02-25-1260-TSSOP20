@@ -212,11 +212,6 @@ void low_power_out(void)
     LP_WKPND |= LP_WKUP_2_PCLR(0x1); // 清除通道2唤醒标志位
     FLASH_TIMEREG1 = 0x58;           // FLASH访问速度 = 系统时钟/3
     CLK_CON0 |= CLK_SYSCLK_SEL(0x3); // 系统时钟选择hirc_clk
-
-#if USER_DEBUG_ENABLE
-    uart0_init();
-    // printf("stop out\n");
-#endif
 }
 
 void low_power_handle(void)
@@ -323,12 +318,16 @@ label_low_power_in:
     avg_voltage_mv = get_battery_voltage_by_adc(adc_val);
 
     update_bat_percent_cnt++;
-    if (update_bat_percent_cnt >= (BATTERY_PERCENT_UPDATE_PERIOD / 1000))
+    if (update_bat_percent_cnt >=
+        (BATTERY_PERCENT_UPDATE_PERIOD_DURING_LOW_POWER / 1000))
     {
         /*
             目前 wake up timer 1s 唤醒一次，
             按键唤醒、充电唤醒和放电唤醒不频繁，可以忽略，
             按照 1s 的时基进行计数，按周期对电池电量百分比进行更新
+
+            低功耗唤醒后，电池电量如果有回升，不更新电池电量百分比
+            只有电量电量下降，才更新电池电量百分比
         */
         update_bat_percent_cnt = 0;
         tmp_bat_percent = get_battery_percentage_by_voltage(avg_voltage_mv);
@@ -339,13 +338,13 @@ label_low_power_in:
                 bat_percent--;
             }
         }
-        else if (bat_percent < tmp_bat_percent)
-        {
-            if (bat_percent < 100)
-            {
-                bat_percent++;
-            }
-        }
+        // else if (bat_percent < tmp_bat_percent)
+        // {
+        //     if (bat_percent < 100)
+        //     {
+        //         bat_percent++;
+        //     }
+        // }
 
 #if USER_DEBUG_ENABLE
         printf("low_power_handle()\n");
@@ -384,10 +383,9 @@ label_low_power_in:
     //     // 充电ic输出充电或放电信号，唤醒，不返回低功耗
     // }
 
-    // 成功退出低功耗之后，清除低电量报警和低电量关机的标志位 
+    // 成功退出低功耗之后，清除低电量报警和低电量关机的标志位
     // 通过按键退出低功耗，也会清除这些标志位
     is_sent_low_bat_alert = 0;
-    is_turn_off_by_low_bat = 0;
     bat_vol_history_buff_init(avg_voltage_mv);
     user_init();
 }

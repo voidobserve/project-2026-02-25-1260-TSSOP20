@@ -5,7 +5,6 @@
 
 // 是否发送了低电量报警（ @NOTE 在第一次上电、低功耗唤醒之后、有充电之后，需要清零）
 volatile u8 is_sent_low_bat_alert = 0;
-volatile u8 is_turn_off_by_low_bat = 0; // 是否低电量关机（ @NOTE 从低功耗唤醒，有充电之后，都清除一下该标志位）
 
 // ====================================================================
 static volatile u8 is_bat_vol_buff_add_enable = 0;     // 是否允许往电池电压数组中放入数据
@@ -35,7 +34,7 @@ volatile u8 bat_percent = 0;
 
 // 电池电量低时，每隔 xx 时间，给蓝牙ic发送一次提示，单位：ms
 #define SEND_LOW_BAT_TIME_PERIOD ((u32)120 * 1000)
-// #define SEND_LOW_BAT_TIME_PERIOD ((u32)10 * 1000)         // @USER_TO_DO  测试使用
+// #define SEND_LOW_BAT_TIME_PERIOD ((u32)10 * 1000)         // TEST ONLY
 static volatile u8 is_send_low_bat_repeatedly_enable = 0; // 是否重复发送低电量报警
 
 // 电池电量百分比更新的时间计数器
@@ -483,35 +482,36 @@ void battery_monitor_handle(void)
 
         // 到了关机对应的电压
         if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
-        { 
-#if USER_DEBUG_ENABLE   
+        {
+#if USER_DEBUG_ENABLE
             printf("detect bat power empty\n");
+            // printf("led_ctl.status == %u\n", (u16)led_ctl.status);
+            // printf("ble_ic.is_working == %u\n", (u16)ble_ic.is_working);
 #endif
 
-            if (0 == is_turn_off_by_low_bat)
+            // 关闭灯光
+            if (led_ctl.status != LED_STATUS_OFF)
             {
-                // 关闭灯光
-                if (led_ctl.status != LED_STATUS_OFF)
-                {
-                    led_status_set(LED_STATUS_OFF);
-                }
+                led_status_set(LED_STATUS_OFF);
+            }
 
-                // 关闭蓝牙
-                if (ble_ic.is_working)
-                {
-                    uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
-                    // delay_ms(5000); // 这里要等蓝牙播报完成
-                    delay_ms(30);
-                    ble_ic_disable_pre();
-                    delay_ms(100);
-                }
- 
-                // bat_percent = 0; // USER_TO_DO 可能需要加回来
-                is_turn_off_by_low_bat = 1;
+            /*
+                关闭蓝牙，从低电量提示到低电量关机。
+                这个时间段会打开蓝牙，进行低电量提示。
+                到了低电量关机，这里需要能够重复进来，一直给蓝牙发送数据，确保蓝牙关机
+            */
+            if (ble_ic.is_working)
+            {
+                uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
+                // delay_ms(5000); // 这里要等蓝牙播报完成
+                delay_ms(30);
+                ble_ic_disable_pre();
+                delay_ms(100);
             }
         }
         /*
             低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
+            电池电量在关机电压和低电量阈值之间，才打开蓝牙
         */
         else if (is_sent_low_bat_alert == 0 &&
                  avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)

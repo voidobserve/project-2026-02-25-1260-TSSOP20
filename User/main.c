@@ -146,7 +146,7 @@ void main(void)
 
     user_init();
     delay_ms(10); // 等待系统稳定（至少要等ad值都更新一遍）
-  
+
     while (1)
     {
         key_driver_scan(&ad_key_para);
@@ -158,11 +158,6 @@ void main(void)
 
         charge_det();
 
-        /*
-            USER_TO_DO 如果拔出了type-c充电器，在充电ic的CH2放电信号结束前都不进入低功耗。
-            防止进入低功耗后又被这个放电信号唤醒
-        */ 
-        // USER_TO_DO 测试时屏蔽：
         low_power_handle();
 
 #if USER_DEBUG_ENABLE

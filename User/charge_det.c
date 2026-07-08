@@ -426,9 +426,9 @@ void charge_det(void)
  *
  *    这里只要小于2000，就认为没有通过type-c充电
  *
- *    USER_TO_DO 如果在旧的板子上测试，
+ *    REVIEW 如果在旧的板子上测试，
  *    旧的板子引脚连接到的是VDD，而不是type-c分压后的电压
- *    @attention 测试完成后，需要恢复这部分程序
+ *    测试完成后，需要恢复这部分程序
  */
 #if USER_DEBUG_ENABLE
     // printf("adc_val_of_type_c == %u\n", adc_val_of_type_c);
@@ -474,8 +474,7 @@ void charge_det(void)
         is_in_charging = 1;
 
         // 有充电之后，清空低电量相关标志位
-        is_sent_low_bat_alert = 0;
-        is_turn_off_by_low_bat = 0;
+        is_sent_low_bat_alert = 0; 
     }
     else if (is_in_charging_by_charger == 0 && is_in_charging_by_solar_panel == 0)
     {
