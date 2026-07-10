@@ -7,7 +7,7 @@
 #define UART0_BAUD 115200
 #define USER_UART0_BAUD ((SYSCLK - UART0_BAUD) / (UART0_BAUD))
 
-#define UART_RX_BUF_SIZE 512
+#define UART_RX_BUF_SIZE 128
 
 // 增加环形缓冲区结构体
 typedef struct

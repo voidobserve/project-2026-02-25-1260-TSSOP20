@@ -2,7 +2,8 @@
 #include "pwm.h"
 #include "user_test.h"
 #include "user_include.h"
-#include "string.h"
+#include <string.h>
+#include "bat_scan.h"
 
 volatile led_ctl_t led_ctl;
 

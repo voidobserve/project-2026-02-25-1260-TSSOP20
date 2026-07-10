@@ -32,7 +32,7 @@ extern volatile bluetooth_ic_t ble_ic;
 void bluetooth_ic_handle_init(void);
 
 void ble_ic_enable(void);
-void ble_ic_disable_pre(void);
-void ble_ic_disable_post(void);
+void ble_ic_disable_pre(void);  // 蓝牙ic关闭 前置操作
+void ble_ic_disable_post(void); // 蓝牙ic关闭 后置操作
 
 #endif

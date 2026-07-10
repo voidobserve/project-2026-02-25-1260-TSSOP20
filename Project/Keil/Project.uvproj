@@ -471,6 +471,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\User\low_power.c</FilePath>
             </File>
+            <File>
+              <FileName>bat_scan.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\bat_scan.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   AD_KEY                                                            07/08/2026 09:53:24 PAGE 1   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            07/09/2026 14:52:30 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE AD_KEY
@@ -12,355 +12,357 @@ line level    source
    1          #include "ad_key.h"
    2          #include "user_include.h"
    3          
-   4          // 存放按键对应的ad值:
-   5          static const u16 ad_key_scan_table[][2] = {
-   6              // [][0]按键对应的索引,在判断按键键值时使用   [][1]按键对应的ad值阈值
-   7          
-   8              {AD_KEY_INDEX_1, AD_KEY_INDEX_1_VAL}, //
-   9              {AD_KEY_INDEX_2, AD_KEY_INDEX_2_VAL}, //
-  10              {AD_KEY_INDEX_3, AD_KEY_INDEX_3_VAL}, //
-  11              {AD_KEY_INDEX_4, AD_KEY_INDEX_4_VAL}, //
-  12          };
-  13          
-  14          // 将按键id和按键事件绑定起来，在 xx 函数中，通过查表的方式得到按键事件
-  15          static const u8 ad_key_event_table[][AD_KEY_EFFECT_EVENT_NUMS + 1] = {
-  16              {AD_KEY_INDEX_1, AD_KEY_EVENT_ID_1_CLICK, AD_KEY_EVENT_ID_1_LONG, AD_KEY_EVENT_ID_1_HOLD, AD_KEY_EVENT
+   4          #include "bat_scan.h"
+   5          
+   6          // 存放按键对应的ad值:
+   7          static const u16 ad_key_scan_table[][2] = {
+   8              // [][0]按键对应的索引,在判断按键键值时使用   [][1]按键对应的ad值阈值
+   9          
+  10              {AD_KEY_INDEX_1, AD_KEY_INDEX_1_VAL}, //
+  11              {AD_KEY_INDEX_2, AD_KEY_INDEX_2_VAL}, //
+  12              {AD_KEY_INDEX_3, AD_KEY_INDEX_3_VAL}, //
+  13              {AD_KEY_INDEX_4, AD_KEY_INDEX_4_VAL}, //
+  14          };
+  15          
+  16          // 将按键id和按键事件绑定起来，在 xx 函数中，通过查表的方式得到按键事件
+  17          static const u8 ad_key_event_table[][AD_KEY_EFFECT_EVENT_NUMS + 1] = {
+  18              {AD_KEY_INDEX_1, AD_KEY_EVENT_ID_1_CLICK, AD_KEY_EVENT_ID_1_LONG, AD_KEY_EVENT_ID_1_HOLD, AD_KEY_EVENT
              -_ID_1_LOOSE}, //
-  17              {AD_KEY_INDEX_2, AD_KEY_EVENT_ID_2_CLICK, AD_KEY_EVENT_ID_2_LONG, AD_KEY_EVENT_ID_2_HOLD, AD_KEY_EVENT
+  19              {AD_KEY_INDEX_2, AD_KEY_EVENT_ID_2_CLICK, AD_KEY_EVENT_ID_2_LONG, AD_KEY_EVENT_ID_2_HOLD, AD_KEY_EVENT
              -_ID_2_LOOSE}, //
-  18              {AD_KEY_INDEX_3, AD_KEY_EVENT_ID_3_CLICK, AD_KEY_EVENT_ID_3_LONG, AD_KEY_EVENT_ID_3_HOLD, AD_KEY_EVENT
+  20              {AD_KEY_INDEX_3, AD_KEY_EVENT_ID_3_CLICK, AD_KEY_EVENT_ID_3_LONG, AD_KEY_EVENT_ID_3_HOLD, AD_KEY_EVENT
              -_ID_3_LOOSE}, //
-  19              {AD_KEY_INDEX_4, AD_KEY_EVENT_ID_4_CLICK, AD_KEY_EVENT_ID_4_LONG, AD_KEY_EVENT_ID_4_HOLD, AD_KEY_EVENT
+  21              {AD_KEY_INDEX_4, AD_KEY_EVENT_ID_4_CLICK, AD_KEY_EVENT_ID_4_LONG, AD_KEY_EVENT_ID_4_HOLD, AD_KEY_EVENT
              -_ID_4_LOOSE}, //
-  20          };
-  21          
-  22          extern u8 ad_key_get_key_val(void);
-  23          volatile struct key_driver_para ad_key_para = {
-  24              // 编译器不支持指定成员赋值的写法，会报错
-  25              AD_KEY_SCAN_CIRCLE_TIMES, // const u8 scan_times; // 按键扫描频率, 单位ms
-  26              0,                        // volatile u8 cur_scan_times; // 按键扫描频率, 单位ms，由1ms的�
+  22          };
+  23          
+  24          extern u8 ad_key_get_key_val(void);
+  25          volatile struct key_driver_para ad_key_para = {
+  26              // 编译器不支持指定成员赋值的写法，会报错
+  27              AD_KEY_SCAN_CIRCLE_TIMES, // const u8 scan_times; // 按键扫描频率, 单位ms
+  28              0,                        // volatile u8 cur_scan_times; // 按键扫描频率, 单位ms，由1ms的�
              -�时器中断内累加，在key_driver_scan()中清零
-  27              0,                        // volatile u8 last_key; // 存放上一次调用get_value()之后得到的�
+  29              0,                        // volatile u8 last_key; // 存放上一次调用get_value()之后得到的�
              -��键值
-  28          
-  29              //== 用于消抖类参数 ==//
-  30              0, // volatile u8 filter_value; // 用于按键消抖，存放消抖期间得到的键值
-  31              0, // volatile u8 filter_cnt;   // 用于按键消抖时的累加值
-  32              3, // const u8 filter_time;     // 当filter_cnt累加到base_cnt值时, 消抖有效
-  33          
-  34              //== 用于判定长按和HOLD事件参数
-  35              AD_KEY_LONG_PRESS_TIME_THRESHOLD_MS / AD_KEY_SCAN_CIRCLE_TIMES,                                       
+  30          
+  31              //== 用于消抖类参数 ==//
+  32              0, // volatile u8 filter_value; // 用于按键消抖，存放消抖期间得到的键值
+  33              0, // volatile u8 filter_cnt;   // 用于按键消抖时的累加值
+  34              3, // const u8 filter_time;     // 当filter_cnt累加到base_cnt值时, 消抖有效
+  35          
+  36              //== 用于判定长按和HOLD事件参数
+  37              AD_KEY_LONG_PRESS_TIME_THRESHOLD_MS / AD_KEY_SCAN_CIRCLE_TIMES,                                       
              -  // const u8 long_time; // 按键判定长按数量
-  36              (AD_KEY_LONG_PRESS_TIME_THRESHOLD_MS + AD_KEY_HOLD_PRESS_TIME_THRESHOLD_MS) / AD_KEY_SCAN_CIRCLE_TIMES
+  38              (AD_KEY_LONG_PRESS_TIME_THRESHOLD_MS + AD_KEY_HOLD_PRESS_TIME_THRESHOLD_MS) / AD_KEY_SCAN_CIRCLE_TIMES
              -, // const u8 hold_time; // 按键判定HOLD数量
-  37              0,                                                                                                    
+  39              0,                                                                                                    
              -  // volatile u8 press_cnt; // 与long_time和hold_time对比, 判断long_event和hold_event
-  38          
-  39              //== 用于判定连击事件参数
-  40              0,                  // volatile u8 click_cnt; // 按键按下次数
-  41              0,                  // volatile u8 click_delay_cnt; // 按键被抬起后等待连击事件延时计�
+  40          
+  41              //== 用于判定连击事件参数
+  42              0,                  // volatile u8 click_cnt; // 按键按下次数
+  43              0,                  // volatile u8 click_delay_cnt; // 按键被抬起后等待连击事件延时计�
              -�
-  42              0,                  // const u8 click_delay_time; // 按键被抬起后等待连击事件延时数量
-  43              0,                  // volatile u8 notify_value;    // 在延时的待发送按键值
-C51 COMPILER V9.60.7.0   AD_KEY                                                            07/08/2026 09:53:24 PAGE 2   
+C51 COMPILER V9.60.7.0   AD_KEY                                                            07/09/2026 14:52:30 PAGE 2   
 
-  44              KEY_TYPE_AD,        // const u8 key_type;
-  45              ad_key_get_key_val, // u8 (*get_value)(void); // 用户自定义的获取键值的函数
-  46          
-  47              // == 存放得到的按键键值和按键事件
-  48              AD_KEY_INDEX_NONE, // volatile u8 latest_key_val;
-  49              KEY_EVENT_NONE,    // volatile u8 latest_key_event;
-  50          };
-  51          
-  52          // 将采集到的ad值转换成自定义的键值
-  53          static u16 ad_key_val_to_ad_key_index(const u16 ad_key_val)
-  54          {
-  55   1          u8 i = 0;
-  56   1          u16 ad_key_index = NO_KEY;
-  57   1      
-  58   1          // ARRAY_SIZE(ad_key_scan_table) 这里是求出数组中存放的按键个数
-  59   1          for (i = 0; i < ARRAY_SIZE(ad_key_scan_table); i++)
-  60   1          {
-  61   2              if (ad_key_val < ad_key_scan_table[i][1])
-  62   2              {
-  63   3                  ad_key_index = ad_key_scan_table[i][0];
-  64   3                  break;
-  65   3              }
-  66   2          }
-  67   1      
-  68   1          return ad_key_index;
-  69   1      }
-  70          
-  71          //
-  72          /**
-  73           * @brief 将按键值和key_driver_scan得到的按键事件转换成ad按键的事件
-  74           *
-  75           * @param key_val ad按键键值
-  76           * @param key_event 在key_driver_scan得到的按键事件 KEY_EVENT
-  77           * @return u8 在ad_key_event_table中找到的对应的按键事件，如果没有则返回 AD_KEY_EVENT_
+  44              0,                  // const u8 click_delay_time; // 按键被抬起后等待连击事件延时数量
+  45              0,                  // volatile u8 notify_value;    // 在延时的待发送按键值
+  46              KEY_TYPE_AD,        // const u8 key_type;
+  47              ad_key_get_key_val, // u8 (*get_value)(void); // 用户自定义的获取键值的函数
+  48          
+  49              // == 存放得到的按键键值和按键事件
+  50              AD_KEY_INDEX_NONE, // volatile u8 latest_key_val;
+  51              KEY_EVENT_NONE,    // volatile u8 latest_key_event;
+  52          };
+  53          
+  54          // 将采集到的ad值转换成自定义的键值
+  55          static u16 ad_key_val_to_ad_key_index(const u16 ad_key_val)
+  56          {
+  57   1          u8 i = 0;
+  58   1          u16 ad_key_index = NO_KEY;
+  59   1      
+  60   1          // ARRAY_SIZE(ad_key_scan_table) 这里是求出数组中存放的按键个数
+  61   1          for (i = 0; i < ARRAY_SIZE(ad_key_scan_table); i++)
+  62   1          {
+  63   2              if (ad_key_val < ad_key_scan_table[i][1])
+  64   2              {
+  65   3                  ad_key_index = ad_key_scan_table[i][0];
+  66   3                  break;
+  67   3              }
+  68   2          }
+  69   1      
+  70   1          return ad_key_index;
+  71   1      }
+  72          
+  73          //
+  74          /**
+  75           * @brief 将按键值和key_driver_scan得到的按键事件转换成ad按键的事件
+  76           *
+  77           * @param key_val ad按键键值
+  78           * @param key_event 在key_driver_scan得到的按键事件 KEY_EVENT
+  79           * @return u8 在ad_key_event_table中找到的对应的按键事件，如果没有则返回 AD_KEY_EVENT_
              -NONE
-  78           */
-  79          static u8 ad_key_get_event(const u8 key_val, const u8 key_event)
-  80          {
-  81   1          u8 ret_key_event = AD_KEY_EVENT_NONE;
-  82   1          u8 key_event_index = 0;
-  83   1          u8 i = 0;
-  84   1      
-  85   1          // 将 key_driver_scan得到的按键事件 KEY_EVENT 转换为 ad_key_event_table 中的索引
-  86   1          if (key_event == KEY_EVENT_CLICK)
-  87   1          {
-  88   2              key_event_index = 1;
-  89   2          }
-  90   1          else if (key_event == KEY_EVENT_LONG)
-  91   1          {
-  92   2              key_event_index = 2;
-  93   2          }
-  94   1          else if (key_event == KEY_EVENT_HOLD)
-  95   1          {
-  96   2              key_event_index = 3;
-  97   2          }
-  98   1          else if (key_event == KEY_EVENT_UP)
-  99   1          {
- 100   2              key_event_index = 4;
- 101   2          }
- 102   1          else
- 103   1          {
- 104   2              return (u8)AD_KEY_EVENT_NONE;
-C51 COMPILER V9.60.7.0   AD_KEY                                                            07/08/2026 09:53:24 PAGE 3   
+  80           */
+  81          static u8 ad_key_get_event(const u8 key_val, const u8 key_event)
+  82          {
+  83   1          u8 ret_key_event = AD_KEY_EVENT_NONE;
+  84   1          u8 key_event_index = 0;
+  85   1          u8 i = 0;
+  86   1      
+  87   1          // 将 key_driver_scan得到的按键事件 KEY_EVENT 转换为 ad_key_event_table 中的索引
+  88   1          if (key_event == KEY_EVENT_CLICK)
+  89   1          {
+  90   2              key_event_index = 1;
+  91   2          }
+  92   1          else if (key_event == KEY_EVENT_LONG)
+  93   1          {
+  94   2              key_event_index = 2;
+  95   2          }
+  96   1          else if (key_event == KEY_EVENT_HOLD)
+  97   1          {
+  98   2              key_event_index = 3;
+  99   2          }
+ 100   1          else if (key_event == KEY_EVENT_UP)
+ 101   1          {
+ 102   2              key_event_index = 4;
+ 103   2          }
+ 104   1          else
+C51 COMPILER V9.60.7.0   AD_KEY                                                            07/09/2026 14:52:30 PAGE 3   
 
- 105   2          }
- 106   1      
- 107   1          for (; i < ARRAY_SIZE(ad_key_event_table); i++)
- 108   1          {
- 109   2              if (key_val == ad_key_event_table[i][0])
- 110   2              {
- 111   3                  ret_key_event = ad_key_event_table[i][key_event_index];
- 112   3                  break;
- 113   3              }
- 114   2          }
- 115   1      
- 116   1          return ret_key_event;
- 117   1      }
- 118          
- 119          // void adc_update_ad_key_val(u16 adc_val)
- 120          // {
- 121          //     adc_val_of_adkey = adc_val;
- 122          // }
- 123          
- 124          // u16 adc_get_ad_key_val(void)
- 125          // {
- 126          //     return adc_val_of_adkey;
- 127          // }
- 128          
- 129          // 获取按键键值，由key_driver_scan()函数调用
- 130          u8 ad_key_get_key_val(void)
- 131          {
- 132   1          static volatile u16 val = AD_KEY_NONE_VAL; // 单次按键标志
- 133   1          u8 ret = NO_KEY;
- 134   1      
- 135   1          // 有数据更新，才获取数据
- 136   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
- 137   1          {
- 138   2              adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
- 139   2              val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
- 140   2      
- 141   2              // printf("ad key val == %u\n", val);
- 142   2          }
- 143   1      
- 144   1          ret = ad_key_val_to_ad_key_index(val); // 将采集到的ad值转换成自定义的键值
- 145   1          return ret;
- 146   1      }
- 147          
- 148          void ad_key_handle(void)
- 149          {
- 150   1          volatile u8 ad_key_event = AD_KEY_EVENT_NONE;
- 151   1      
- 152   1          if (ad_key_para.latest_key_val == AD_KEY_INDEX_NONE)
- 153   1          {
- 154   2              return;
- 155   2          }
- 156   1      
- 157   1          ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
- 158   1          ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
- 159   1          ad_key_para.latest_key_event = KEY_EVENT_NONE;
- 160   1      
- 161   1          // 充电时、或者电池电量低于 xx 时，不执行按键操作
- 162   1          // if (is_in_charging || avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
- 163   1          // if (is_in_charging || bat_percent <= 0)
- 164   1          // if (bat_percent <= 0) // 电池电量低于 xx 时，不执行按键操作
- 165   1          if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
- 166   1          { 
-C51 COMPILER V9.60.7.0   AD_KEY                                                            07/08/2026 09:53:24 PAGE 4   
+ 105   1          {
+ 106   2              return (u8)AD_KEY_EVENT_NONE;
+ 107   2          }
+ 108   1      
+ 109   1          for (; i < ARRAY_SIZE(ad_key_event_table); i++)
+ 110   1          {
+ 111   2              if (key_val == ad_key_event_table[i][0])
+ 112   2              {
+ 113   3                  ret_key_event = ad_key_event_table[i][key_event_index];
+ 114   3                  break;
+ 115   3              }
+ 116   2          }
+ 117   1      
+ 118   1          return ret_key_event;
+ 119   1      }
+ 120          
+ 121          // void adc_update_ad_key_val(u16 adc_val)
+ 122          // {
+ 123          //     adc_val_of_adkey = adc_val;
+ 124          // }
+ 125          
+ 126          // u16 adc_get_ad_key_val(void)
+ 127          // {
+ 128          //     return adc_val_of_adkey;
+ 129          // }
+ 130          
+ 131          // 获取按键键值，由key_driver_scan()函数调用
+ 132          u8 ad_key_get_key_val(void)
+ 133          {
+ 134   1          static volatile u16 val = AD_KEY_NONE_VAL; // 单次按键标志
+ 135   1          u8 ret = NO_KEY;
+ 136   1      
+ 137   1          // 有数据更新，才获取数据
+ 138   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_AD_KEY))
+ 139   1          {
+ 140   2              adc_clear_update_flag(ADC_CHANNEL_SEL_AD_KEY);
+ 141   2              val = adc_get_val(ADC_CHANNEL_SEL_AD_KEY);
+ 142   2      
+ 143   2              // printf("ad key val == %u\n", val);
+ 144   2          }
+ 145   1      
+ 146   1          ret = ad_key_val_to_ad_key_index(val); // 将采集到的ad值转换成自定义的键值
+ 147   1          return ret;
+ 148   1      }
+ 149          
+ 150          void ad_key_handle(void)
+ 151          {
+ 152   1          volatile u8 ad_key_event = AD_KEY_EVENT_NONE;
+ 153   1      
+ 154   1          if (ad_key_para.latest_key_val == AD_KEY_INDEX_NONE)
+ 155   1          {
+ 156   2              return;
+ 157   2          }
+ 158   1      
+ 159   1          ad_key_event = ad_key_get_event(ad_key_para.latest_key_val, ad_key_para.latest_key_event);
+ 160   1          ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
+ 161   1          ad_key_para.latest_key_event = KEY_EVENT_NONE;
+ 162   1      
+ 163   1          // 充电时、或者电池电量低于 xx 时，不执行按键操作
+ 164   1          // if (is_in_charging || avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+ 165   1          // if (is_in_charging || bat_percent <= 0)
+ 166   1          // if (bat_percent <= 0) // 电池电量低于 xx 时，不执行按键操作
+C51 COMPILER V9.60.7.0   AD_KEY                                                            07/09/2026 14:52:30 PAGE 4   
 
- 167   2      #if USER_DEBUG_ENABLE
- 168   2              printf("ad_key_handle()\n");
- 169   2              printf("bat is low\n");
- 170   2      #endif
- 171   2              /*
- 172   2                  这里需要清空按键事件，否则在充电期间按下了按键，
- 173   2                  退出充电时会立即进入对应的处理程序
- 174   2              */
- 175   2              ad_key_event = AD_KEY_EVENT_NONE;
- 176   2              return;
- 177   2          }
- 178   1      
- 179   1          switch (ad_key_event)
- 180   1          {
- 181   2              // ================================================================
- 182   2              // key 1，对应的丝印是 灯开关
- 183   2          case AD_KEY_EVENT_ID_1_CLICK:
- 184   2      #if USER_DEBUG_ENABLE
- 185   2              // printf("key 1 click\n");
- 186   2      #endif
- 187   2              led_status_switch();
- 188   2              break;
- 189   2      
- 190   2          case AD_KEY_EVENT_ID_1_LONG:
- 191   2      #if USER_DEBUG_ENABLE
- 192   2              // printf("key 1 long\n");
- 193   2      #endif
- 194   2              break;
- 195   2      
- 196   2          case AD_KEY_EVENT_ID_1_HOLD:
- 197   2      #if USER_DEBUG_ENABLE
- 198   2              // printf("key 1 hold\n");
- 199   2      #endif
- 200   2      
- 201   2              break;
+ 167   1          if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+ 168   1          { 
+ 169   2      #if USER_DEBUG_ENABLE
+ 170   2              printf("ad_key_handle()\n");
+ 171   2              printf("bat is low\n");
+ 172   2      #endif
+ 173   2              /*
+ 174   2                  这里需要清空按键事件，否则在充电期间按下了按键，
+ 175   2                  退出充电时会立即进入对应的处理程序
+ 176   2              */
+ 177   2              ad_key_event = AD_KEY_EVENT_NONE;
+ 178   2              return;
+ 179   2          }
+ 180   1      
+ 181   1          switch (ad_key_event)
+ 182   1          {
+ 183   2              // ================================================================
+ 184   2              // key 1，对应的丝印是 灯开关
+ 185   2          case AD_KEY_EVENT_ID_1_CLICK:
+ 186   2      #if USER_DEBUG_ENABLE
+ 187   2              // printf("key 1 click\n");
+ 188   2      #endif
+ 189   2              led_status_switch();
+ 190   2              break;
+ 191   2      
+ 192   2          case AD_KEY_EVENT_ID_1_LONG:
+ 193   2      #if USER_DEBUG_ENABLE
+ 194   2              // printf("key 1 long\n");
+ 195   2      #endif
+ 196   2              break;
+ 197   2      
+ 198   2          case AD_KEY_EVENT_ID_1_HOLD:
+ 199   2      #if USER_DEBUG_ENABLE
+ 200   2              // printf("key 1 hold\n");
+ 201   2      #endif
  202   2      
- 203   2          case AD_KEY_EVENT_ID_1_LOOSE:
- 204   2      #if USER_DEBUG_ENABLE
- 205   2              // printf("key 1 loose\n");
- 206   2      #endif
- 207   2              break;
- 208   2      
- 209   2              // ================================================================
- 210   2              // key 2，对应的丝印是 上一曲
- 211   2          case AD_KEY_EVENT_ID_2_CLICK:
- 212   2      #if USER_DEBUG_ENABLE
- 213   2              // printf("key 2 click\n");
- 214   2      #endif
- 215   2              uart_data_send_cmd(UART_SEND_CMD_MUSIC_PREV);
- 216   2              break;
- 217   2      
- 218   2          case AD_KEY_EVENT_ID_2_LONG:
- 219   2      #if USER_DEBUG_ENABLE
- 220   2              // printf("key 2 long\n");
- 221   2      #endif
- 222   2              // 长按发送音量加
- 223   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
- 224   2              break;
- 225   2      
- 226   2          case AD_KEY_EVENT_ID_2_HOLD:
- 227   2      #if USER_DEBUG_ENABLE
- 228   2              // printf("key 2 hold\n");
-C51 COMPILER V9.60.7.0   AD_KEY                                                            07/08/2026 09:53:24 PAGE 5   
+ 203   2              break;
+ 204   2      
+ 205   2          case AD_KEY_EVENT_ID_1_LOOSE:
+ 206   2      #if USER_DEBUG_ENABLE
+ 207   2              // printf("key 1 loose\n");
+ 208   2      #endif
+ 209   2              break;
+ 210   2      
+ 211   2              // ================================================================
+ 212   2              // key 2，对应的丝印是 上一曲
+ 213   2          case AD_KEY_EVENT_ID_2_CLICK:
+ 214   2      #if USER_DEBUG_ENABLE
+ 215   2              // printf("key 2 click\n");
+ 216   2      #endif
+ 217   2              uart_data_send_cmd(UART_SEND_CMD_MUSIC_PREV);
+ 218   2              break;
+ 219   2      
+ 220   2          case AD_KEY_EVENT_ID_2_LONG:
+ 221   2      #if USER_DEBUG_ENABLE
+ 222   2              // printf("key 2 long\n");
+ 223   2      #endif
+ 224   2              // 长按发送音量加
+ 225   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
+ 226   2              break;
+ 227   2      
+ 228   2          case AD_KEY_EVENT_ID_2_HOLD:
+C51 COMPILER V9.60.7.0   AD_KEY                                                            07/09/2026 14:52:30 PAGE 5   
 
- 229   2      #endif
- 230   2              // 长按发送音量加
- 231   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
- 232   2              break;
- 233   2      
- 234   2          case AD_KEY_EVENT_ID_2_LOOSE:
- 235   2      #if USER_DEBUG_ENABLE
- 236   2              // printf("key 2 loose\n");
- 237   2      #endif
- 238   2              break;
- 239   2      
- 240   2              // ================================================================
- 241   2              // key 3，对应的丝印是 下一曲
- 242   2      
- 243   2          case AD_KEY_EVENT_ID_3_CLICK:
- 244   2      #if USER_DEBUG_ENABLE
- 245   2              // printf("key 3 click\n");
- 246   2      #endif
- 247   2      
- 248   2              uart_data_send_cmd(UART_SEND_CMD_MUSIC_NEXT);
- 249   2              break;
- 250   2      
- 251   2          case AD_KEY_EVENT_ID_3_LONG:
- 252   2      #if USER_DEBUG_ENABLE
- 253   2              // printf("key 3 long\n");
- 254   2      #endif
- 255   2      
- 256   2              // 长按发送音量减
- 257   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
- 258   2              break;
- 259   2      
- 260   2          case AD_KEY_EVENT_ID_3_HOLD:
- 261   2      #if USER_DEBUG_ENABLE
- 262   2              // printf("key 3 hold\n");
- 263   2      #endif
- 264   2      
- 265   2              // 长按发送音量减
- 266   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
- 267   2              break;
- 268   2      
- 269   2          case AD_KEY_EVENT_ID_3_LOOSE:
- 270   2      #if USER_DEBUG_ENABLE
- 271   2              // printf("key 3 loose\n");
- 272   2      #endif
- 273   2              break;
- 274   2      
- 275   2              // ================================================================
- 276   2              // key 4，对应的丝印是 总开关
- 277   2          case AD_KEY_EVENT_ID_4_CLICK:
- 278   2      #if USER_DEBUG_ENABLE
- 279   2              // printf("key 4 click\n");
- 280   2      #endif
- 281   2      
- 282   2              // 播放/暂停音乐
- 283   2              if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PLAYING_MUSIC)
- 284   2              {
- 285   3                  uart_data_send_cmd(UART_SEND_CMD_MUSIC_PAUSE);
- 286   3              }
- 287   2              else if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PAUSE_MUSIC)
- 288   2              {
- 289   3                  uart_data_send_cmd(UART_SEND_CMD_MUSIC_PLAY);
- 290   3              }
-C51 COMPILER V9.60.7.0   AD_KEY                                                            07/08/2026 09:53:24 PAGE 6   
+ 229   2      #if USER_DEBUG_ENABLE
+ 230   2              // printf("key 2 hold\n");
+ 231   2      #endif
+ 232   2              // 长按发送音量加
+ 233   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_ADD);
+ 234   2              break;
+ 235   2      
+ 236   2          case AD_KEY_EVENT_ID_2_LOOSE:
+ 237   2      #if USER_DEBUG_ENABLE
+ 238   2              // printf("key 2 loose\n");
+ 239   2      #endif
+ 240   2              break;
+ 241   2      
+ 242   2              // ================================================================
+ 243   2              // key 3，对应的丝印是 下一曲
+ 244   2      
+ 245   2          case AD_KEY_EVENT_ID_3_CLICK:
+ 246   2      #if USER_DEBUG_ENABLE
+ 247   2              // printf("key 3 click\n");
+ 248   2      #endif
+ 249   2      
+ 250   2              uart_data_send_cmd(UART_SEND_CMD_MUSIC_NEXT);
+ 251   2              break;
+ 252   2      
+ 253   2          case AD_KEY_EVENT_ID_3_LONG:
+ 254   2      #if USER_DEBUG_ENABLE
+ 255   2              // printf("key 3 long\n");
+ 256   2      #endif
+ 257   2      
+ 258   2              // 长按发送音量减
+ 259   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
+ 260   2              break;
+ 261   2      
+ 262   2          case AD_KEY_EVENT_ID_3_HOLD:
+ 263   2      #if USER_DEBUG_ENABLE
+ 264   2              // printf("key 3 hold\n");
+ 265   2      #endif
+ 266   2      
+ 267   2              // 长按发送音量减
+ 268   2              uart_data_send_cmd(UART_SEND_CMD_VOLUME_SUB);
+ 269   2              break;
+ 270   2      
+ 271   2          case AD_KEY_EVENT_ID_3_LOOSE:
+ 272   2      #if USER_DEBUG_ENABLE
+ 273   2              // printf("key 3 loose\n");
+ 274   2      #endif
+ 275   2              break;
+ 276   2      
+ 277   2              // ================================================================
+ 278   2              // key 4，对应的丝印是 总开关
+ 279   2          case AD_KEY_EVENT_ID_4_CLICK:
+ 280   2      #if USER_DEBUG_ENABLE
+ 281   2              // printf("key 4 click\n");
+ 282   2      #endif
+ 283   2      
+ 284   2              // 播放/暂停音乐
+ 285   2              if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PLAYING_MUSIC)
+ 286   2              {
+ 287   3                  uart_data_send_cmd(UART_SEND_CMD_MUSIC_PAUSE);
+ 288   3              }
+ 289   2              else if (ble_ic.music_status == BLUETOOTH_IC_STATUS_PAUSE_MUSIC)
+ 290   2              {
+C51 COMPILER V9.60.7.0   AD_KEY                                                            07/09/2026 14:52:30 PAGE 6   
 
- 291   2              break;
- 292   2      
- 293   2          case AD_KEY_EVENT_ID_4_LONG:
- 294   2      #if USER_DEBUG_ENABLE
- 295   2              // printf("key 4 long\n");
- 296   2      #endif
- 297   2      
- 298   2              // 打开蓝牙/关闭蓝牙
- 299   2              if (ble_ic.is_working)
- 300   2              {
- 301   3                  // uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
- 302   3                  // // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关�
+ 291   3                  uart_data_send_cmd(UART_SEND_CMD_MUSIC_PLAY);
+ 292   3              }
+ 293   2              break;
+ 294   2      
+ 295   2          case AD_KEY_EVENT_ID_4_LONG:
+ 296   2      #if USER_DEBUG_ENABLE
+ 297   2              // printf("key 4 long\n");
+ 298   2      #endif
+ 299   2      
+ 300   2              // 打开蓝牙/关闭蓝牙
+ 301   2              if (ble_ic.is_working)
+ 302   2              {
+ 303   3                  // uart_data_send_cmd(UART_SEND_CMD_BLE_CLOSE);
+ 304   3                  // // 发送完成后，需要在串口接收到蓝牙关闭功放的数据后，再执行关�
              -��蓝牙的操作
- 303   3                  ble_ic_disable_pre();
- 304   3              }
- 305   2              else
- 306   2              {
- 307   3                  // BLE_IC_POWER_KEY_PIN = 0;
- 308   3                  // delay_ms(30); // 等待蓝牙开机完毕
- 309   3                  // uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
- 310   3                  // ble_ic.is_working = 1;
- 311   3                  ble_ic_enable();
- 312   3              }
- 313   2              break;
- 314   2      
- 315   2          case AD_KEY_EVENT_ID_4_HOLD:
- 316   2      #if USER_DEBUG_ENABLE
- 317   2              // printf("key 4 hold\n");
- 318   2      #endif
- 319   2              break;
- 320   2      
- 321   2          case AD_KEY_EVENT_ID_4_LOOSE:
- 322   2      #if USER_DEBUG_ENABLE
- 323   2              // printf("key 4 loose\n");
- 324   2      #endif
- 325   2              break;
- 326   2      
- 327   2          default:
- 328   2              break;
- 329   2          }
- 330   1      }
+ 305   3                  ble_ic_disable_pre();
+ 306   3              }
+ 307   2              else
+ 308   2              {
+ 309   3                  // BLE_IC_POWER_KEY_PIN = 0;
+ 310   3                  // delay_ms(30); // 等待蓝牙开机完毕
+ 311   3                  // uart_data_send_cmd(UART_SEND_CMD_BLE_OPEN);
+ 312   3                  // ble_ic.is_working = 1;
+ 313   3                  ble_ic_enable();
+ 314   3              }
+ 315   2              break;
+ 316   2      
+ 317   2          case AD_KEY_EVENT_ID_4_HOLD:
+ 318   2      #if USER_DEBUG_ENABLE
+ 319   2              // printf("key 4 hold\n");
+ 320   2      #endif
+ 321   2              break;
+ 322   2      
+ 323   2          case AD_KEY_EVENT_ID_4_LOOSE:
+ 324   2      #if USER_DEBUG_ENABLE
+ 325   2              // printf("key 4 loose\n");
+ 326   2      #endif
+ 327   2              break;
+ 328   2      
+ 329   2          default:
+ 330   2              break;
+ 331   2          }
+ 332   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE

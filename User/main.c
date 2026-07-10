@@ -151,12 +151,11 @@ void main(void)
     {
         key_driver_scan(&ad_key_para);
         ad_key_handle();
-
         uart_data_handle();
-
-        battery_monitor_handle();
-
         charge_det();
+
+        bat_scan();
+        battery_monitor_handle();
 
         low_power_handle();
 

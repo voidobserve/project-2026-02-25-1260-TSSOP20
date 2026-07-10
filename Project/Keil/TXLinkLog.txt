@@ -61,3 +61,30 @@
 [07-08 10:17:38]FreeCache: 0x0
 [07-08 10:17:38]StopTarget: 0x0
 [07-08 10:17:38]FreeCache: 0x0
+[07-09 09:36:15]DllUv3Cap:0x2
+[07-09 09:36:15]DllUv3Cap:0x64
+[07-10 13:59:32]DllUv3Cap:0x2
+[07-10 13:59:32]DllUv3Cap:0x64
+[07-10 13:59:35]DllUv3Cap:0x2
+[07-10 13:59:35]DllUv3Cap:0x6d
+[07-10 13:59:35]DllUv3Cap:0x1
+[07-10 13:59:35]Serial init start!
+[07-10 13:59:35]TXLink ready failed!
+[07-10 13:59:35]TXLink ready failed!
+[07-10 13:59:35]TXLink ready failed!
+[07-10 13:59:35]TXLink ready failed!
+[07-10 13:59:35]Serial close ok!
+[07-10 13:59:35]Serial init start!
+[07-10 13:59:35]uart_txm8c1200_set_driver:0x0
+[07-10 13:59:35]user uart set driver ok!
+[07-10 13:59:35]TXLink ready ok!
+[07-10 13:59:35]TXLink init ok!
+[07-10 13:59:35]Serial close ok!
+[07-10 13:59:35]Serial init start!
+[07-10 13:59:35]uart_txm8c1200_set_driver:0x0
+[07-10 13:59:35]user uart set driver ok!
+[07-10 13:59:35]TXLink ready ok!
+[07-10 13:59:35]TXLink init ok!
+[07-10 13:59:35]Serial close ok!
+[07-10 16:49:48]DllUv3Cap:0x2
+[07-10 16:49:48]DllUv3Cap:0x64

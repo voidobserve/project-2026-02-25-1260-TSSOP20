@@ -1,6 +1,10 @@
 #include "adc.h"
+#include "bat_scan.h"
+
 #include "user_config.h"
 #include "user_include.h"
+
+
 
 volatile u8 cur_adc_status = ADC_STATUS_IDLE;
 

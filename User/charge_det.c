@@ -1,5 +1,6 @@
 #include "charge_det.h"
 #include "user_include.h"
+#include "bat_scan.h"
 
 // volatile u8 charge_det_sta; // 检测充电的状态
 volatile u8 is_in_charging_by_solar_panel = 0; // 是否正在通过太阳能充电
@@ -169,7 +170,7 @@ void detect_1khz_signal_100us(void)
             is_in_charging_by_charger = 1;
         }
 
-        // 5000 *10 * 100 us 连续 5s检测到1Khz信号，说明充满电(实际测试可能只有3s)
+        // 5000 *10 * 100 us 连续 5s 检测到1Khz信号，说明充满电(实际测试可能只有3s)
         if (consecutive_detection_count >= (u32)5000 * 10)
         {
             is_charging_ic_stop = 1;

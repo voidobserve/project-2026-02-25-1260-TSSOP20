@@ -1,6 +1,5 @@
 #include "low_power.h"
-
-#define LOW_POWER_ENTER_TIME_WHEN_POWER_OFF ((u16)2000) // 关机后，多久进入低功耗，单位：ms
+#include "bat_scan.h"
 
 static volatile is_low_power_enter_enable = 0;
 
@@ -277,18 +276,7 @@ label_low_power_in:
         // printf("charge by solar panel\n");
 #endif
     }
-
-#if 0
-    /*
-        如果是充电ic输出放电信号导致的唤醒，此时电池电压已经被拉低，
-        检测已经没有效果
-    */     
-    adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
-    delay_ms(1);
-    adc_val = adc_get_val_once();
-    // 从低功耗唤醒之后，需要采集一次电池对应的ad值，更新电池相关的变量
-    battery_monitor_refresh_by_adc_val(adc_val);
-#endif
+ 
 
     // 如果是充电ic输出正在充电的信号，导致的唤醒
     if (LP_WKPND & LP_WKUP_1_PND(0x01))

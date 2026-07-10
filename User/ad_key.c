@@ -1,6 +1,8 @@
 #include "ad_key.h"
 #include "user_include.h"
 
+#include "bat_scan.h"
+
 // 存放按键对应的ad值:
 static const u16 ad_key_scan_table[][2] = {
     // [][0]按键对应的索引,在判断按键键值时使用   [][1]按键对应的ad值阈值

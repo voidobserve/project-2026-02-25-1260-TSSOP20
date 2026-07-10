@@ -1,6 +1,7 @@
 #include "timer0.h"
 #include "user_config.h"
 #include "user_include.h"
+#include "bat_scan.h"
 
 #define PEROID_VAL (SYSCLK / 128 / 1000 - 1) // 周期值=系统时钟/分频/频率 - 1
 
