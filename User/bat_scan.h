@@ -22,12 +22,16 @@ typedef u8 bat_vol_update_sta_t;
 /*
 	低电量警告电压 (mV)
 */
-#define BATTERY_LOW_WARNING_VOLTAGE ((u16)3200)
+#define BATTERY_LOW_WARNING_VOLTAGE ((u16)3250)
+
+
 
 // ADC相关参数 (电池检测使用内部2.0V参考电压，VDD 1/5分压)
 #define BATTERY_ADC_REF_VOLTAGE_MV 2000 // 内部参考电压 2.0V
 #define BATTERY_VOLTAGE_DIVIDER 5		// VDD经过1/5分压后输入ADC
 
+// =================================================================
+// =================================================================
 // 计算ADC值对应的电池电压 (单位：mV)
 // ADC值 -> 实际电池电压 = ADC值 * (参考电压/4096) * 分压比 * 1000
 #define ADC_TO_BATTERY_VOLTAGE_MV(adc_val) \
@@ -71,18 +75,19 @@ typedef u8 bat_vol_update_sta_t;
 #define BATTERY_PERCENT_UPDATE_PERIOD_DURING_LOW_POWER \
 	((u16)10 * BATTERY_PERCENT_UPDATE_PERIOD)
 
-extern volatile u8 bat_percent;
+// extern volatile u8 bat_percent;
 extern volatile u16 avg_voltage_mv; // @attention 在当前.c文件外调用时，慎用
 
-void bat_percent_update_time_add(void);
-void bat_percent_update_time_reset(void);
-u8 bat_percent_update_time_is_comes(void);
+// void bat_percent_update_time_add(void);
+// void bat_percent_update_time_reset(void);
+// u8 bat_percent_update_time_is_comes(void);
 
 void battery_voltage_update_by_isr(void);
 void bat_vol_history_buff_init(u16 voltage_mv);
 
+// 不使用电池电量百分比
 // 计算电池电压对应的百分比 (0-100)
-u8 get_battery_percentage_by_voltage(u16 voltage_mv);
+// u8 get_battery_percentage_by_voltage(u16 voltage_mv);
 u16 get_battery_voltage_by_adc(u16 adc_val); // 通过AD值计算电池电压 (单位：mV)
 
 void bat_vol_update_timer_callback(void);

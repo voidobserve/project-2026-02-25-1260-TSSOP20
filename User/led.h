@@ -98,6 +98,18 @@ enum
 };
 typedef u8 led_status_t;
 
+// 电池电量指示灯状态：
+enum
+{
+    LED_BAT_LEV_STA_ALERT = 0, // 低电量报警
+    LED_BAT_LEV_STA_1,         // 只亮 1颗 指示灯
+    LED_BAT_LEV_STA_2,
+    LED_BAT_LEV_STA_3,
+    LED_BAT_LEV_STA_4,
+};
+typedef u8 led_bat_lev_sta_t;
+
+
 typedef struct
 {
     led_status_t status; // 状态（红灯、蓝灯、黄灯和白灯）
@@ -127,10 +139,12 @@ enum
 
     LED_BAT_LEVEL_STA_DISCHARGE, // 放电中
 };
-typedef u8 led_bat_level_sta_t;
+typedef u8 led_bat_level_anim_sta_t;
 
 extern volatile led_ctl_t led_ctl;
-extern volatile led_bat_level_sta_t led_bat_level_sta;
+extern volatile led_bat_level_anim_sta_t led_bat_level_sta;
+
+extern volatile led_bat_lev_sta_t led_bat_lev_sta;
 
 void led_init(void);
 
@@ -147,6 +161,8 @@ void led_resume(void);
 void led_ctl_init(void);
 void led_status_switch(void);
 void led_status_set(led_status_t status);
+
+void led_bat_lev_sta_init(u16 voltage_mv);
 
 void led_red_blue_flash_1ms_isr(void);
 void led_slow_adjust_isr(void);

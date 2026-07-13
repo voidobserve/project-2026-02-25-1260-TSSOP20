@@ -160,10 +160,7 @@ void ad_key_handle(void)
     ad_key_para.latest_key_val = AD_KEY_INDEX_NONE;
     ad_key_para.latest_key_event = KEY_EVENT_NONE;
 
-    // 充电时、或者电池电量低于 xx 时，不执行按键操作
-    // if (is_in_charging || avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
-    // if (is_in_charging || bat_percent <= 0)
-    // if (bat_percent <= 0) // 电池电量低于 xx 时，不执行按键操作
+    // 电池电量低于 xx 时，不执行按键操作 
     if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
     { 
 #if USER_DEBUG_ENABLE

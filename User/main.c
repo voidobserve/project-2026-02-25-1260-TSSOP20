@@ -29,76 +29,9 @@
 
 #include "uart_data_handle.h"
 #include "ad_key.h"
+#include "bat_scan.h"
 
 #include "user_include.h"
-
-#if 0
-volatile delay_exec_block_t delay_exec_array[DELAY_EXEC_MAX];
-
-void delay_exec_init(void)
-{
-    u8 i;
-    for (i = 0; i < DELAY_EXEC_MAX; i++)
-    {
-        delay_exec_array[i].cur_cnt = 0;
-        delay_exec_array[i].dest_cnt = 0;
-        delay_exec_array[i].is_pending = 0;
-        delay_exec_array[i].is_enable = 0;
-    }
-}
-
-void delay_exec_set(delay_exec_task_id_t task_id, u8 interval_ms)
-{
-    delay_exec_array[task_id].cur_cnt = 0;
-    delay_exec_array[task_id].dest_cnt = interval_ms;
-    delay_exec_array[task_id].is_pending = 0;
-    delay_exec_array[task_id].is_enable = 1;
-}
-
-void delay_exec_reset(delay_exec_task_id_t task_id)
-{
-    delay_exec_array[task_id].is_enable = 0;
-    delay_exec_array[task_id].cur_cnt = 0;
-    delay_exec_array[task_id].dest_cnt = 0;
-    delay_exec_array[task_id].is_pending = 0;
-}
-
-// 更新延时执行任务的当前时间计数
-void delay_exec_update(void)
-{
-    u8 i;
-    for (i = 0; i < DELAY_EXEC_MAX; i++)
-    {
-        if (delay_exec_array[i].is_enable)
-        {
-            delay_exec_array[i].cur_cnt++;
-            if (delay_exec_array[i].cur_cnt >= delay_exec_array[i].dest_cnt)
-            {
-                delay_exec_array[i].cur_cnt = 0;
-                delay_exec_array[i].is_pending = 1;
-            }
-        }
-    }
-}
-
-u8 delay_exec_is_pending(delay_exec_task_id_t task_id)
-{
-    return delay_exec_array[task_id].is_pending;
-}
-
-void delay_exec_handle(void)
-{
-    if (delay_exec_is_pending(DELAY_EXEC_BLE_OFF))
-    {
-        // delay_exec_reset(DELAY_EXEC_BLE_OFF);
-
-        delay_exec_array[DELAY_EXEC_BLE_OFF].is_pending = 0;
-
-        // 关闭蓝牙
-        USER_DEBUG_PIN_TOGGLE();
-    }
-}
-#endif
 
 void user_init(void)
 {

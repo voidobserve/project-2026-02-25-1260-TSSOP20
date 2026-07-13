@@ -26,21 +26,13 @@ Project File Date:  07/09/2026
 
 <h2>Output:</h2>
 Build target 'Target 1'
-compiling charge_det.c...
-compiling bat_scan.c...
 linking...
-*** WARNING L15: MULTIPLE CALL TO SEGMENT
-    SEGMENT: ?PR?_GET_BATTERY_PERCENTAGE_BY_VOLTAGE?BAT_SCAN
-    CALLER1: ?C_C51STARTUP
-    CALLER2: ?PR?ADC_IRQHANDLER?ADC
-*** WARNING L15: MULTIPLE CALL TO SEGMENT
-    SEGMENT: ?PR?PRINTF?PRINTF
-    CALLER1: ?C_C51STARTUP
-    CALLER2: ?PR?ADC_IRQHANDLER?ADC
-Program Size: data=21.7 xdata=445 code=11320
+*** WARNING L16: UNCALLED SEGMENT, IGNORED FOR OVERLAY PROCESS
+    SEGMENT: ?PR?BATTTERY_MONITOR_1MS_ISR?BATTERY_MONITOR
+Program Size: data=9.5 xdata=387 code=10099
 creating hex file from ".\Release\Objects\Demo"...
-".\Release\Objects\Demo" - 0 Error(s), 2 Warning(s).
-Build Time Elapsed:  00:00:01
+".\Release\Objects\Demo" - 0 Error(s), 1 Warning(s).
+Build Time Elapsed:  00:00:00
 </pre>
 </body>
 </html>

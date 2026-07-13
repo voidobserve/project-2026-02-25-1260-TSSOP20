@@ -4,13 +4,26 @@
 #include "user_include.h"
 #include <string.h>
 #include "bat_scan.h"
+#include "battery_monitor.h"
 
 volatile led_ctl_t led_ctl;
 
 // 控制电池电量指示灯的状态：
-volatile led_bat_level_sta_t led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
+volatile led_bat_level_anim_sta_t led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
 volatile u8 led_charge_anim_phase = 0; // 充电开始的动画阶段，0：灯光全灭，1：开始点亮第一个灯
 volatile u16 led_charge_anim_cnt = 0;
+// 充满后快速填充显示的计时和阶段（短时间内逐档上升）
+static volatile u32 led_quick_fill_cnt = 0; // ms 计时
+// 每次填充到下一个档位时，增加 led_charge_anim_phase，最多到 3（对应 75%），然后最终点亮 100%
+
+// 存放电池电量指示灯状态（不包括指示灯全部关闭的状态）：
+// volatile led_bat_lev_sta_t last_led_bat_lev_sta = 0;
+volatile led_bat_lev_sta_t led_bat_lev_sta = 0;
+
+// 电池指示灯跳级向下的去抖时间（ms），发生跳级时，每隔该时间降一档
+#define LED_BAT_JUMP_DOWN_DEBOUNCE_MS ((u32)10 * 60 * 1000)
+// 充电完成后快速填充每档间隔（ms），短时间内逐档上升显示
+#define LED_CHARGE_QUICK_FILL_INTERVAL_MS ((u32)1 * 60 * 1000)
 
 void led_init(void)
 {
@@ -62,6 +75,42 @@ void led_ctl_init(void)
 
     // 目前可以用这个来代替
     memset(&led_ctl, 0, sizeof(led_ctl_t));
+}
+
+/**
+ * @brief 初始化电池电量指示灯对应的状态
+ *      只在第一次上电后调用
+ *
+ */
+void led_bat_lev_sta_init(u16 voltage_mv)
+{
+    static u8 is_initialized = 0;
+    if (is_initialized)
+    {
+        return;
+    }
+
+    is_initialized = 1;
+
+    // 直接根据黄白灯都点亮对应的电池电压来划分
+    if (voltage_mv >= BAT_WY_4LED_VOLTAGE)
+    {
+        led_bat_lev_sta = LED_BAT_LEV_STA_4;
+    }
+    else if (voltage_mv >= BAT_WY_3LED_VOLTAGE)
+    {
+        led_bat_lev_sta = LED_BAT_LEV_STA_3;
+    }
+    else if (voltage_mv >= BAT_WY_2LED_VOLTAGE)
+    {
+        led_bat_lev_sta = LED_BAT_LEV_STA_2;
+    }
+    // else if (voltage_mv >=
+    //          (BAT_WY_LOW_WARN_VOLTAGE + BAT_WY_DEAD_ZONE_VOLTAGE))
+    else
+    {
+        led_bat_lev_sta = LED_BAT_LEV_STA_1;
+    }
 }
 
 void led_yellow_on(void)
@@ -209,72 +258,6 @@ void led_status_set(led_status_t status)
 
     led_ctl.status = status; // 需要最后再给状态赋值，否则会在定时器中断先执行了相关的操作
 }
-
-#if 0
-/**
- * @brief 挂起led任务，不包括电量指示灯（在准备采集电池电压的ad值前，暂时关闭led）
- *
- * @attention 只能由adc的中断调用
- *
- */
-void led_suspend(void)
-{
-    led_yellow_off();
-    led_white_off();
-    LED_RED_OFF();
-    LED_BLUE_OFF();
-}
-
-/**
- * @brief 恢复led任务，不包括电量指示灯（在采集电池电压的ad值之后，恢复led）
- *
- * @attention 只能由adc的中断调用
- */
-void led_resume(void)
-{
-    switch (led_ctl.status)
-    {
-    case LED_STATUS_OFF: // 关灯
-        led_yellow_off();
-        led_white_off();
-        LED_RED_OFF();
-        LED_BLUE_OFF();
-
-        break;
-
-    case LED_STATUS_YELLOW:
-        led_white_off();
-        LED_RED_OFF();
-        LED_BLUE_OFF();
-
-        __led_yellow_resume__(); // 只亮黄灯
-        break;
-
-    case LED_STATUS_WHITE:
-        led_yellow_off();
-        LED_RED_OFF();
-        LED_BLUE_OFF();
-
-        __led_white_resume__(); // 只亮白灯
-        break;
-
-    case LED_STATUS_WHITE_YELLOW:
-        LED_RED_OFF();
-        LED_BLUE_OFF();
-
-        // 只亮黄灯和白灯
-        __led_yellow_resume__();
-        __led_white_resume__();
-        break;
-
-    case LED_STATUS_RED_BLUE_FLASH: // 红蓝闪烁
-        led_yellow_off();
-        led_white_off();
-
-        break;
-    }
-}
-#endif
 
 /**
  * @brief 红灯、蓝灯闪烁的动画效果，由定时器调用
@@ -513,8 +496,14 @@ void led_slow_adjust_isr(void)
 #endif
 }
 
-// 充电或放电时，电池电量指示灯的动画
-// 外部参数： 全局变量 bat_percent ，电池电量百分比
+/**
+ * @brief 充电或放电时，电池电量指示灯的动画
+ *
+ * 外部参数： 全局变量 bat_percent ，电池电量百分比
+ *
+ * 目前 1ms 调用一次
+ *
+ */
 void led_bat_instruction_timer_callback(void)
 {
     if (led_bat_level_sta == LED_BAT_LEVEL_STA_IDLE)
@@ -532,6 +521,7 @@ void led_bat_instruction_timer_callback(void)
         LED_25_PERCENT_OFF();
         led_charge_anim_phase = 0;
         led_charge_anim_cnt = 0;
+        led_quick_fill_cnt = 0;
         led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM;
     }
     else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM)
@@ -542,19 +532,19 @@ void led_bat_instruction_timer_callback(void)
             led_charge_anim_cnt = 0;
 
             if (led_charge_anim_phase == 0 &&
-                bat_percent > 25)
+                LED_BAT_LEV_STA_1 <= led_bat_lev_sta)
             {
                 LED_25_PERCENT_ON();
                 led_charge_anim_phase = 1;
             }
             else if (led_charge_anim_phase == 1 &&
-                     bat_percent > 50)
+                     LED_BAT_LEV_STA_2 <= led_bat_lev_sta)
             {
                 LED_50_PERCENT_ON();
                 led_charge_anim_phase = 2;
             }
             else if (led_charge_anim_phase == 2 &&
-                     bat_percent > 75)
+                     LED_BAT_LEV_STA_3 <= led_bat_lev_sta)
             {
                 LED_75_PERCENT_ON();
                 led_charge_anim_phase = 3;
@@ -573,6 +563,8 @@ void led_bat_instruction_timer_callback(void)
         if (led_charge_anim_cnt >= 500 || led_charge_anim_cnt == 0)
         {
             led_charge_anim_cnt = 0;
+
+            // 根据 LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM 期间更新的值，让对应的指示灯闪烁
             switch (led_charge_anim_phase)
             {
             case 0:
@@ -589,38 +581,62 @@ void led_bat_instruction_timer_callback(void)
                 break;
             }
 
-            /*
-                如果电池电量已经到100%，并且充电IC已经停止工作，则说明充电结束
-                由于电池电量百分比不能准确反应电池电量，这里只判断充电ic有没有停止工作
-            */
-            // 充电时，电池电量指示灯要隔段时间才更新一次
-            // if (is_charging_ic_stop && led_charge_anim_phase == 3)
-            // 有两种充满电的情况，通过充电ic充满电，和通过太阳能一侧充满电
-            if ((is_in_charging_by_charger && is_charging_ic_stop && led_charge_anim_phase == 3) ||
-                (is_in_charging_by_solar_panel &&
-                 bat_percent >= 99 &&     // 可能充电充不到100%
-                 avg_voltage_mv >= 4195)) // 可能充不到4.2V，这里检测到大于4.195就认为充满
+            if ((is_in_charging_by_charger || // 通过充电器充电，或者通过太阳能充电
+                 is_in_charging_by_solar_panel) &&
+                is_charging_ic_stop) // 充电IC报告停止，认为充满电，进入快速填充显示状态
             {
-                led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
-                // printf("detect charge end\n");
+                // 如果已经是满电显示，直接标记为充满
+                if (led_bat_lev_sta >= LED_BAT_LEV_STA_4)
+                {
+                    led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
+                }
+                else
+                {
+                    // 快速填充：以较短时间逐档上升显示（由 led_quick_fill_cnt 驱动）
+                    if (led_quick_fill_cnt < ((u32)-1))
+                    {
+                        led_quick_fill_cnt++;
+                    }
+
+                    if (led_quick_fill_cnt >= LED_CHARGE_QUICK_FILL_INTERVAL_MS)
+                    {
+                        led_quick_fill_cnt = 0;
+
+                        /*
+                            REVIEW, 如果 led_bat_lev_sta 和 led_charge_anim_phase
+                            的数值并不对应，这里需要重新映射，建立对应关系
+                        */
+                        led_bat_lev_sta++;
+                        led_charge_anim_phase = led_bat_lev_sta;
+                    }
+                }
             }
-            else if (bat_percent > 75 &&
-                     (led_charge_anim_phase == 2 || led_charge_anim_phase == 3))
+            else if (charge_time_cnt >= BAT_CHARGE_3LED_TIME &&
+                     (led_charge_anim_phase == 2 ||
+                      led_charge_anim_phase == 3))
             {
                 led_charge_anim_phase = 3;
                 LED_75_PERCENT_ON(); //
+
+                led_bat_lev_sta = LED_BAT_LEV_STA_3;
             }
-            else if (bat_percent > 50 &&
-                     (led_charge_anim_phase == 1 || led_charge_anim_phase == 2))
+            else if (charge_time_cnt >= BAT_CHARGE_2LED_TIME &&
+                     (led_charge_anim_phase == 1 ||
+                      led_charge_anim_phase == 2))
             {
                 led_charge_anim_phase = 2;
                 LED_50_PERCENT_ON(); //
+
+                led_bat_lev_sta = LED_BAT_LEV_STA_2;
             }
-            else if (bat_percent > 25 &&
-                     (led_charge_anim_phase == 0 || led_charge_anim_phase == 1))
+            else if (charge_time_cnt >= BAT_CHARGE_1LED_TIME &&
+                     (led_charge_anim_phase == 0 ||
+                      led_charge_anim_phase == 1))
             {
                 led_charge_anim_phase = 1;
                 LED_25_PERCENT_ON(); //
+
+                led_bat_lev_sta = LED_BAT_LEV_STA_1;
             }
         }
 
@@ -628,44 +644,210 @@ void led_bat_instruction_timer_callback(void)
     }
     else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_END)
     {
+        // 已经充满电
         LED_100_PERCENT_ON();
         LED_75_PERCENT_ON();
         LED_50_PERCENT_ON();
         LED_25_PERCENT_ON();
+        led_bat_lev_sta = LED_BAT_LEV_STA_4;
     }
     else if (led_bat_level_sta == LED_BAT_LEVEL_STA_DISCHARGE)
     {
         // 放电中
-        if (bat_percent > 75)
+        static volatile u8 blink_cnt = 0;         // 闪烁计数
+        static volatile u32 jump_down_cnt_ms = 0; // 跳级向下的去抖计时（ms）
+
+        if (is_in_low_bat_alert)
         {
-            LED_100_PERCENT_ON();
-        }
-        else
-        {
+            // 正在低电量报警
+            // 让指示灯以 1Hz 频率闪烁
             LED_100_PERCENT_OFF();
-        }
-
-        if (bat_percent > 50)
-        {
-            LED_75_PERCENT_ON();
-        }
-        else
-        {
             LED_75_PERCENT_OFF();
-        }
+            LED_50_PERCENT_OFF();
 
-        if (bat_percent > 25)
-        {
-            LED_50_PERCENT_ON();
+            blink_cnt++;
+            if (blink_cnt >= 500)
+            {
+                blink_cnt = 0;
+                LED_25_PERCENT_TOGGLE();
+            }
+
+            led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
+            jump_down_cnt_ms = 0;
         }
         else
         {
-            LED_50_PERCENT_OFF();
-        }
 
-        if (bat_percent >= 0)
-        {
-            LED_25_PERCENT_ON();
+            u8 target_level = LED_BAT_LEV_STA_4;
+            blink_cnt = 0; // 不在低电量报警，清空低电量报警的闪烁计数
+
+            if (led_ctl.status == LED_STATUS_YELLOW ||
+                led_ctl.status == LED_STATUS_WHITE ||
+                led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
+            {
+                // 只有一种灯亮（single light）
+                if (discharge_time_cnt >= BAT_SINGLE_LIGHT_LOW_WARN_TIME &&
+                    avg_voltage_mv <
+                        (BAT_SINGLE_LIGHT_LOW_WARN_VOLTAGE -
+                         BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
+                {
+                    is_in_low_bat_alert = 1;
+                    target_level = LED_BAT_LEV_STA_ALERT;
+                }
+                else if (discharge_time_cnt >= BAT_SINGLE_LIGHT_1LED_TIME &&
+                         avg_voltage_mv <
+                             (BAT_SINGLE_LIGHT_2LED_VOLTAGE -
+                              BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
+                {
+                    target_level = LED_BAT_LEV_STA_1;
+                }
+                else if (discharge_time_cnt >= BAT_SINGLE_LIGHT_2LED_TIME &&
+                         avg_voltage_mv <
+                             (BAT_SINGLE_LIGHT_3LED_VOLTAGE -
+                              BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
+                {
+                    target_level = LED_BAT_LEV_STA_2;
+                }
+                else if (discharge_time_cnt >= BAT_SINGLE_LIGHT_3LED_TIME &&
+                         avg_voltage_mv <
+                             (BAT_SINGLE_LIGHT_4LED_VOLTAGE -
+                              BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
+                {
+                    target_level = LED_BAT_LEV_STA_3;
+                }
+                else
+                {
+                    target_level = LED_BAT_LEV_STA_4;
+                }
+            }
+            else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+            {
+                // 黄白灯都亮
+                if (discharge_time_cnt >= BAT_WY_LOW_WARN_TIME &&
+                    avg_voltage_mv <
+                        (BAT_WY_LOW_WARN_VOLTAGE -
+                         BAT_WY_DEAD_ZONE_VOLTAGE))
+                {
+                    is_in_low_bat_alert = 1;
+                    target_level = LED_BAT_LEV_STA_ALERT;
+                }
+                else if (discharge_time_cnt >= BAT_WY_1LED_TIME &&
+                         avg_voltage_mv <
+                             (BAT_WY_2LED_VOLTAGE -
+                              BAT_WY_DEAD_ZONE_VOLTAGE))
+                {
+                    target_level = LED_BAT_LEV_STA_1;
+                }
+                else if (discharge_time_cnt >= BAT_WY_2LED_TIME &&
+                         avg_voltage_mv <
+                             (BAT_WY_3LED_VOLTAGE -
+                              BAT_WY_DEAD_ZONE_VOLTAGE))
+                {
+                    target_level = LED_BAT_LEV_STA_2;
+                }
+                else if (discharge_time_cnt >= BAT_WY_3LED_TIME &&
+                         avg_voltage_mv <
+                             (BAT_WY_4LED_VOLTAGE -
+                              BAT_WY_DEAD_ZONE_VOLTAGE))
+                {
+                    target_level = LED_BAT_LEV_STA_3;
+                }
+                else
+                {
+                    target_level = LED_BAT_LEV_STA_4;
+                }
+            }
+
+            // 如果目标等级高于或等于当前显示等级，立即更新并清除跳级计时
+            if (target_level >= led_bat_lev_sta)
+            {
+                jump_down_cnt_ms = 0;
+                led_bat_lev_sta = target_level;
+                // 立即更新显示
+                switch (led_bat_lev_sta)
+                {
+                case LED_BAT_LEV_STA_ALERT:
+                    LED_100_PERCENT_OFF();
+                    LED_75_PERCENT_OFF();
+                    LED_50_PERCENT_OFF();
+                    LED_25_PERCENT_ON();
+                    break;
+                case LED_BAT_LEV_STA_1:
+                    LED_100_PERCENT_OFF();
+                    LED_75_PERCENT_OFF();
+                    LED_50_PERCENT_OFF();
+                    LED_25_PERCENT_ON();
+                    break;
+                case LED_BAT_LEV_STA_2:
+                    LED_100_PERCENT_OFF();
+                    LED_75_PERCENT_OFF();
+                    LED_50_PERCENT_ON();
+                    LED_25_PERCENT_ON();
+                    break;
+                case LED_BAT_LEV_STA_3:
+                    LED_100_PERCENT_OFF();
+                    LED_75_PERCENT_ON();
+                    LED_50_PERCENT_ON();
+                    LED_25_PERCENT_ON();
+                    break;
+                default:
+                    LED_100_PERCENT_ON();
+                    LED_75_PERCENT_ON();
+                    LED_50_PERCENT_ON();
+                    LED_25_PERCENT_ON();
+                    break;
+                }
+            }
+            else if ((target_level + 1) < led_bat_lev_sta ||
+                     target_level == LED_BAT_LEV_STA_1)
+            {
+                /*
+                    目标等级比当前显示等级还要低2级，或者是目标等级已经是1级，
+                    按每次降一档的策略，每隔 LED_BAT_JUMP_DOWN_DEBOUNCE_MS 降一档
+                */
+                if (jump_down_cnt_ms < ((u32)-1))
+                {
+                    jump_down_cnt_ms++;
+                }
+
+                if (jump_down_cnt_ms >= LED_BAT_JUMP_DOWN_DEBOUNCE_MS)
+                {
+                    jump_down_cnt_ms = 0;
+                    if (led_bat_lev_sta > LED_BAT_LEV_STA_1)
+                    {
+                        led_bat_lev_sta--;
+                    }
+
+                    // 更新显示到新的档位
+                    switch (led_bat_lev_sta)
+                    {
+                    case LED_BAT_LEV_STA_1:
+                        LED_100_PERCENT_OFF();
+                        LED_75_PERCENT_OFF();
+                        LED_50_PERCENT_OFF();
+                        LED_25_PERCENT_ON();
+                        break;
+                    case LED_BAT_LEV_STA_2:
+                        LED_100_PERCENT_OFF();
+                        LED_75_PERCENT_OFF();
+                        LED_50_PERCENT_ON();
+                        LED_25_PERCENT_ON();
+                        break;
+                    case LED_BAT_LEV_STA_3:
+                        LED_100_PERCENT_OFF();
+                        LED_75_PERCENT_ON();
+                        LED_50_PERCENT_ON();
+                        LED_25_PERCENT_ON();
+                        break;
+                    default:
+                        LED_100_PERCENT_ON();
+                        LED_75_PERCENT_ON();
+                        LED_50_PERCENT_ON();
+                        LED_25_PERCENT_ON();
+                        break;
+                    }
+                }
+            }
         }
     }
 }
