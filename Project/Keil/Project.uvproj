@@ -476,6 +476,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\User\bat_scan.c</FilePath>
             </File>
+            <File>
+              <FileName>led_bat_lev.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\User\led_bat_lev.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

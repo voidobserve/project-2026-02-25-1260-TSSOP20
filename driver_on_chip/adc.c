@@ -295,11 +295,7 @@ void ADC_IRQHandler(void) interrupt ADC_IRQn
             adc_update_val(ADC_CHANNEL_SEL_AD_KEY, adc_val);
             break;
         case ADC_STATUS_SEL_BAT_DET:
-            adc_update_val(ADC_CHANNEL_SEL_BAT_DET, adc_val);
-
-            // 采集完电池电压对应的ad值后，恢复led显示，不包括电量指示灯
-            // led_resume();
-
+            adc_update_val(ADC_CHANNEL_SEL_BAT_DET, adc_val);  
             battery_voltage_update_by_isr();
             break;
         case ADC_STATUS_SEL_SOLAR_DET:

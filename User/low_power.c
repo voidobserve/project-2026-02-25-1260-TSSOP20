@@ -25,6 +25,7 @@ void low_power_enter_timer_callback(void)
     if (is_low_power_condition_establish())
     {
         cnt++;
+        // TODO 等几分钟，直到电池电压没有明显变化的时候再进入低功耗
         if (cnt >= LOW_POWER_ENTER_TIME_WHEN_POWER_OFF)
         {
             cnt = 0;
@@ -301,11 +302,15 @@ label_low_power_in:
 
     adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
     delay_ms(1);
+    // TODO 唤醒后，采集电池电压时，要多采集几次
+    // TODO 唤醒后，需要跟进入低功耗之前的电池电压进行比较
     adc_val = adc_get_val_once();
     avg_voltage_mv = get_battery_voltage_by_adc(adc_val);
+    
+    // TODO 
     // 初始化电池充电、放电时间
-    bat_charge_time_cnt_update(avg_voltage_mv);
-    bat_discharge_time_cnt_update(avg_voltage_mv);
+    // bat_charge_time_cnt_update(avg_voltage_mv);
+    // bat_discharge_time_cnt_update(avg_voltage_mv);
 
     /*
         1. 按键唤醒，电池电压低，并且没有在充电，返回低功耗

@@ -44,9 +44,10 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
         charge_det_time_add();
         uart_receiver_timeout_add();
 
+        
         bat_vol_update_timer_callback();
-        bat_vol_buff_add_timer_callback();
-        bat_vol_buff_get_avg_timer_callback();
+        bat_vol_history_buff_add_timer_callback();
+        bat_get_avg_vol_period_add(); 
 
         led_slow_adjust_isr();
         led_red_blue_flash_1ms_isr();
@@ -55,7 +56,8 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
         low_power_enter_timer_callback();
         send_low_bat_timer_callback();
  
-  
+        led_bat_lev_dislplay_1ms_isr();
+
 #if USER_DEBUG_ENABLE
         debug_time_add();
 #endif

@@ -7,8 +7,7 @@
 #include "user_config.h"
 
 // ====================================================================
-static volatile u8 is_bat_vol_buff_add_enable = 0;	   // 是否允许往电池电压数组中放入数据
-static volatile u8 is_bat_vol_buff_get_avg_enable = 0; // 是否允许往电池电压数组中获取平均值
+// static volatile u8 is_bat_vol_buff_add_enable = 0; // 是否允许往电池电压数组中放入数据
 
 // 控制一段时间内采集电池电压峰值（电压最大值）
 static volatile bat_vol_update_sta_t bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
@@ -19,42 +18,19 @@ static volatile u16 bat_vol_history_buff[VOLTAGE_HISTORY_SIZE] = {0};
 static volatile u8 bat_vol_history_buff_idx = 0;
 // ====================================================================
 
-// 只在采集使用：
-static volatile u16 voltage_mv = 0;		//
-static volatile u16 max_voltage_mv = 0; // 存放一段时间内采集到的最大电压值（只在采集使用，不能作为最终的判断使用）
+static volatile u16 max_voltage_mv = 0;	   // 存放一段时间内采集到的最大电压值（只在采集使用，不能作为最终的判断使用）
+static volatile u16 voltage_mv_global = 0; //
 
+// 采集电池电压的定时计数器
+static volatile u32 bat_avg_vol_scan_period_cnt = 0;
 // 最后得到的、稳定的电池电压
-volatile u16 avg_voltage_mv = 0; // @ATTENTION 在当前文件外调用时，慎用
+volatile u16 avg_voltage_mv = 0; //
 
-// static volatile u8 percent = 0; // 电池电量百分比
-
-// // 最终得到的、稳定的电池电量百分比
-// volatile u8 bat_percent = 0;
-
-// 电池电量百分比更新的时间计数器
-// static volatile u16 bat_percent_update_time_cnt = 0;
-
-// 由定时器调用，控制一段时间内，往数组中放入数据的时间
-void bat_vol_buff_add_timer_callback(void)
+void bat_get_avg_vol_period_add(void)
 {
-	static u32 cnt = 0;
-	cnt++;
-	if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER)
+	if (bat_avg_vol_scan_period_cnt < ((u32)-1))
 	{
-		cnt = 0;
-		is_bat_vol_buff_add_enable = 1;
-	}
-}
-
-// 由定时器调用，控制一段时间内，从数组中获取平均值的时间
-void bat_vol_buff_get_avg_timer_callback(void)
-{
-	static u32 cnt = 0;
-	cnt++;
-	if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT)
-	{
-		cnt = 0;
-		is_bat_vol_buff_get_avg_enable = 1;
+		bat_avg_vol_scan_period_cnt++;
 	}
 }
 
@@ -88,15 +64,15 @@ void bat_vol_update_timer_callback(void)
 u16 get_battery_voltage_by_adc(u16 adc_val)
 {
 	u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
-	// 打印转换好的电压值（发现实际打印的电压比万用表量出的电压大了0.13V）
-#if 0
-    // printf("voltage_mv == %u\n", voltage_mv);
-    if (voltage_mv > 130)
-    {
-        // 这里做电压补偿（实际打印的电压比万用表量出的电压大了0.13V，需要减去0.13V）
-        voltage_mv -= 130;
-    }
-    // printf("voltage_mv == %u\n", voltage_mv);
+
+#if 1
+	// printf("voltage_mv == %u\n", voltage_mv);
+	if (voltage_mv > 70)
+	{
+		// 这里做电压补偿
+		voltage_mv -= 70;
+	}
+	// printf("voltage_mv == %u\n", voltage_mv);
 #endif
 
 #if 0
@@ -112,7 +88,6 @@ u16 get_battery_voltage_by_adc(u16 adc_val)
 
 	return voltage_mv;
 }
- 
 
 void bat_vol_history_buff_init(u16 voltage_mv)
 {
@@ -148,11 +123,14 @@ u16 bat_vol_history_buff_get_avg(void)
 }
 
 /**
- * @brief 更新电池电压，由定时器调用。函数内部会更新电池电压和电池电量百分比相关的变量
+ * @brief 更新电池电压
+ * 		由adc中断服务函数调用
+ * 		函数内部会更新最新得到的电池电压
  *
  */
 void battery_voltage_update_by_isr(void)
 {
+	static volatile u8 is_initialized = 0;
 	volatile u16 adc_val = 0;
 	volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
 
@@ -165,17 +143,20 @@ void battery_voltage_update_by_isr(void)
 		cur_voltage_mv = get_battery_voltage_by_adc(adc_val);
 		// printf("cur_voltage_mv == %u\n", cur_voltage_mv);
 
-		if (0 == voltage_mv)
+		if (0 == is_initialized)
 		{
+			is_initialized = 1;
 			// 如果还没有采集过电池电压，直接将第一次采集到的ad值转换成电池电压
-			voltage_mv = cur_voltage_mv;
-
-			bat_vol_history_buff_init(voltage_mv);
-			// avg_voltage_mv = bat_vol_history_buff_get_avg();
+			voltage_mv_global = cur_voltage_mv;
 			avg_voltage_mv = cur_voltage_mv;
-			bat_charge_time_cnt_update(avg_voltage_mv);
-			bat_discharge_time_cnt_update(avg_voltage_mv);
-			led_bat_lev_sta_init(avg_voltage_mv);
+
+			bat_vol_history_buff_init(avg_voltage_mv);
+
+			// TODO 刚上电时，直接根据对应的电池电压，给放电时间进行赋值
+			// 试着直接赋值为向下一个挡位对应的放电时间？
+			// bat_charge_time_cnt_update(avg_voltage_mv);
+			// bat_discharge_time_cnt_update(avg_voltage_mv);
+			// led_bat_lev_sta_init(avg_voltage_mv);
 
 #if USER_DEBUG_ENABLE
 			printf("bat monitor init\n");
@@ -187,24 +168,24 @@ void battery_voltage_update_by_isr(void)
 		/*
 			@attention
 			测试时，如果需要改变电池电压和电量百分比，需要屏蔽下面这段程序。
-			否则会更新 voltage_mv 和 max_voltage_mv，可能会被赋值为0，
+			否则会更新 voltage_mv_global 和 max_voltage_mv，可能会被赋值为0，
 			导致又进入了 电池电量相关变量的初始化
 		*/
 		/*
-			@attention 这里没有判断上一次的电压值，会实时更新 voltage_mv
-			在充电时，哪怕电压有下降，也会更新 voltage_mv
-			在放电时，电压有上升，也会更新 voltage_mv
+			@attention 这里没有判断上一次的电压值，会实时更新 voltage_mv_global
+			在充电时，哪怕电压有下降，也会更新 voltage_mv_global
+			在放电时，电压有上升，也会更新 voltage_mv_global
 		*/
 		if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
 		{
-			// 如果已经采集了一段时间的电压值，则将 voltage_mv 赋值为 max_voltage_mv
-			voltage_mv = max_voltage_mv;
+			// 如果已经采集了一段时间的电压值，则将 voltage_mv_global 赋值为 max_voltage_mv
+			voltage_mv_global = max_voltage_mv;
 
 			max_voltage_mv = 0; // 清零，准备下一轮采集
 			bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
 
 			// 输出计算结果 (调试用)
-			// printf("Voltage: %umV\n", voltage_mv);
+			// printf("voltage_mv_global: %umV\n", voltage_mv_global);
 		}
 		else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_CAPTURING)
 		{
@@ -217,85 +198,38 @@ void battery_voltage_update_by_isr(void)
 	}
 }
 
-// void bat_percent_update_time_add(void)
-// {
-// 	if (bat_percent_update_time_cnt < ((u16)-1))
-// 	{
-// 		bat_percent_update_time_cnt++;
-// 	}
-// }
+/**
+ * @brief 定期给存放电池电压的滑动平均数组添加数据
+ * 		由 1ms 定时器调用
+ *
+ */
+void bat_vol_history_buff_add_timer_callback(void)
+{
 
-// // 重置电池电量百分比的更新时间
-// void bat_percent_update_time_reset(void)
-// {
-// 	bat_percent_update_time_cnt = 0;
-// }
-
-// // 确认电池电量百分比的更新时间是否到来
-// u8 bat_percent_update_time_is_comes(void)
-// {
-// 	if (bat_percent_update_time_cnt >= BATTERY_PERCENT_UPDATE_PERIOD)
-// 	{
-// 		return 1;
-// 	}
-// 	else
-// 	{
-// 		return 0;
-// 	}
-// }
+	static u32 cnt = 0;
+	cnt++;
+	if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER)
+	{
+		cnt = 0;
+		// 每隔一段时间，将采集到的电压值放入数组
+		bat_vol_history_buff_add(voltage_mv_global);
+	}
+}
 
 void bat_scan(void)
 {
-	if (voltage_mv == 0)
+	if (voltage_mv_global == 0)
 	{
 		return; // 尚未获取到电压值，不执行以下操作
 	}
 
-	// 每隔一段时间，将采集到的电压值放入数组
-	if (is_bat_vol_buff_add_enable)
-	{
-		bat_vol_history_buff_add(voltage_mv);
-		is_bat_vol_buff_add_enable = 0;
-	}
-
 	// 每隔一段时间，将数组中的数据进行平均
-	if (is_bat_vol_buff_get_avg_enable)
+	if (bat_avg_vol_scan_period_cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT)
 	{
+		bat_avg_vol_scan_period_cnt = 0;
 		avg_voltage_mv = bat_vol_history_buff_get_avg();
 #if USER_DEBUG_ENABLE
 		printf("avg_voltage_mv == %u\n", avg_voltage_mv);
 #endif
-
-		is_bat_vol_buff_get_avg_enable = 0;
 	}
-
-#if 0
-	if (bat_percent_update_time_is_comes())
-	{
-		bat_percent_update_time_reset();
-
-		// 每次只变化1%的电池电量百分比
-		if (bat_percent > percent && is_in_charging == 0)
-		{
-			// 只有在放电时，才允许最后得到的电池电量百分比减少
-			if (bat_percent > 0)
-			{
-				bat_percent--;
-			}
-		}
-		else if (bat_percent < percent && is_in_charging == 1)
-		{
-			// 只有在充电时，才允许最后得到的电池电量百分比增加
-			if (bat_percent < 100)
-			{
-				bat_percent++;
-			}
-		}
-
-#if USER_DEBUG_ENABLE
-		printf("bat percent == %u\n", (u16)bat_percent);
-		printf("avg_voltage_mv == %u\n", avg_voltage_mv);
-#endif
-	}
-#endif
 }

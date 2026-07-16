@@ -164,6 +164,7 @@ void ad_key_handle(void)
     if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
     { 
 #if USER_DEBUG_ENABLE
+// 表示电池电量低，不处理ad按键事件
         printf("ad_key_handle()\n");
         printf("bat is low\n");
 #endif

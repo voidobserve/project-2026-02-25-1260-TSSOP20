@@ -54,3 +54,4 @@ void bluetooth_ic_handle_init(void)
     // ble_ic.is_amp_off = 0;
     ble_ic.is_working = 0;
 }
+

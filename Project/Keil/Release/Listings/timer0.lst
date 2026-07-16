@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   TIMER0                                                            07/13/2026 17:16:28 PAGE 1   
+C51 COMPILER V9.60.7.0   TIMER0                                                            07/16/2026 18:47:23 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE TIMER0
@@ -48,8 +48,8 @@ line level    source
   35   2              TMR0_CONH |= TMR_PRD_PND(0x1); // 清除pending
   36   2      
   37   2      #if USER_DEBUG_ENABLE
-                      // timebase_update();
-              #endif
+  38   2              // timebase_update();
+  39   2      #endif
   40   2      
   41   2              ad_key_para.cur_scan_times++; // 满足一定时间后，会在 key_driver_scan 中清零
   42   2              adc_scan();
@@ -57,33 +57,35 @@ line level    source
   44   2              charge_det_time_add();
   45   2              uart_receiver_timeout_add();
   46   2      
-  47   2              bat_vol_update_timer_callback();
-  48   2              bat_vol_buff_add_timer_callback();
-  49   2              bat_vol_buff_get_avg_timer_callback();
-  50   2      
-  51   2              led_slow_adjust_isr();
-C51 COMPILER V9.60.7.0   TIMER0                                                            07/13/2026 17:16:28 PAGE 2   
+  47   2              
+  48   2              bat_vol_update_timer_callback();
+  49   2              bat_vol_history_buff_add_timer_callback();
+  50   2              bat_get_avg_vol_period_add(); 
+  51   2      
+C51 COMPILER V9.60.7.0   TIMER0                                                            07/16/2026 18:47:23 PAGE 2   
 
-  52   2              led_red_blue_flash_1ms_isr();
-  53   2              led_bat_instruction_timer_callback(); // 电池电量指示灯动画
-  54   2      
-  55   2              low_power_enter_timer_callback();
-  56   2              send_low_bat_timer_callback();
-  57   2       
-  58   2        
-  59   2      #if USER_DEBUG_ENABLE
-                      debug_time_add();
-              #endif
-  62   2              // delay_exec_update();
-  63   2          }
-  64   1      
-  65   1          // 退出中断设置IP，不可删除
-  66   1          __IRQnIPnPop(TMR0_IRQn);
-  67   1      }
+  52   2              led_slow_adjust_isr();
+  53   2              led_red_blue_flash_1ms_isr();
+  54   2              led_bat_instruction_timer_callback(); // 电池电量指示灯动画
+  55   2      
+  56   2              low_power_enter_timer_callback();
+  57   2              send_low_bat_timer_callback();
+  58   2       
+  59   2              led_bat_lev_dislplay_1ms_isr();
+  60   2      
+  61   2      #if USER_DEBUG_ENABLE
+  62   2              debug_time_add();
+  63   2      #endif
+  64   2              // delay_exec_update();
+  65   2          }
+  66   1      
+  67   1          // 退出中断设置IP，不可删除
+  68   1          __IRQnIPnPop(TMR0_IRQn);
+  69   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    132    ----
+   CODE SIZE        =    138    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----

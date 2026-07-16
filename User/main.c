@@ -30,6 +30,7 @@
 #include "uart_data_handle.h"
 #include "ad_key.h"
 #include "bat_scan.h"
+#include "led_bat_lev.h"
 
 #include "user_include.h"
 
@@ -83,14 +84,16 @@ void main(void)
     while (1)
     {
         key_driver_scan(&ad_key_para);
-        ad_key_handle();
+        ad_key_handle();        
         uart_data_handle();
+
         charge_det();
 
-        bat_scan();
-        battery_monitor_handle();
+        bat_scan(); // 得到稳定的电池电压并更新
+        led_bat_lev_handle();
+        // battery_monitor_handle(); // 测试时屏蔽
 
-        low_power_handle();
+        // low_power_handle();// 测试时屏蔽
 
 #if USER_DEBUG_ENABLE
         // user_test_main();

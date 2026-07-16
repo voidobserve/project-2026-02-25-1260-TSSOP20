@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 1   
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED
@@ -30,115 +30,117 @@ line level    source
              -最终点亮 100%
   18          
   19          // 存放电池电量指示灯状态（不包括指示灯全部关闭的状态）：
-  20          // volatile led_bat_lev_sta_t last_led_bat_lev_sta = 0;
-  21          volatile led_bat_lev_sta_t led_bat_lev_sta = 0;
-  22          
-  23          // 电池指示灯跳级向下的去抖时间（ms），发生跳级时，每隔该时间降一档
-  24          #define LED_BAT_JUMP_DOWN_DEBOUNCE_MS ((u32)10 * 60 * 1000)
-  25          // 充电完成后快速填充每档间隔（ms），短时间内逐档上升显示
-  26          #define LED_CHARGE_QUICK_FILL_INTERVAL_MS ((u32)1 * 60 * 1000)
-  27          
-  28          void led_init(void)
-  29          {
-  30   1          // 100% 电量指示灯
-  31   1          P1_MD0 &= ~GPIO_P13_MODE_SEL(0x03);
-  32   1          P1_MD0 |= GPIO_P13_MODE_SEL(0x01); // 输出
-  33   1          P13 = 0;
-  34   1          FOUT_S13 = GPIO_FOUT_AF_FUNC;
-  35   1      
-  36   1          // 75% 电量指示灯
-  37   1          P0_MD1 &= ~GPIO_P06_MODE_SEL(0x03);
-  38   1          P0_MD1 |= GPIO_P06_MODE_SEL(0x01);
-  39   1          P06 = 0; // 不点亮指示灯
-  40   1          FOUT_S06 = GPIO_FOUT_AF_FUNC;
-  41   1      
-  42   1          // 50% 电量指示灯
-  43   1          P0_MD1 &= ~GPIO_P05_MODE_SEL(0x03);
-  44   1          P0_MD1 |= GPIO_P05_MODE_SEL(0x01);
-  45   1          P05 = 0; // 不点亮指示灯
-  46   1          FOUT_S05 = GPIO_FOUT_AF_FUNC;
-  47   1      
-  48   1          // 25% 电量指示灯
-  49   1          P0_MD0 &= ~GPIO_P00_MODE_SEL(0x03);
-  50   1          P0_MD0 |= GPIO_P00_MODE_SEL(0x01);
-  51   1          P00 = 0; // 不点亮指示灯
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 2   
+  20          // volatile led_bat_lev_sta_t led_bat_lev_sta = 0;
+  21          
+  22          // 电池指示灯跳级向下的去抖时间（ms），发生跳级时，每隔该时间降一档
+  23          #define LED_BAT_JUMP_DOWN_DEBOUNCE_MS ((u32)10 * 60 * 1000)
+  24          // 充电完成后快速填充每档间隔（ms），短时间内逐档上升显示
+  25          #define LED_CHARGE_QUICK_FILL_INTERVAL_MS ((u32)1 * 60 * 1000)
+  26          
+  27          void led_init(void)
+  28          {
+  29   1          // 100% 电量指示灯
+  30   1          P1_MD0 &= ~GPIO_P13_MODE_SEL(0x03);
+  31   1          P1_MD0 |= GPIO_P13_MODE_SEL(0x01); // 输出
+  32   1          P13 = 0;
+  33   1          FOUT_S13 = GPIO_FOUT_AF_FUNC;
+  34   1      
+  35   1          // 75% 电量指示灯
+  36   1          P0_MD1 &= ~GPIO_P06_MODE_SEL(0x03);
+  37   1          P0_MD1 |= GPIO_P06_MODE_SEL(0x01);
+  38   1          P06 = 0; // 不点亮指示灯
+  39   1          FOUT_S06 = GPIO_FOUT_AF_FUNC;
+  40   1      
+  41   1          // 50% 电量指示灯
+  42   1          P0_MD1 &= ~GPIO_P05_MODE_SEL(0x03);
+  43   1          P0_MD1 |= GPIO_P05_MODE_SEL(0x01);
+  44   1          P05 = 0; // 不点亮指示灯
+  45   1          FOUT_S05 = GPIO_FOUT_AF_FUNC;
+  46   1      
+  47   1          // 25% 电量指示灯
+  48   1          P0_MD0 &= ~GPIO_P00_MODE_SEL(0x03);
+  49   1          P0_MD0 |= GPIO_P00_MODE_SEL(0x01);
+  50   1          P00 = 0; // 不点亮指示灯
+  51   1          FOUT_S00 = GPIO_FOUT_AF_FUNC;
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 2   
 
-  52   1          FOUT_S00 = GPIO_FOUT_AF_FUNC;
-  53   1      
-  54   1          // P01 蓝灯
-  55   1          P0_MD0 &= ~GPIO_P01_MODE_SEL(0x03);
-  56   1          P0_MD0 |= GPIO_P01_MODE_SEL(0x01); // 输出模式
-  57   1          P01 = 1;
-  58   1          FOUT_S01 = GPIO_FOUT_AF_FUNC;
-  59   1      
-  60   1          // P02 红灯
-  61   1          P0_MD0 &= ~GPIO_P02_MODE_SEL(0x03);
-  62   1          P0_MD0 |= GPIO_P02_MODE_SEL(0x01); // 输出模式
-  63   1          P02 = 1;
-  64   1          FOUT_S02 = GPIO_FOUT_AF_FUNC;
-  65   1      }
-  66          
-  67          void led_ctl_init(void)
-  68          {
-  69   1          // led_ctl.status = LED_STATUS_OFF;
-  70   1          // led_ctl.cnt = 0;
-  71   1          // led_ctl.cur_pwm_duty_val = PWM_DUTY_VAL_PERCENT_0;
-  72   1          // led_ctl.is_slowly_adjust_end = 0;
-  73   1          // led_ctl.adjust_time_cnt = 0;
-  74   1          // led_ctl.working_time = 0;
-  75   1      
-  76   1          // 目前可以用这个来代替
-  77   1          memset(&led_ctl, 0, sizeof(led_ctl_t));
-  78   1      }
+  52   1      
+  53   1          // P01 蓝灯
+  54   1          P0_MD0 &= ~GPIO_P01_MODE_SEL(0x03);
+  55   1          P0_MD0 |= GPIO_P01_MODE_SEL(0x01); // 输出模式
+  56   1          P01 = 1;
+  57   1          FOUT_S01 = GPIO_FOUT_AF_FUNC;
+  58   1      
+  59   1          // P02 红灯
+  60   1          P0_MD0 &= ~GPIO_P02_MODE_SEL(0x03);
+  61   1          P0_MD0 |= GPIO_P02_MODE_SEL(0x01); // 输出模式
+  62   1          P02 = 1;
+  63   1          FOUT_S02 = GPIO_FOUT_AF_FUNC;
+  64   1      }
+  65          
+  66          void led_ctl_init(void)
+  67          {
+  68   1          // led_ctl.status = LED_STATUS_OFF;
+  69   1          // led_ctl.cnt = 0;
+  70   1          // led_ctl.cur_pwm_duty_val = PWM_DUTY_VAL_PERCENT_0;
+  71   1          // led_ctl.is_slowly_adjust_end = 0;
+  72   1          // led_ctl.adjust_time_cnt = 0;
+  73   1          // led_ctl.working_time = 0;
+  74   1      
+  75   1          // 目前可以用这个来代替
+  76   1          memset(&led_ctl, 0, sizeof(led_ctl_t));
+  77   1      }
+  78          
   79          
-  80          /**
-  81           * @brief 初始化电池电量指示灯对应的状态
-  82           *      只在第一次上电后调用
-  83           *
-  84           */
-  85          void led_bat_lev_sta_init(u16 voltage_mv)
-  86          {
-  87   1          static u8 is_initialized = 0;
-  88   1          if (is_initialized)
-  89   1          {
-  90   2              return;
-  91   2          }
-  92   1      
-  93   1          is_initialized = 1;
-  94   1      
-  95   1          // 直接根据黄白灯都点亮对应的电池电压来划分
-  96   1          if (voltage_mv >= BAT_WY_4LED_VOLTAGE)
-  97   1          {
-  98   2              led_bat_lev_sta = LED_BAT_LEV_STA_4;
-  99   2          }
- 100   1          else if (voltage_mv >= BAT_WY_3LED_VOLTAGE)
- 101   1          {
- 102   2              led_bat_lev_sta = LED_BAT_LEV_STA_3;
- 103   2          }
- 104   1          else if (voltage_mv >= BAT_WY_2LED_VOLTAGE)
- 105   1          {
- 106   2              led_bat_lev_sta = LED_BAT_LEV_STA_2;
- 107   2          }
- 108   1          // else if (voltage_mv >=
- 109   1          //          (BAT_WY_LOW_WARN_VOLTAGE + BAT_WY_DEAD_ZONE_VOLTAGE))
- 110   1          else
- 111   1          {
- 112   2              led_bat_lev_sta = LED_BAT_LEV_STA_1;
- 113   2          }
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 3   
+  80          #if 0
+              /**
+               * @brief 初始化电池电量指示灯对应的状态
+               *      只在第一次上电后调用
+               *
+               */
+              void led_bat_lev_sta_init(u16 voltage_mv)
+              {
+                  static u8 is_initialized = 0;
+                  if (is_initialized)
+                  {
+                      return;
+                  }
+              
+                  is_initialized = 1;
+              
+                  // 直接根据黄白灯都点亮对应的电池电压来划分
+                  if (voltage_mv >= BAT_WY_4LED_VOLTAGE)
+                  {
+                      led_bat_lev_sta = LED_BAT_LEV_4;
+                  }
+                  else if (voltage_mv >= BAT_WY_3LED_VOLTAGE)
+                  {
+                      led_bat_lev_sta = LED_BAT_LEV_3;
+                  }
+                  else if (voltage_mv >= BAT_WY_2LED_VOLTAGE)
+                  {
+                      led_bat_lev_sta = LED_BAT_LEV_2;
+                  }
+                  // else if (voltage_mv >=
+                  //          (BAT_WY_LOW_WARN_VOLTAGE + BAT_WY_DEAD_ZONE_VOLTAGE))
+                  else
+                  {
+                      led_bat_lev_sta = LED_BAT_LEV_1;
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 3   
 
- 114   1      }
- 115          
- 116          void led_yellow_on(void)
- 117          {
- 118   1          // pwm_set_channel_0_duty(STMR0_PERIOD_30_PERCENT_VAL);
- 119   1          pwm_set_channel_0_duty(STMR0_PERIOD_0_PERCENT_VAL);
- 120   1          // led_ctl.cur_pwm_duty_val = STMR0_PERIOD_0_PERCENT_VAL;
- 121   1          FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
- 122   1      }
- 123          
- 124          #if 0
+                  }
+              }
+              #endif
+ 117          
+ 118          void led_yellow_on(void)
+ 119          {
+ 120   1          // pwm_set_channel_0_duty(STMR0_PERIOD_30_PERCENT_VAL);
+ 121   1          pwm_set_channel_0_duty(STMR0_PERIOD_0_PERCENT_VAL);
+ 122   1          // led_ctl.cur_pwm_duty_val = STMR0_PERIOD_0_PERCENT_VAL;
+ 123   1          FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
+ 124   1      }
+ 125          
+ 126          #if 0
               // 只由 led_resume() 调用
               void __led_yellow_resume__(void)
               {
@@ -146,22 +148,22 @@ line level    source
                   FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
               }
               #endif
- 132          
- 133          void led_yellow_off(void)
- 134          {
- 135   1          P30 = 1;
- 136   1          FOUT_S30 = GPIO_FOUT_AF_FUNC;
- 137   1      }
- 138          
- 139          void led_white_on(void)
- 140          {
- 141   1          // pwm_set_channel_1_duty(STMR1_PERIOD_30_PERCENT_VAL);
- 142   1          pwm_set_channel_1_duty(STMR1_PERIOD_0_PERCENT_VAL); //
- 143   1          // led_ctl.cur_pwm_duty_val = STMR1_PERIOD_0_PERCENT_VAL;
- 144   1          FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
- 145   1      }
- 146          
- 147          #if 0
+ 134          
+ 135          void led_yellow_off(void)
+ 136          {
+ 137   1          P30 = 1;
+ 138   1          FOUT_S30 = GPIO_FOUT_AF_FUNC;
+ 139   1      }
+ 140          
+ 141          void led_white_on(void)
+ 142          {
+ 143   1          // pwm_set_channel_1_duty(STMR1_PERIOD_30_PERCENT_VAL);
+ 144   1          pwm_set_channel_1_duty(STMR1_PERIOD_0_PERCENT_VAL); //
+ 145   1          // led_ctl.cur_pwm_duty_val = STMR1_PERIOD_0_PERCENT_VAL;
+ 146   1          FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
+ 147   1      }
+ 148          
+ 149          #if 0
               // 只由 led_resume() 调用
               void __led_white_resume__(void)
               {
@@ -169,353 +171,354 @@ line level    source
                   FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
               }
               #endif
- 155          
- 156          void led_white_off(void)
- 157          {
- 158   1          P27 = 1;
- 159   1          FOUT_S27 = GPIO_FOUT_AF_FUNC;
- 160   1      }
- 161          
- 162          void led_status_switch(void)
- 163          {
- 164   1          // printf("led_ctl.status == %u\n", (u16)led_ctl.status);
- 165   1          switch (led_ctl.status)
- 166   1          {
- 167   2          case LED_STATUS_OFF:
- 168   2              // 关灯 -> 打开黄灯
- 169   2              // led_ctl.status = LED_STATUS_YELLOW;
- 170   2              // led_yellow_on();
- 171   2              led_status_set(LED_STATUS_YELLOW);
- 172   2              break;
- 173   2          case LED_STATUS_YELLOW:
- 174   2              // 黄灯打开 -> 关闭黄灯，打开白灯
- 175   2              // led_ctl.status = LED_STATUS_WHITE;
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 4   
+ 157          
+ 158          void led_white_off(void)
+ 159          {
+ 160   1          P27 = 1;
+ 161   1          FOUT_S27 = GPIO_FOUT_AF_FUNC;
+ 162   1      }
+ 163          
+ 164          void led_status_switch(void)
+ 165          {
+ 166   1          // printf("led_ctl.status == %u\n", (u16)led_ctl.status);
+ 167   1          switch (led_ctl.status)
+ 168   1          {
+ 169   2          case LED_STATUS_OFF:
+ 170   2              // 关灯 -> 打开黄灯
+ 171   2              // led_ctl.status = LED_STATUS_YELLOW;
+ 172   2              // led_yellow_on();
+ 173   2              led_status_set(LED_STATUS_YELLOW);
+ 174   2              break;
+ 175   2          case LED_STATUS_YELLOW:
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 4   
 
- 176   2              // led_yellow_off();
- 177   2              // led_white_on();
- 178   2              led_status_set(LED_STATUS_WHITE);
- 179   2              break;
- 180   2          case LED_STATUS_WHITE:
- 181   2              // 白灯打开 -> 打开白灯，打开黄灯
- 182   2              // led_ctl.status = LED_STATUS_WHITE_YELLOW;
- 183   2              // led_yellow_on();
- 184   2              led_status_set(LED_STATUS_WHITE_YELLOW);
- 185   2              break;
- 186   2          case LED_STATUS_WHITE_YELLOW:
- 187   2              // 白灯和黄灯都打开 -> 关闭黄灯和白灯，执行红灯和蓝灯闪烁的动画（红�
+ 176   2              // 黄灯打开 -> 关闭黄灯，打开白灯
+ 177   2              // led_ctl.status = LED_STATUS_WHITE;
+ 178   2              // led_yellow_off();
+ 179   2              // led_white_on();
+ 180   2              led_status_set(LED_STATUS_WHITE);
+ 181   2              break;
+ 182   2          case LED_STATUS_WHITE:
+ 183   2              // 白灯打开 -> 打开白灯，打开黄灯
+ 184   2              // led_ctl.status = LED_STATUS_WHITE_YELLOW;
+ 185   2              // led_yellow_on();
+ 186   2              led_status_set(LED_STATUS_WHITE_YELLOW);
+ 187   2              break;
+ 188   2          case LED_STATUS_WHITE_YELLOW:
+ 189   2              // 白灯和黄灯都打开 -> 关闭黄灯和白灯，执行红灯和蓝灯闪烁的动画（红�
              -��和蓝灯闪烁由其他函数来控制）
- 188   2              // led_ctl.red_blue_flash_time_cnt = 0; // 红灯和蓝灯闪烁的时间计数清零
- 189   2              // led_ctl.status = LED_STATUS_RED_BLUE_FLASH;
- 190   2              // led_yellow_off();
- 191   2              // led_white_off();
- 192   2              led_status_set(LED_STATUS_RED_BLUE_FLASH);
- 193   2              break;
- 194   2          case LED_STATUS_RED_BLUE_FLASH:
- 195   2              // 当前红灯和蓝灯都闪烁 -> 关闭红灯和蓝灯
- 196   2              // led_ctl.status = LED_STATUS_OFF;
- 197   2      
- 198   2              // // 这里要关闭红灯和蓝灯
- 199   2              // LED_RED_OFF();
- 200   2              // LED_BLUE_OFF();
- 201   2      
- 202   2              // led_ctl.working_time = 0;         // 工作时间清零
- 203   2              // led_ctl.cur_pwm_duty_val = 0;     // PWM占空比值清零
- 204   2              // led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
- 205   2              led_status_set(LED_STATUS_OFF);
- 206   2              break;
- 207   2          }
- 208   1      }
- 209          
- 210          // 设置led灯的状态
- 211          void led_status_set(led_status_t status)
- 212          {
- 213   1          // 每次切换状态时，都清空工作时间
- 214   1          led_ctl.working_time = 0;     // 工作时间清零
- 215   1          led_ctl.cur_pwm_duty_val = 0; // PWM占空比值清零（表示当前灯光为最亮）
- 216   1          // led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
- 217   1          led_ctl.adjust_time_cnt = 0;
- 218   1      
- 219   1          switch (status)
- 220   1          {
- 221   2          case LED_STATUS_OFF: // 关灯
- 222   2              led_yellow_off();
- 223   2              led_white_off();
- 224   2              LED_RED_OFF();
- 225   2              LED_BLUE_OFF();
- 226   2              break;
- 227   2          case LED_STATUS_YELLOW:
- 228   2              led_white_off();
- 229   2              LED_RED_OFF();
- 230   2              LED_BLUE_OFF();
- 231   2      
- 232   2              led_yellow_on(); // 只亮黄灯
- 233   2              break;
- 234   2          case LED_STATUS_WHITE:
- 235   2              led_yellow_off();
- 236   2              LED_RED_OFF();
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 5   
+ 190   2              // led_ctl.red_blue_flash_time_cnt = 0; // 红灯和蓝灯闪烁的时间计数清零
+ 191   2              // led_ctl.status = LED_STATUS_RED_BLUE_FLASH;
+ 192   2              // led_yellow_off();
+ 193   2              // led_white_off();
+ 194   2              led_status_set(LED_STATUS_RED_BLUE_FLASH);
+ 195   2              break;
+ 196   2          case LED_STATUS_RED_BLUE_FLASH:
+ 197   2              // 当前红灯和蓝灯都闪烁 -> 关闭红灯和蓝灯
+ 198   2              // led_ctl.status = LED_STATUS_OFF;
+ 199   2      
+ 200   2              // // 这里要关闭红灯和蓝灯
+ 201   2              // LED_RED_OFF();
+ 202   2              // LED_BLUE_OFF();
+ 203   2      
+ 204   2              // led_ctl.working_time = 0;         // 工作时间清零
+ 205   2              // led_ctl.cur_pwm_duty_val = 0;     // PWM占空比值清零
+ 206   2              // led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
+ 207   2              led_status_set(LED_STATUS_OFF);
+ 208   2              break;
+ 209   2          }
+ 210   1      }
+ 211          
+ 212          // 设置led灯的状态
+ 213          void led_status_set(led_status_t status)
+ 214          {
+ 215   1          // 每次切换状态时，都清空工作时间
+ 216   1          led_ctl.working_time = 0;     // 工作时间清零
+ 217   1          led_ctl.cur_pwm_duty_val = 0; // PWM占空比值清零（表示当前灯光为最亮）
+ 218   1          // led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
+ 219   1          led_ctl.adjust_time_cnt = 0;
+ 220   1      
+ 221   1          switch (status)
+ 222   1          {
+ 223   2          case LED_STATUS_OFF: // 关灯
+ 224   2              led_yellow_off();
+ 225   2              led_white_off();
+ 226   2              LED_RED_OFF();
+ 227   2              LED_BLUE_OFF();
+ 228   2              break;
+ 229   2          case LED_STATUS_YELLOW:
+ 230   2              led_white_off();
+ 231   2              LED_RED_OFF();
+ 232   2              LED_BLUE_OFF();
+ 233   2      
+ 234   2              led_yellow_on(); // 只亮黄灯
+ 235   2              break;
+ 236   2          case LED_STATUS_WHITE:
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 5   
 
- 237   2              LED_BLUE_OFF();
- 238   2      
- 239   2              led_white_on(); // 只亮白灯
- 240   2              break;
- 241   2      
- 242   2          case LED_STATUS_WHITE_YELLOW:
- 243   2              LED_RED_OFF();
- 244   2              LED_BLUE_OFF();
- 245   2      
- 246   2              // 只亮黄灯和白灯
- 247   2              led_white_on();
- 248   2              led_yellow_on();
- 249   2              break;
- 250   2      
- 251   2          case LED_STATUS_RED_BLUE_FLASH: // 红蓝闪烁
- 252   2              led_yellow_off();
- 253   2              led_white_off();
- 254   2      
- 255   2              led_ctl.red_blue_flash_time_cnt = 0;
- 256   2              break;
- 257   2          }
- 258   1      
- 259   1          led_ctl.status = status; // 需要最后再给状态赋值，否则会在定时器中断先执行了�
+ 237   2              led_yellow_off();
+ 238   2              LED_RED_OFF();
+ 239   2              LED_BLUE_OFF();
+ 240   2      
+ 241   2              led_white_on(); // 只亮白灯
+ 242   2              break;
+ 243   2      
+ 244   2          case LED_STATUS_WHITE_YELLOW:
+ 245   2              LED_RED_OFF();
+ 246   2              LED_BLUE_OFF();
+ 247   2      
+ 248   2              // 只亮黄灯和白灯
+ 249   2              led_white_on();
+ 250   2              led_yellow_on();
+ 251   2              break;
+ 252   2      
+ 253   2          case LED_STATUS_RED_BLUE_FLASH: // 红蓝闪烁
+ 254   2              led_yellow_off();
+ 255   2              led_white_off();
+ 256   2      
+ 257   2              led_ctl.red_blue_flash_time_cnt = 0;
+ 258   2              break;
+ 259   2          }
+ 260   1      
+ 261   1          led_ctl.status = status; // 需要最后再给状态赋值，否则会在定时器中断先执行了�
              -�关的操作
- 260   1      }
- 261          
- 262          /**
- 263           * @brief 红灯、蓝灯闪烁的动画效果，由定时器调用
- 264           *
- 265           * @attention 进入该动画前，要先给 led_ctl.red_blue_flash_time_cnt 清零
+ 262   1      }
+ 263          
+ 264          /**
+ 265           * @brief 红灯、蓝灯闪烁的动画效果，由定时器调用
  266           *
- 267           */
- 268          void led_red_blue_flash_1ms_isr(void)
- 269          {
- 270   1          u16 time_in_cycle; // 后续再赋值
- 271   1      
- 272   1          if (led_ctl.status != LED_STATUS_RED_BLUE_FLASH)
- 273   1          {
- 274   2              return;
- 275   2          }
- 276   1      
- 277   1          led_ctl.red_blue_flash_time_cnt++;
+ 267           * @attention 进入该动画前，要先给 led_ctl.red_blue_flash_time_cnt 清零
+ 268           *
+ 269           */
+ 270          void led_red_blue_flash_1ms_isr(void)
+ 271          {
+ 272   1          u16 time_in_cycle; // 后续再赋值
+ 273   1      
+ 274   1          if (led_ctl.status != LED_STATUS_RED_BLUE_FLASH)
+ 275   1          {
+ 276   2              return;
+ 277   2          }
  278   1      
- 279   1          // 小动画1：红灯和蓝灯的波形错位400ms，最开始蓝灯先点亮，低电平200ms，高�
+ 279   1          led_ctl.red_blue_flash_time_cnt++;
+ 280   1      
+ 281   1          // 小动画1：红灯和蓝灯的波形错位400ms，最开始蓝灯先点亮，低电平200ms，高�
              -��平600ms，持续 7.8s
- 280   1          if (led_ctl.red_blue_flash_time_cnt <= (u32)7800) // 7.8秒 = 7800毫秒
- 281   1          {
- 282   2              time_in_cycle = led_ctl.red_blue_flash_time_cnt % 800; // 800ms周期 (200ms低+600ms高)
- 283   2      
- 284   2              // 蓝灯先亮，红灯延迟400ms亮
- 285   2              if (time_in_cycle < 200) // 前200ms，蓝灯低电平（亮），红灯高电平（灭）
- 286   2              {
- 287   3                  LED_BLUE_ON(); // 蓝灯亮
- 288   3                  LED_RED_OFF(); // 红灯灭
- 289   3              }
- 290   2              else if (time_in_cycle < 400) // 接下来200ms，红蓝灯都灭
- 291   2              {
- 292   3                  LED_BLUE_OFF();
- 293   3                  LED_RED_OFF();
- 294   3              }
- 295   2              else if (time_in_cycle < 600) // 再接下来200ms，红灯亮（低电平），蓝灯灭（高电
+ 282   1          if (led_ctl.red_blue_flash_time_cnt <= (u32)7800) // 7.8秒 = 7800毫秒
+ 283   1          {
+ 284   2              time_in_cycle = led_ctl.red_blue_flash_time_cnt % 800; // 800ms周期 (200ms低+600ms高)
+ 285   2      
+ 286   2              // 蓝灯先亮，红灯延迟400ms亮
+ 287   2              if (time_in_cycle < 200) // 前200ms，蓝灯低电平（亮），红灯高电平（灭）
+ 288   2              {
+ 289   3                  LED_BLUE_ON(); // 蓝灯亮
+ 290   3                  LED_RED_OFF(); // 红灯灭
+ 291   3              }
+ 292   2              else if (time_in_cycle < 400) // 接下来200ms，红蓝灯都灭
+ 293   2              {
+ 294   3                  LED_BLUE_OFF();
+ 295   3                  LED_RED_OFF();
+ 296   3              }
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 6   
+
+ 297   2              else if (time_in_cycle < 600) // 再接下来200ms，红灯亮（低电平），蓝灯灭（高电
              -平）
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 6   
-
- 296   2              {
- 297   3                  LED_BLUE_OFF();
- 298   3                  LED_RED_ON();
- 299   3              }
- 300   2              else // 最后200ms，红蓝灯都灭（高电平）
- 301   2              {
- 302   3                  LED_BLUE_OFF();
- 303   3                  LED_RED_OFF();
- 304   3              }
- 305   2          }
- 306   1          // 小动画2：红灯和蓝灯波形不错位，低电平230ms，高电平220ms，持续 4.26s
- 307   1          else if (led_ctl.red_blue_flash_time_cnt <= (u32)7800 + 4260) // 7.8s + 4.26s = 12060ms
- 308   1          {
- 309   2              time_in_cycle = (led_ctl.red_blue_flash_time_cnt - 7800) % ((u16)230 + 220); // 450ms周期 (230ms
+ 298   2              {
+ 299   3                  LED_BLUE_OFF();
+ 300   3                  LED_RED_ON();
+ 301   3              }
+ 302   2              else // 最后200ms，红蓝灯都灭（高电平）
+ 303   2              {
+ 304   3                  LED_BLUE_OFF();
+ 305   3                  LED_RED_OFF();
+ 306   3              }
+ 307   2          }
+ 308   1          // 小动画2：红灯和蓝灯波形不错位，低电平230ms，高电平220ms，持续 4.26s
+ 309   1          else if (led_ctl.red_blue_flash_time_cnt <= (u32)7800 + 4260) // 7.8s + 4.26s = 12060ms
+ 310   1          {
+ 311   2              time_in_cycle = (led_ctl.red_blue_flash_time_cnt - 7800) % ((u16)230 + 220); // 450ms周期 (230ms
              -低+220ms高)
- 310   2      
- 311   2              if (time_in_cycle < 230) // 低电平230ms，灯亮（低电平）
- 312   2              {
- 313   3                  LED_RED_ON();  // 红灯亮
- 314   3                  LED_BLUE_ON(); // 蓝灯亮
- 315   3              }
- 316   2              else // 高电平220ms，灯灭（高电平）
- 317   2              {
- 318   3                  LED_RED_OFF();  // 红灯灭
- 319   3                  LED_BLUE_OFF(); // 蓝灯灭
- 320   3              }
- 321   2          }
- 322   1          // 小动画3：红灯和蓝灯都熄灭（引脚输出高电平）230ms，之后蓝灯先点亮40ms�
+ 312   2      
+ 313   2              if (time_in_cycle < 230) // 低电平230ms，灯亮（低电平）
+ 314   2              {
+ 315   3                  LED_RED_ON();  // 红灯亮
+ 316   3                  LED_BLUE_ON(); // 蓝灯亮
+ 317   3              }
+ 318   2              else // 高电平220ms，灯灭（高电平）
+ 319   2              {
+ 320   3                  LED_RED_OFF();  // 红灯灭
+ 321   3                  LED_BLUE_OFF(); // 蓝灯灭
+ 322   3              }
+ 323   2          }
+ 324   1          // 小动画3：红灯和蓝灯都熄灭（引脚输出高电平）230ms，之后蓝灯先点亮40ms�
              -�再熄灭60ms，重复3次，
- 323   1          // 到红灯点亮40ms，熄灭60ms，重复3次，再到蓝灯点亮40ms...整个动画持续6.17s �
+ 325   1          // 到红灯点亮40ms，熄灭60ms，重复3次，再到蓝灯点亮40ms...整个动画持续6.17s �
              -�后红灯和蓝灯都熄灭
- 324   1          else if (led_ctl.red_blue_flash_time_cnt <= (u32)7800 + 4260 + 6170) // 12060ms + 6.17s = 18230ms
- 325   1          {
- 326   2              // 前230ms，红灯和蓝灯都熄灭
- 327   2              if (led_ctl.red_blue_flash_time_cnt < (u32)7800 + 4260 + 230)
- 328   2              {
- 329   3                  LED_RED_OFF();
- 330   3                  LED_BLUE_OFF();
- 331   3                  return;
- 332   3              }
- 333   2      
- 334   2              // (40 + 60) * 3 * 2，(点亮40ms+熄灭60ms)*重复3次 * 2（红灯和蓝灯）
- 335   2              time_in_cycle = (led_ctl.red_blue_flash_time_cnt - 7800 - 4260 - 230) % (((u16)40 + 60) * 3 * 2);
- 336   2              // 蓝灯循环：点亮40ms，熄灭60ms，重复3次
- 337   2              if (time_in_cycle < ((u16)40 + 60) * 3)
- 338   2              {
- 339   3                  LED_RED_OFF();
- 340   3                  if ((time_in_cycle % (40 + 60)) < 40)
- 341   3                  {
- 342   4                      LED_BLUE_ON();
- 343   4                  }
- 344   3                  else
- 345   3                  {
- 346   4                      LED_BLUE_OFF();
- 347   4                  }
- 348   3              }
- 349   2              // 红灯循环：点亮40ms，熄灭60ms，重复3次
- 350   2              else
- 351   2              {
- 352   3                  LED_BLUE_OFF();
- 353   3                  if ((time_in_cycle % (40 + 60)) < 40)
- 354   3                  {
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 7   
+ 326   1          else if (led_ctl.red_blue_flash_time_cnt <= (u32)7800 + 4260 + 6170) // 12060ms + 6.17s = 18230ms
+ 327   1          {
+ 328   2              // 前230ms，红灯和蓝灯都熄灭
+ 329   2              if (led_ctl.red_blue_flash_time_cnt < (u32)7800 + 4260 + 230)
+ 330   2              {
+ 331   3                  LED_RED_OFF();
+ 332   3                  LED_BLUE_OFF();
+ 333   3                  return;
+ 334   3              }
+ 335   2      
+ 336   2              // (40 + 60) * 3 * 2，(点亮40ms+熄灭60ms)*重复3次 * 2（红灯和蓝灯）
+ 337   2              time_in_cycle = (led_ctl.red_blue_flash_time_cnt - 7800 - 4260 - 230) % (((u16)40 + 60) * 3 * 2);
+ 338   2              // 蓝灯循环：点亮40ms，熄灭60ms，重复3次
+ 339   2              if (time_in_cycle < ((u16)40 + 60) * 3)
+ 340   2              {
+ 341   3                  LED_RED_OFF();
+ 342   3                  if ((time_in_cycle % (40 + 60)) < 40)
+ 343   3                  {
+ 344   4                      LED_BLUE_ON();
+ 345   4                  }
+ 346   3                  else
+ 347   3                  {
+ 348   4                      LED_BLUE_OFF();
+ 349   4                  }
+ 350   3              }
+ 351   2              // 红灯循环：点亮40ms，熄灭60ms，重复3次
+ 352   2              else
+ 353   2              {
+ 354   3                  LED_BLUE_OFF();
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 7   
 
- 355   4                      LED_RED_ON();
- 356   4                  }
- 357   3                  else
- 358   3                  {
- 359   4                      LED_RED_OFF();
- 360   4                  }
- 361   3              }
- 362   2          }
- 363   1          else
- 364   1          {
- 365   2              LED_RED_OFF();
- 366   2              LED_BLUE_OFF();
- 367   2              led_ctl.red_blue_flash_time_cnt = 0; // 计时清零，让动画重新开始跑
- 368   2          }
- 369   1      }
- 370          
- 371          // 黄灯、白灯、黄白灯缓慢调节的动画效果
- 372          void led_slow_adjust_isr(void)
- 373          {
- 374   1          if ((led_ctl.status == LED_STATUS_YELLOW ||
- 375   1               led_ctl.status == LED_STATUS_WHITE ||
- 376   1               led_ctl.status == LED_STATUS_WHITE_YELLOW))
- 377   1          {
- 378   2              /*
- 379   2                  黄灯、白灯、黄白灯模式下，
- 380   2                  并且缓慢调节灯光的操作没有结束，
- 381   2                  记录灯光工作时间，进行缓慢调节
- 382   2              */
- 383   2              if (led_ctl.working_time < ((u32)-1)) // 防止计数溢出
- 384   2              {
- 385   3                  led_ctl.working_time++;
- 386   3              }
- 387   2          }
- 388   1          else
- 389   1          {
- 390   2              // 不在黄灯、白灯、黄白灯模式，或者缓慢调节已经结束
- 391   2              return;
- 392   2          }
- 393   1      
- 394   1          if (is_in_charging)
- 395   1          {
- 396   2              // 正在充电，但是占空比没有调节至目标占空比
- 397   2              led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT_DURING_CHARGING);
- 398   2      
- 399   2              // 每 xx ms调节1单位的占空比值
- 400   2              led_ctl.adjust_time_cnt++;
- 401   2              if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
- 402   2              {
- 403   3                  led_ctl.adjust_time_cnt = 0;
- 404   3                  if (led_ctl.cur_pwm_duty_val < led_ctl.dest_pwm_duty_val)
- 405   3                  {
- 406   4                      led_ctl.cur_pwm_duty_val++;
- 407   4                      if (led_ctl.status == LED_STATUS_YELLOW ||
- 408   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 409   4                      {
- 410   5                          pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
- 411   5                      }
- 412   4      
- 413   4                      if (led_ctl.status == LED_STATUS_WHITE ||
- 414   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 415   4                      {
- 416   5                          pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 8   
+ 355   3                  if ((time_in_cycle % (40 + 60)) < 40)
+ 356   3                  {
+ 357   4                      LED_RED_ON();
+ 358   4                  }
+ 359   3                  else
+ 360   3                  {
+ 361   4                      LED_RED_OFF();
+ 362   4                  }
+ 363   3              }
+ 364   2          }
+ 365   1          else
+ 366   1          {
+ 367   2              LED_RED_OFF();
+ 368   2              LED_BLUE_OFF();
+ 369   2              led_ctl.red_blue_flash_time_cnt = 0; // 计时清零，让动画重新开始跑
+ 370   2          }
+ 371   1      }
+ 372          
+ 373          // 黄灯、白灯、黄白灯缓慢调节的动画效果
+ 374          void led_slow_adjust_isr(void)
+ 375          {
+ 376   1          if ((led_ctl.status == LED_STATUS_YELLOW ||
+ 377   1               led_ctl.status == LED_STATUS_WHITE ||
+ 378   1               led_ctl.status == LED_STATUS_WHITE_YELLOW))
+ 379   1          {
+ 380   2              /*
+ 381   2                  黄灯、白灯、黄白灯模式下，
+ 382   2                  并且缓慢调节灯光的操作没有结束，
+ 383   2                  记录灯光工作时间，进行缓慢调节
+ 384   2              */
+ 385   2              if (led_ctl.working_time < ((u32)-1)) // 防止计数溢出
+ 386   2              {
+ 387   3                  led_ctl.working_time++;
+ 388   3              }
+ 389   2          }
+ 390   1          else
+ 391   1          {
+ 392   2              // 不在黄灯、白灯、黄白灯模式，或者缓慢调节已经结束
+ 393   2              return;
+ 394   2          }
+ 395   1      
+ 396   1          if (is_in_charging)
+ 397   1          {
+ 398   2              // 正在充电，但是占空比没有调节至目标占空比
+ 399   2              led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT_DURING_CHARGING);
+ 400   2      
+ 401   2              // 每 xx ms调节1单位的占空比值
+ 402   2              led_ctl.adjust_time_cnt++;
+ 403   2              if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
+ 404   2              {
+ 405   3                  led_ctl.adjust_time_cnt = 0;
+ 406   3                  if (led_ctl.cur_pwm_duty_val < led_ctl.dest_pwm_duty_val)
+ 407   3                  {
+ 408   4                      led_ctl.cur_pwm_duty_val++;
+ 409   4                      if (led_ctl.status == LED_STATUS_YELLOW ||
+ 410   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
+ 411   4                      {
+ 412   5                          pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
+ 413   5                      }
+ 414   4      
+ 415   4                      if (led_ctl.status == LED_STATUS_WHITE ||
+ 416   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 8   
 
- 417   5                      }
- 418   4                  }
- 419   3              }
- 420   2          }
- 421   1          else
- 422   1          {
- 423   2              // 没有在充电
- 424   2      
- 425   2              // 180s 之后，每 xx ms调节1单位的占空比值
- 426   2              led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT);
- 427   2              led_ctl.adjust_time_cnt++;
- 428   2      
- 429   2              // 占空比越小，灯光亮度越高
- 430   2              if (led_ctl.cur_pwm_duty_val < led_ctl.dest_pwm_duty_val)
- 431   2              {
- 432   3                  // 如果当前占空比 小于 目标占空比（当前灯光亮度大于目标亮度）
- 433   3                  // 要按照 正常工作 的缓慢速度进行调节
- 434   3      
- 435   3                  if (led_ctl.working_time <= (u32)180 * 1000)
- 436   3                  {
- 437   4                      // 开灯的前180s不调节
- 438   4                      led_ctl.adjust_time_cnt = 0;
- 439   4                      return;
- 440   4                  }
- 441   3      
- 442   3                  if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT)
- 443   3                  {
- 444   4                      led_ctl.adjust_time_cnt = 0;
- 445   4                      led_ctl.cur_pwm_duty_val++;
- 446   4                      if (led_ctl.status == LED_STATUS_YELLOW ||
- 447   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 448   4                      {
- 449   5                          pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
- 450   5                      }
- 451   4      
- 452   4                      if (led_ctl.status == LED_STATUS_WHITE ||
- 453   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 454   4                      {
- 455   5                          pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
- 456   5                      }
- 457   4                  }
- 458   3              }
- 459   2              else if (led_ctl.cur_pwm_duty_val > led_ctl.dest_pwm_duty_val)
- 460   2              {
- 461   3                  // 如果当前占空比 大于 目标占空（当前灯光亮度小于目标亮度值）
- 462   3                  // 要按照 充电期间 的速度进行调节
- 463   3                  if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
- 464   3                  {
- 465   4                      led_ctl.adjust_time_cnt = 0;
- 466   4                      led_ctl.cur_pwm_duty_val--;
- 467   4                      if (led_ctl.status == LED_STATUS_YELLOW ||
- 468   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 469   4                      {
- 470   5                          pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
- 471   5                      }
- 472   4      
- 473   4                      if (led_ctl.status == LED_STATUS_WHITE ||
- 474   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 475   4                      {
- 476   5                          pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
- 477   5                      }
- 478   4                  }
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 9   
+ 417   4                      {
+ 418   5                          pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
+ 419   5                      }
+ 420   4                  }
+ 421   3              }
+ 422   2          }
+ 423   1          else
+ 424   1          {
+ 425   2              // 没有在充电
+ 426   2      
+ 427   2              // 180s 之后，每 xx ms调节1单位的占空比值
+ 428   2              led_ctl.dest_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT);
+ 429   2              led_ctl.adjust_time_cnt++;
+ 430   2      
+ 431   2              // 占空比越小，灯光亮度越高
+ 432   2              if (led_ctl.cur_pwm_duty_val < led_ctl.dest_pwm_duty_val)
+ 433   2              {
+ 434   3                  // 如果当前占空比 小于 目标占空比（当前灯光亮度大于目标亮度）
+ 435   3                  // 要按照 正常工作 的缓慢速度进行调节
+ 436   3      
+ 437   3                  if (led_ctl.working_time <= (u32)180 * 1000)
+ 438   3                  {
+ 439   4                      // 开灯的前180s不调节
+ 440   4                      led_ctl.adjust_time_cnt = 0;
+ 441   4                      return;
+ 442   4                  }
+ 443   3      
+ 444   3                  if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT)
+ 445   3                  {
+ 446   4                      led_ctl.adjust_time_cnt = 0;
+ 447   4                      led_ctl.cur_pwm_duty_val++;
+ 448   4                      if (led_ctl.status == LED_STATUS_YELLOW ||
+ 449   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
+ 450   4                      {
+ 451   5                          pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
+ 452   5                      }
+ 453   4      
+ 454   4                      if (led_ctl.status == LED_STATUS_WHITE ||
+ 455   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
+ 456   4                      {
+ 457   5                          pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
+ 458   5                      }
+ 459   4                  }
+ 460   3              }
+ 461   2              else if (led_ctl.cur_pwm_duty_val > led_ctl.dest_pwm_duty_val)
+ 462   2              {
+ 463   3                  // 如果当前占空比 大于 目标占空（当前灯光亮度小于目标亮度值）
+ 464   3                  // 要按照 充电期间 的速度进行调节
+ 465   3                  if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
+ 466   3                  {
+ 467   4                      led_ctl.adjust_time_cnt = 0;
+ 468   4                      led_ctl.cur_pwm_duty_val--;
+ 469   4                      if (led_ctl.status == LED_STATUS_YELLOW ||
+ 470   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
+ 471   4                      {
+ 472   5                          pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
+ 473   5                      }
+ 474   4      
+ 475   4                      if (led_ctl.status == LED_STATUS_WHITE ||
+ 476   4                          led_ctl.status == LED_STATUS_WHITE_YELLOW)
+ 477   4                      {
+ 478   5                          pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 9   
 
- 479   3              }
- 480   2          }
- 481   1      
- 482   1      #if USER_DEBUG_ENABLE
+ 479   5                      }
+ 480   4                  }
+ 481   3              }
+ 482   2          }
+ 483   1      
+ 484   1      #if USER_DEBUG_ENABLE
+ 485   1      #if 0
                   // USER_TO_DO 每隔一段时间，再打印一次占空比
                   {
                       static u8 cnt = 0;
@@ -530,383 +533,387 @@ line level    source
                       }
                   }
               #endif
- 497   1      }
- 498          
- 499          /**
- 500           * @brief 充电或放电时，电池电量指示灯的动画
- 501           *
- 502           * 外部参数： 全局变量 bat_percent ，电池电量百分比
- 503           *
- 504           * 目前 1ms 调用一次
+ 500   1      #endif
+ 501   1      }
+ 502          
+ 503          /**
+ 504           * @brief 充电或放电时，电池电量指示灯的动画
  505           *
- 506           */
- 507          void led_bat_instruction_timer_callback(void)
- 508          {
- 509   1          if (led_bat_level_sta == LED_BAT_LEVEL_STA_IDLE)
- 510   1          {
- 511   2              LED_100_PERCENT_OFF();
- 512   2              LED_75_PERCENT_OFF();
- 513   2              LED_50_PERCENT_OFF();
- 514   2              LED_25_PERCENT_OFF();
- 515   2          }
- 516   1          else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_BEGIN)
- 517   1          {
- 518   2              LED_100_PERCENT_OFF();
- 519   2              LED_75_PERCENT_OFF();
- 520   2              LED_50_PERCENT_OFF();
- 521   2              LED_25_PERCENT_OFF();
- 522   2              led_charge_anim_phase = 0;
- 523   2              led_charge_anim_cnt = 0;
- 524   2              led_quick_fill_cnt = 0;
- 525   2              led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM;
- 526   2          }
- 527   1          else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM)
- 528   1          {
- 529   2              led_charge_anim_cnt++;
- 530   2              if (led_charge_anim_cnt >= 500)
- 531   2              {
- 532   3                  led_charge_anim_cnt = 0;
- 533   3      
- 534   3                  if (led_charge_anim_phase == 0 &&
- 535   3                      LED_BAT_LEV_STA_1 <= led_bat_lev_sta)
- 536   3                  {
- 537   4                      LED_25_PERCENT_ON();
- 538   4                      led_charge_anim_phase = 1;
- 539   4                  }
- 540   3                  else if (led_charge_anim_phase == 1 &&
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 10  
+ 506           * 外部参数： 全局变量 bat_percent ，电池电量百分比
+ 507           *
+ 508           * 目前 1ms 调用一次
+ 509           *
+ 510           */
+ 511          void led_bat_instruction_timer_callback(void)
+ 512          {
+ 513   1          #if 0
+                  if (led_bat_level_sta == LED_BAT_LEVEL_STA_IDLE)
+                  {
+                      LED_100_PERCENT_OFF();
+                      LED_75_PERCENT_OFF();
+                      LED_50_PERCENT_OFF();
+                      LED_25_PERCENT_OFF();
+                  }
+                  else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_BEGIN)
+                  {
+                      LED_100_PERCENT_OFF();
+                      LED_75_PERCENT_OFF();
+                      LED_50_PERCENT_OFF();
+                      LED_25_PERCENT_OFF();
+                      led_charge_anim_phase = 0;
+                      led_charge_anim_cnt = 0;
+                      led_quick_fill_cnt = 0;
+                      led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM;
+                  }
+                  else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM)
+                  {
+                      led_charge_anim_cnt++;
+                      if (led_charge_anim_cnt >= 500)
+                      {
+                          led_charge_anim_cnt = 0;
+              
+                          if (led_charge_anim_phase == 0 &&
+                              LED_BAT_LEV_1 <= led_bat_lev_sta)
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 10  
 
- 541   3                           LED_BAT_LEV_STA_2 <= led_bat_lev_sta)
- 542   3                  {
- 543   4                      LED_50_PERCENT_ON();
- 544   4                      led_charge_anim_phase = 2;
- 545   4                  }
- 546   3                  else if (led_charge_anim_phase == 2 &&
- 547   3                           LED_BAT_LEV_STA_3 <= led_bat_lev_sta)
- 548   3                  {
- 549   4                      LED_75_PERCENT_ON();
- 550   4                      led_charge_anim_phase = 3;
- 551   4                  }
- 552   3                  else
- 553   3                  {
- 554   4                      led_charge_anim_cnt = 0;
- 555   4                      led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGING;
- 556   4                  }
- 557   3              }
- 558   2          }
- 559   1          else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGING)
- 560   1          {
- 561   2              // 正在充电，让当前电量对应的指示灯闪烁（只闪烁一个灯）
- 562   2              // led_charge_anim_cnt == 0，说明刚进入这个阶段，也需要对应的指示灯状态翻�
+                          {
+                              LED_25_PERCENT_ON();
+                              led_charge_anim_phase = 1;
+                          }
+                          else if (led_charge_anim_phase == 1 &&
+                                   LED_BAT_LEV_2 <= led_bat_lev_sta)
+                          {
+                              LED_50_PERCENT_ON();
+                              led_charge_anim_phase = 2;
+                          }
+                          else if (led_charge_anim_phase == 2 &&
+                                   LED_BAT_LEV_3 <= led_bat_lev_sta)
+                          {
+                              LED_75_PERCENT_ON();
+                              led_charge_anim_phase = 3;
+                          }
+                          else
+                          {
+                              led_charge_anim_cnt = 0;
+                              led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGING;
+                          }
+                      }
+                  }
+                  else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGING)
+                  {
+                      // 正在充电，让当前电量对应的指示灯闪烁（只闪烁一个灯）
+                      // led_charge_anim_cnt == 0，说明刚进入这个阶段，也需要对应的指示灯状态翻�
              -�一次
- 563   2              if (led_charge_anim_cnt >= 500 || led_charge_anim_cnt == 0)
- 564   2              {
- 565   3                  led_charge_anim_cnt = 0;
- 566   3      
- 567   3                  // 根据 LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM 期间更新的值，让对应的指示灯闪烁
- 568   3                  switch (led_charge_anim_phase)
- 569   3                  {
- 570   4                  case 0:
- 571   4                      LED_25_PERCENT_TOGGLE();
- 572   4                      break;
- 573   4                  case 1:
- 574   4                      LED_50_PERCENT_TOGGLE();
- 575   4                      break;
- 576   4                  case 2:
- 577   4                      LED_75_PERCENT_TOGGLE();
- 578   4                      break;
- 579   4                  case 3:
- 580   4                      LED_100_PERCENT_TOGGLE();
- 581   4                      break;
- 582   4                  }
- 583   3      
- 584   3                  if ((is_in_charging_by_charger || // 通过充电器充电，或者通过太阳能充电
- 585   3                       is_in_charging_by_solar_panel) &&
- 586   3                      is_charging_ic_stop) // 充电IC报告停止，认为充满电，进入快速填充显示�
+                      if (led_charge_anim_cnt >= 500 || led_charge_anim_cnt == 0)
+                      {
+                          led_charge_anim_cnt = 0;
+              
+                          // 根据 LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM 期间更新的值，让对应的指示灯闪烁
+                          switch (led_charge_anim_phase)
+                          {
+                          case 0:
+                              LED_25_PERCENT_TOGGLE();
+                              break;
+                          case 1:
+                              LED_50_PERCENT_TOGGLE();
+                              break;
+                          case 2:
+                              LED_75_PERCENT_TOGGLE();
+                              break;
+                          case 3:
+                              LED_100_PERCENT_TOGGLE();
+                              break;
+                          }
+              
+                          if ((is_in_charging_by_charger || // 通过充电器充电，或者通过太阳能充电
+                               is_in_charging_by_solar_panel) &&
+                              is_charging_ic_stop) // 充电IC报告停止，认为充满电，进入快速填充显示�
              -��态
- 587   3                  {
- 588   4                      // 如果已经是满电显示，直接标记为充满
- 589   4                      if (led_bat_lev_sta >= LED_BAT_LEV_STA_4)
- 590   4                      {
- 591   5                          led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
- 592   5                      }
- 593   4                      else
- 594   4                      {
- 595   5                          // 快速填充：以较短时间逐档上升显示（由 led_quick_fill_cnt 驱动）
- 596   5                          if (led_quick_fill_cnt < ((u32)-1))
- 597   5                          {
- 598   6                              led_quick_fill_cnt++;
- 599   6                          }
- 600   5      
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 11  
+                          {
+                              // 如果已经是满电显示，直接标记为充满
+                              if (led_bat_lev_sta >= LED_BAT_LEV_4)
+                              {
+                                  led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_END;
+                              }
+                              else
+                              {
+                                  // 如果已经满电，但是当前没有显示4个指示灯
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 11  
 
- 601   5                          if (led_quick_fill_cnt >= LED_CHARGE_QUICK_FILL_INTERVAL_MS)
- 602   5                          {
- 603   6                              led_quick_fill_cnt = 0;
- 604   6      
- 605   6                              /*
- 606   6                                  REVIEW, 如果 led_bat_lev_sta 和 led_charge_anim_phase
- 607   6                                  的数值并不对应，这里需要重新映射，建立对应关系
- 608   6                              */
- 609   6                              led_bat_lev_sta++;
- 610   6                              led_charge_anim_phase = led_bat_lev_sta;
- 611   6                          }
- 612   5                      }
- 613   4                  }
- 614   3                  else if (charge_time_cnt >= BAT_CHARGE_3LED_TIME &&
- 615   3                           (led_charge_anim_phase == 2 ||
- 616   3                            led_charge_anim_phase == 3))
- 617   3                  {
- 618   4                      led_charge_anim_phase = 3;
- 619   4                      LED_75_PERCENT_ON(); //
- 620   4      
- 621   4                      led_bat_lev_sta = LED_BAT_LEV_STA_3;
- 622   4                  }
- 623   3                  else if (charge_time_cnt >= BAT_CHARGE_2LED_TIME &&
- 624   3                           (led_charge_anim_phase == 1 ||
- 625   3                            led_charge_anim_phase == 2))
- 626   3                  {
- 627   4                      led_charge_anim_phase = 2;
- 628   4                      LED_50_PERCENT_ON(); //
- 629   4      
- 630   4                      led_bat_lev_sta = LED_BAT_LEV_STA_2;
- 631   4                  }
- 632   3                  else if (charge_time_cnt >= BAT_CHARGE_1LED_TIME &&
- 633   3                           (led_charge_anim_phase == 0 ||
- 634   3                            led_charge_anim_phase == 1))
- 635   3                  {
- 636   4                      led_charge_anim_phase = 1;
- 637   4                      LED_25_PERCENT_ON(); //
- 638   4      
- 639   4                      led_bat_lev_sta = LED_BAT_LEV_STA_1;
- 640   4                  }
- 641   3              }
- 642   2      
- 643   2              led_charge_anim_cnt++;
- 644   2          }
- 645   1          else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_END)
- 646   1          {
- 647   2              // 已经充满电
- 648   2              LED_100_PERCENT_ON();
- 649   2              LED_75_PERCENT_ON();
- 650   2              LED_50_PERCENT_ON();
- 651   2              LED_25_PERCENT_ON();
- 652   2              led_bat_lev_sta = LED_BAT_LEV_STA_4;
- 653   2          }
- 654   1          else if (led_bat_level_sta == LED_BAT_LEVEL_STA_DISCHARGE)
- 655   1          {
- 656   2              // 放电中
- 657   2              static volatile u8 blink_cnt = 0;         // 闪烁计数
- 658   2              static volatile u32 jump_down_cnt_ms = 0; // 跳级向下的去抖计时（ms）
- 659   2      
- 660   2              if (is_in_low_bat_alert)
- 661   2              {
- 662   3                  // 正在低电量报警
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 12  
+                                  // 快速填充：以较短时间逐档上升显示（由 led_quick_fill_cnt 驱动）
+                                  if (led_quick_fill_cnt < ((u32)-1))
+                                  {
+                                      led_quick_fill_cnt++;
+                                  }
+              
+                                  if (led_quick_fill_cnt >= LED_CHARGE_QUICK_FILL_INTERVAL_MS)
+                                  {
+                                      led_quick_fill_cnt = 0;
+              
+                                      /*
+                                          REVIEW, 如果 led_bat_lev_sta 和 led_charge_anim_phase
+                                          的数值并不对应，这里需要重新映射，建立对应关系
+                                      */
+                                      led_bat_lev_sta++;
+                                      led_charge_anim_phase = led_bat_lev_sta;
+                                  }
+                              }
+                          }
+                          else if (charge_time_cnt >= BAT_CHARGE_3LED_TIME &&
+                                   (led_charge_anim_phase == 2 ||
+                                    led_charge_anim_phase == 3))
+                          {
+                              led_charge_anim_phase = 3;
+                              LED_75_PERCENT_ON(); //
+              
+                              led_bat_lev_sta = LED_BAT_LEV_3;
+                          }
+                          else if (charge_time_cnt >= BAT_CHARGE_2LED_TIME &&
+                                   (led_charge_anim_phase == 1 ||
+                                    led_charge_anim_phase == 2))
+                          {
+                              led_charge_anim_phase = 2;
+                              LED_50_PERCENT_ON(); //
+              
+                              led_bat_lev_sta = LED_BAT_LEV_2;
+                          }
+                          else if (charge_time_cnt >= BAT_CHARGE_1LED_TIME &&
+                                   (led_charge_anim_phase == 0 ||
+                                    led_charge_anim_phase == 1))
+                          {
+                              led_charge_anim_phase = 1;
+                              LED_25_PERCENT_ON(); //
+              
+                              led_bat_lev_sta = LED_BAT_LEV_1;
+                          }
+                      }
+              
+                      led_charge_anim_cnt++;
+                  }
+                  else if (led_bat_level_sta == LED_BAT_LEVEL_STA_CHARGE_END)
+                  {
+                      // 已经充满电
+                      LED_100_PERCENT_ON();
+                      LED_75_PERCENT_ON();
+                      LED_50_PERCENT_ON();
+                      LED_25_PERCENT_ON();
+                      led_bat_lev_sta = LED_BAT_LEV_4;
+                  }
+                  else if (led_bat_level_sta == LED_BAT_LEVEL_STA_DISCHARGE)
+                  {
+                      // 放电中
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 12  
 
- 663   3                  // 让指示灯以 1Hz 频率闪烁
- 664   3                  LED_100_PERCENT_OFF();
- 665   3                  LED_75_PERCENT_OFF();
- 666   3                  LED_50_PERCENT_OFF();
- 667   3      
- 668   3                  blink_cnt++;
- 669   3                  if (blink_cnt >= 500)
- 670   3                  {
- 671   4                      blink_cnt = 0;
- 672   4                      LED_25_PERCENT_TOGGLE();
- 673   4                  }
- 674   3      
- 675   3                  led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
- 676   3                  jump_down_cnt_ms = 0;
- 677   3              }
- 678   2              else
- 679   2              {
- 680   3      
- 681   3                  u8 target_level = LED_BAT_LEV_STA_4;
- 682   3                  blink_cnt = 0; // 不在低电量报警，清空低电量报警的闪烁计数
- 683   3      
- 684   3                  if (led_ctl.status == LED_STATUS_YELLOW ||
- 685   3                      led_ctl.status == LED_STATUS_WHITE ||
- 686   3                      led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
- 687   3                  {
- 688   4                      // 只有一种灯亮（single light）
- 689   4                      if (discharge_time_cnt >= BAT_SINGLE_LIGHT_LOW_WARN_TIME &&
- 690   4                          avg_voltage_mv <
- 691   4                              (BAT_SINGLE_LIGHT_LOW_WARN_VOLTAGE -
- 692   4                               BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
- 693   4                      {
- 694   5                          is_in_low_bat_alert = 1;
- 695   5                          target_level = LED_BAT_LEV_STA_ALERT;
- 696   5                      }
- 697   4                      else if (discharge_time_cnt >= BAT_SINGLE_LIGHT_1LED_TIME &&
- 698   4                               avg_voltage_mv <
- 699   4                                   (BAT_SINGLE_LIGHT_2LED_VOLTAGE -
- 700   4                                    BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
- 701   4                      {
- 702   5                          target_level = LED_BAT_LEV_STA_1;
- 703   5                      }
- 704   4                      else if (discharge_time_cnt >= BAT_SINGLE_LIGHT_2LED_TIME &&
- 705   4                               avg_voltage_mv <
- 706   4                                   (BAT_SINGLE_LIGHT_3LED_VOLTAGE -
- 707   4                                    BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
- 708   4                      {
- 709   5                          target_level = LED_BAT_LEV_STA_2;
- 710   5                      }
- 711   4                      else if (discharge_time_cnt >= BAT_SINGLE_LIGHT_3LED_TIME &&
- 712   4                               avg_voltage_mv <
- 713   4                                   (BAT_SINGLE_LIGHT_4LED_VOLTAGE -
- 714   4                                    BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
- 715   4                      {
- 716   5                          target_level = LED_BAT_LEV_STA_3;
- 717   5                      }
- 718   4                      else
- 719   4                      {
- 720   5                          target_level = LED_BAT_LEV_STA_4;
- 721   5                      }
- 722   4                  }
- 723   3                  else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 724   3                  {
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 13  
+                      static volatile u8 blink_cnt = 0;         // 闪烁计数
+                      static volatile u32 jump_down_cnt_ms = 0; // 跳级向下的去抖计时（ms）
+              
+                      if (is_in_low_bat_alert)
+                      {
+                          // 正在低电量报警
+                          // 让指示灯以 1Hz 频率闪烁
+                          LED_100_PERCENT_OFF();
+                          LED_75_PERCENT_OFF();
+                          LED_50_PERCENT_OFF();
+              
+                          blink_cnt++;
+                          if (blink_cnt >= 500)
+                          {
+                              blink_cnt = 0;
+                              LED_25_PERCENT_TOGGLE();
+                          }
+              
+                          led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
+                          jump_down_cnt_ms = 0;
+                      }
+                      else
+                      {
+              
+                          volatile u8 target_level = LED_BAT_LEV_4;
+                          blink_cnt = 0; // 不在低电量报警，清空低电量报警的闪烁计数
+              
+                          if (led_ctl.status == LED_STATUS_YELLOW ||
+                              led_ctl.status == LED_STATUS_WHITE ||
+                              led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
+                          {
+                              // 只有一种灯亮（single light）
+                              if (discharge_time_cnt >= BAT_SINGLE_LIGHT_LOW_WARN_TIME &&
+                                  avg_voltage_mv <
+                                      (BAT_SINGLE_LIGHT_LOW_WARN_VOLTAGE -
+                                       BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
+                              {
+                                  is_in_low_bat_alert = 1;
+                                  target_level = LED_BAT_LEV_STA_ALERT;
+                              }
+                              else if (discharge_time_cnt >= BAT_SINGLE_LIGHT_1LED_TIME &&
+                                       avg_voltage_mv <
+                                           (BAT_SINGLE_LIGHT_2LED_VOLTAGE -
+                                            BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
+                              {
+                                  target_level = LED_BAT_LEV_1;
+                              }
+                              else if (discharge_time_cnt >= BAT_SINGLE_LIGHT_2LED_TIME &&
+                                       avg_voltage_mv <
+                                           (BAT_SINGLE_LIGHT_3LED_VOLTAGE -
+                                            BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
+                              {
+                                  target_level = LED_BAT_LEV_2;
+                              }
+                              else if (discharge_time_cnt >= BAT_SINGLE_LIGHT_3LED_TIME &&
+                                       avg_voltage_mv <
+                                           (BAT_SINGLE_LIGHT_4LED_VOLTAGE -
+                                            BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE))
+                              {
+                                  target_level = LED_BAT_LEV_3;
+                              }
+                              else
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 13  
 
- 725   4                      // 黄白灯都亮
- 726   4                      if (discharge_time_cnt >= BAT_WY_LOW_WARN_TIME &&
- 727   4                          avg_voltage_mv <
- 728   4                              (BAT_WY_LOW_WARN_VOLTAGE -
- 729   4                               BAT_WY_DEAD_ZONE_VOLTAGE))
- 730   4                      {
- 731   5                          is_in_low_bat_alert = 1;
- 732   5                          target_level = LED_BAT_LEV_STA_ALERT;
- 733   5                      }
- 734   4                      else if (discharge_time_cnt >= BAT_WY_1LED_TIME &&
- 735   4                               avg_voltage_mv <
- 736   4                                   (BAT_WY_2LED_VOLTAGE -
- 737   4                                    BAT_WY_DEAD_ZONE_VOLTAGE))
- 738   4                      {
- 739   5                          target_level = LED_BAT_LEV_STA_1;
- 740   5                      }
- 741   4                      else if (discharge_time_cnt >= BAT_WY_2LED_TIME &&
- 742   4                               avg_voltage_mv <
- 743   4                                   (BAT_WY_3LED_VOLTAGE -
- 744   4                                    BAT_WY_DEAD_ZONE_VOLTAGE))
- 745   4                      {
- 746   5                          target_level = LED_BAT_LEV_STA_2;
- 747   5                      }
- 748   4                      else if (discharge_time_cnt >= BAT_WY_3LED_TIME &&
- 749   4                               avg_voltage_mv <
- 750   4                                   (BAT_WY_4LED_VOLTAGE -
- 751   4                                    BAT_WY_DEAD_ZONE_VOLTAGE))
- 752   4                      {
- 753   5                          target_level = LED_BAT_LEV_STA_3;
- 754   5                      }
- 755   4                      else
- 756   4                      {
- 757   5                          target_level = LED_BAT_LEV_STA_4;
- 758   5                      }
- 759   4                  }
- 760   3      
- 761   3                  // 如果目标等级高于或等于当前显示等级，立即更新并清除跳级计时
- 762   3                  if (target_level >= led_bat_lev_sta)
- 763   3                  {
- 764   4                      jump_down_cnt_ms = 0;
- 765   4                      led_bat_lev_sta = target_level;
- 766   4                      // 立即更新显示
- 767   4                      switch (led_bat_lev_sta)
- 768   4                      {
- 769   5                      case LED_BAT_LEV_STA_ALERT:
- 770   5                          LED_100_PERCENT_OFF();
- 771   5                          LED_75_PERCENT_OFF();
- 772   5                          LED_50_PERCENT_OFF();
- 773   5                          LED_25_PERCENT_ON();
- 774   5                          break;
- 775   5                      case LED_BAT_LEV_STA_1:
- 776   5                          LED_100_PERCENT_OFF();
- 777   5                          LED_75_PERCENT_OFF();
- 778   5                          LED_50_PERCENT_OFF();
- 779   5                          LED_25_PERCENT_ON();
- 780   5                          break;
- 781   5                      case LED_BAT_LEV_STA_2:
- 782   5                          LED_100_PERCENT_OFF();
- 783   5                          LED_75_PERCENT_OFF();
- 784   5                          LED_50_PERCENT_ON();
- 785   5                          LED_25_PERCENT_ON();
- 786   5                          break;
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 14  
+                              {
+                                  target_level = LED_BAT_LEV_4;
+                              }
+                          }
+                          else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+                          {
+                              // 黄白灯都亮
+                              if (discharge_time_cnt >= BAT_WY_LOW_WARN_TIME &&
+                                  avg_voltage_mv <
+                                      (BAT_WY_LOW_WARN_VOLTAGE -
+                                       BAT_WY_DEAD_ZONE_VOLTAGE))
+                              {
+                                  is_in_low_bat_alert = 1;
+                                  target_level = LED_BAT_LEV_STA_ALERT;
+                              }
+                              else if (discharge_time_cnt >= BAT_WY_1LED_TIME &&
+                                       avg_voltage_mv <
+                                           (BAT_WY_2LED_VOLTAGE -
+                                            BAT_WY_DEAD_ZONE_VOLTAGE))
+                              {
+                                  target_level = LED_BAT_LEV_1;
+                              }
+                              else if (discharge_time_cnt >= BAT_WY_2LED_TIME &&
+                                       avg_voltage_mv <
+                                           (BAT_WY_3LED_VOLTAGE -
+                                            BAT_WY_DEAD_ZONE_VOLTAGE))
+                              {
+                                  target_level = LED_BAT_LEV_2;
+                              }
+                              else if (discharge_time_cnt >= BAT_WY_3LED_TIME &&
+                                       avg_voltage_mv <
+                                           (BAT_WY_4LED_VOLTAGE -
+                                            BAT_WY_DEAD_ZONE_VOLTAGE))
+                              {
+                                  target_level = LED_BAT_LEV_3;
+                              }
+                              else
+                              {
+                                  target_level = LED_BAT_LEV_4;
+                              }
+                          }
+              
+                          // 如果目标等级高于或等于当前显示等级，立即更新并清除跳级计时
+                          if (target_level >= led_bat_lev_sta)
+                          {
+                              jump_down_cnt_ms = 0;
+                              led_bat_lev_sta = target_level;
+                              // 立即更新显示
+                              switch (led_bat_lev_sta)
+                              {
+                              case LED_BAT_LEV_STA_ALERT:
+                                  LED_100_PERCENT_OFF();
+                                  LED_75_PERCENT_OFF();
+                                  LED_50_PERCENT_OFF();
+                                  LED_25_PERCENT_ON();
+                                  break;
+                              case LED_BAT_LEV_1:
+                                  LED_100_PERCENT_OFF();
+                                  LED_75_PERCENT_OFF();
+                                  LED_50_PERCENT_OFF();
+                                  LED_25_PERCENT_ON();
+                                  break;
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 14  
 
- 787   5                      case LED_BAT_LEV_STA_3:
- 788   5                          LED_100_PERCENT_OFF();
- 789   5                          LED_75_PERCENT_ON();
- 790   5                          LED_50_PERCENT_ON();
- 791   5                          LED_25_PERCENT_ON();
- 792   5                          break;
- 793   5                      default:
- 794   5                          LED_100_PERCENT_ON();
- 795   5                          LED_75_PERCENT_ON();
- 796   5                          LED_50_PERCENT_ON();
- 797   5                          LED_25_PERCENT_ON();
- 798   5                          break;
- 799   5                      }
- 800   4                  }
- 801   3                  else if ((target_level + 1) < led_bat_lev_sta ||
- 802   3                           target_level == LED_BAT_LEV_STA_1)
- 803   3                  {
- 804   4                      /*
- 805   4                          目标等级比当前显示等级还要低2级，或者是目标等级已经是1级，
- 806   4                          按每次降一档的策略，每隔 LED_BAT_JUMP_DOWN_DEBOUNCE_MS 降一档
- 807   4                      */
- 808   4                      if (jump_down_cnt_ms < ((u32)-1))
- 809   4                      {
- 810   5                          jump_down_cnt_ms++;
- 811   5                      }
- 812   4      
- 813   4                      if (jump_down_cnt_ms >= LED_BAT_JUMP_DOWN_DEBOUNCE_MS)
- 814   4                      {
- 815   5                          jump_down_cnt_ms = 0;
- 816   5                          if (led_bat_lev_sta > LED_BAT_LEV_STA_1)
- 817   5                          {
- 818   6                              led_bat_lev_sta--;
- 819   6                          }
- 820   5      
- 821   5                          // 更新显示到新的档位
- 822   5                          switch (led_bat_lev_sta)
- 823   5                          {
- 824   6                          case LED_BAT_LEV_STA_1:
- 825   6                              LED_100_PERCENT_OFF();
- 826   6                              LED_75_PERCENT_OFF();
- 827   6                              LED_50_PERCENT_OFF();
- 828   6                              LED_25_PERCENT_ON();
- 829   6                              break;
- 830   6                          case LED_BAT_LEV_STA_2:
- 831   6                              LED_100_PERCENT_OFF();
- 832   6                              LED_75_PERCENT_OFF();
- 833   6                              LED_50_PERCENT_ON();
- 834   6                              LED_25_PERCENT_ON();
- 835   6                              break;
- 836   6                          case LED_BAT_LEV_STA_3:
- 837   6                              LED_100_PERCENT_OFF();
- 838   6                              LED_75_PERCENT_ON();
- 839   6                              LED_50_PERCENT_ON();
- 840   6                              LED_25_PERCENT_ON();
- 841   6                              break;
- 842   6                          default:
- 843   6                              LED_100_PERCENT_ON();
- 844   6                              LED_75_PERCENT_ON();
- 845   6                              LED_50_PERCENT_ON();
- 846   6                              LED_25_PERCENT_ON();
- 847   6                              break;
- 848   6                          }
-C51 COMPILER V9.60.7.0   LED                                                               07/13/2026 17:16:57 PAGE 15  
+                              case LED_BAT_LEV_2:
+                                  LED_100_PERCENT_OFF();
+                                  LED_75_PERCENT_OFF();
+                                  LED_50_PERCENT_ON();
+                                  LED_25_PERCENT_ON();
+                                  break;
+                              case LED_BAT_LEV_3:
+                                  LED_100_PERCENT_OFF();
+                                  LED_75_PERCENT_ON();
+                                  LED_50_PERCENT_ON();
+                                  LED_25_PERCENT_ON();
+                                  break;
+                              default:
+                                  LED_100_PERCENT_ON();
+                                  LED_75_PERCENT_ON();
+                                  LED_50_PERCENT_ON();
+                                  LED_25_PERCENT_ON();
+                                  break;
+                              }
+                          }
+                          else if (((target_level + 1) < led_bat_lev_sta) ||
+                                   (target_level == LED_BAT_LEV_1))
+                          {
+                              /*
+                                  目标等级比当前显示等级还要低2级，或者是目标等级已经是1级，
+                                  按每次降一档的策略，每隔 LED_BAT_JUMP_DOWN_DEBOUNCE_MS 降一档
+                              */
+                              if (jump_down_cnt_ms < ((u32)-1))
+                              {
+                                  jump_down_cnt_ms++;
+                              }
+              
+                              if (jump_down_cnt_ms >= LED_BAT_JUMP_DOWN_DEBOUNCE_MS)
+                              {
+                                  jump_down_cnt_ms = 0;
+                                  if (led_bat_lev_sta > LED_BAT_LEV_1)
+                                  {
+                                      led_bat_lev_sta--;
+                                  }
+              
+                                  // 更新显示到新的档位
+                                  switch (led_bat_lev_sta)
+                                  {
+                                  case LED_BAT_LEV_1:
+                                      LED_100_PERCENT_OFF();
+                                      LED_75_PERCENT_OFF();
+                                      LED_50_PERCENT_OFF();
+                                      LED_25_PERCENT_ON();
+                                      break;
+                                  case LED_BAT_LEV_2:
+                                      LED_100_PERCENT_OFF();
+                                      LED_75_PERCENT_OFF();
+                                      LED_50_PERCENT_ON();
+                                      LED_25_PERCENT_ON();
+                                      break;
+                                  case LED_BAT_LEV_3:
+                                      LED_100_PERCENT_OFF();
+                                      LED_75_PERCENT_ON();
+                                      LED_50_PERCENT_ON();
+                                      LED_25_PERCENT_ON();
+                                      break;
+                                  default:
+C51 COMPILER V9.60.7.0   LED                                                               07/16/2026 18:47:24 PAGE 15  
 
- 849   5                      }
- 850   4                  }
- 851   3              }
- 852   2          }
- 853   1      }
+                                      LED_100_PERCENT_ON();
+                                      LED_75_PERCENT_ON();
+                                      LED_50_PERCENT_ON();
+                                      LED_25_PERCENT_ON();
+                                      break;
+                                  }
+                              }
+                          }
+                      }
+                  }
+              #endif
+ 860   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   2067    ----
+   CODE SIZE        =    948    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     29       4
+   XDATA SIZE       =     22       3
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
