@@ -3,6 +3,7 @@
 #include "led.h"
 #include "charge_det.h"
 #include "battery_monitor.h"
+#include "led_bat_lev.h"
 
 #include "user_config.h"
 
@@ -151,12 +152,10 @@ void battery_voltage_update_by_isr(void)
 			avg_voltage_mv = cur_voltage_mv;
 
 			bat_vol_history_buff_init(avg_voltage_mv);
-
-			// TODO 刚上电时，直接根据对应的电池电压，给放电时间进行赋值
-			// 试着直接赋值为向下一个挡位对应的放电时间？
-			// bat_charge_time_cnt_update(avg_voltage_mv);
-			// bat_discharge_time_cnt_update(avg_voltage_mv);
-			// led_bat_lev_sta_init(avg_voltage_mv);
+			// 刚上电时，直接根据对应的电池电压，给充电时间、放电时间进行赋值
+			led_bat_lev_init_by_vol(avg_voltage_mv);
+			bat_charge_time_cnt_update(avg_voltage_mv);
+			bat_discharge_time_cnt_update(avg_voltage_mv);
 
 #if USER_DEBUG_ENABLE
 			printf("bat monitor init\n");
@@ -221,6 +220,12 @@ void bat_scan(void)
 	if (voltage_mv_global == 0)
 	{
 		return; // 尚未获取到电压值，不执行以下操作
+	}
+
+	if (is_low_power_wakeup_initialize_enable)
+	{
+		// 低功耗唤醒后的一段时间内，不采集电池电压，等电压稳定之后再采集
+		return;
 	}
 
 	// 每隔一段时间，将数组中的数据进行平均

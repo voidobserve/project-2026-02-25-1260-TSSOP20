@@ -2,6 +2,7 @@
 #include "user_config.h"
 #include "user_include.h"
 #include "bat_scan.h"
+#include "battery_monitor.h"
 
 #define PEROID_VAL (SYSCLK / 128 / 1000 - 1) // 周期值=系统时钟/分频/频率 - 1
 
@@ -51,12 +52,14 @@ void TIMR0_IRQHandler(void) interrupt TMR0_IRQn
 
         led_slow_adjust_isr();
         led_red_blue_flash_1ms_isr();
-        led_bat_instruction_timer_callback(); // 电池电量指示灯动画
+        // led_bat_instruction_timer_callback(); // 电池电量指示灯动画
 
         low_power_enter_timer_callback();
         send_low_bat_timer_callback();
  
         led_bat_lev_dislplay_1ms_isr();
+
+        batttery_monitor_1ms_isr(); // 电池监控：更新充电时间和放电时间
 
 #if USER_DEBUG_ENABLE
         debug_time_add();

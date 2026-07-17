@@ -21,11 +21,11 @@ u8 is_low_power_condition_establish(void)
 // 进入低功耗的条件成立，则累加时间，满足时间后进入低功耗
 void low_power_enter_timer_callback(void)
 {
-    static u16 cnt = 0;
+    static volatile u32 cnt = 0;
     if (is_low_power_condition_establish())
     {
         cnt++;
-        // TODO 等几分钟，直到电池电压没有明显变化的时候再进入低功耗
+        // 等待较长时间，等到电池电压稳定后，再进入低功耗
         if (cnt >= LOW_POWER_ENTER_TIME_WHEN_POWER_OFF)
         {
             cnt = 0;
@@ -216,8 +216,6 @@ void low_power_out(void)
 
 void low_power_handle(void)
 {
-    // static volatile u16 update_bat_percent_cnt = 0; // 计数值，计满一定次数后，更新电池电量信息
-    // u8 tmp_bat_percent;           // 临时存放的电池电量百分比
     u8 is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
     u8 is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
     u8 is_key_sig_wkup = 0;       // 是否由ad按键唤醒
@@ -237,9 +235,17 @@ void low_power_handle(void)
 #endif
 label_low_power_in:
 
+    // 进入低功耗，给该标志位清零
+    is_low_power_wakeup_initialize_enable = 0;
+    low_power_wakeup_initialize_cnt = 0;
+
     is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
     is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
     is_key_sig_wkup = 0;       // 是否由ad按键唤醒
+
+    // 进入低功耗，清空充电时间、清空放电时间
+    charge_time_cnt = 0;
+    discharge_time_cnt = 0;
 
     low_power_in();
     low_power_out();
@@ -302,15 +308,8 @@ label_low_power_in:
 
     adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
     delay_ms(1);
-    // TODO 唤醒后，采集电池电压时，要多采集几次
-    // TODO 唤醒后，需要跟进入低功耗之前的电池电压进行比较
     adc_val = adc_get_val_once();
     avg_voltage_mv = get_battery_voltage_by_adc(adc_val);
-    
-    // TODO 
-    // 初始化电池充电、放电时间
-    // bat_charge_time_cnt_update(avg_voltage_mv);
-    // bat_discharge_time_cnt_update(avg_voltage_mv);
 
     /*
         1. 按键唤醒，电池电压低，并且没有在充电，返回低功耗
@@ -346,9 +345,8 @@ label_low_power_in:
     // 成功退出低功耗之后，清除低电量报警和低电量关机的标志位
     // 通过按键退出低功耗，也会清除这些标志位
     is_sent_low_bat_alert = 0;
-    is_in_low_bat_alert = 0;
-    bat_vol_history_buff_init(avg_voltage_mv);
     user_init();
+    is_low_power_wakeup_initialize_enable = 1;
 }
 
 // wake up timer 中断服务函数

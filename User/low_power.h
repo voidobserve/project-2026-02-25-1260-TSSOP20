@@ -1,9 +1,11 @@
 #ifndef __LOW_POWER_H__
-#define __LOW_POWER_H__ 
+#define __LOW_POWER_H__
 
 #include "user_include.h"
 
-#define LOW_POWER_ENTER_TIME_WHEN_POWER_OFF ((u16)2000) // 关机后，多久进入低功耗，单位：ms
+// 关机后，多久进入低功耗，单位：ms
+// #define LOW_POWER_ENTER_TIME_WHEN_POWER_OFF ((u32)2 * 60 * 1000)
+#define LOW_POWER_ENTER_TIME_WHEN_POWER_OFF ((u32)2 * 1000)
 
 void low_power_handle(void);
 

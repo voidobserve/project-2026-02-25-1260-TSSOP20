@@ -47,7 +47,8 @@ typedef u8 bat_vol_update_sta_t;
 	(BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER * VOLTAGE_HISTORY_SIZE)
 
 extern volatile u16 avg_voltage_mv; // @attention 在当前.c文件外调用时，慎用
- 
+
+u16 bat_vol_history_buff_get_avg(void);
 
 void battery_voltage_update_by_isr(void);
 void bat_vol_history_buff_init(u16 voltage_mv);

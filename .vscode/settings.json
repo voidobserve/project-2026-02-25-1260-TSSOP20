@@ -40,5 +40,6 @@
         "fan_ctl.h": "c",
         "typedef.h": "c",
         "adc.h": "c"
-    }
+    },
+    "Codegeex.CompletionDelay": 0.2
 }

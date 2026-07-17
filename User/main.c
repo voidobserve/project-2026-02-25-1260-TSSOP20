@@ -87,13 +87,13 @@ void main(void)
         ad_key_handle();        
         uart_data_handle();
 
-        charge_det();
+        charge_det(); // 充电IC检测（充电和放电信号检测）
 
         bat_scan(); // 得到稳定的电池电压并更新
         led_bat_lev_handle();
-        // battery_monitor_handle(); // 测试时屏蔽
+        battery_monitor_handle(); // 
 
-        // low_power_handle();// 测试时屏蔽
+        low_power_handle(); //  
 
 #if USER_DEBUG_ENABLE
         // user_test_main();

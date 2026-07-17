@@ -4,7 +4,7 @@
 #include "typedef.h"
 
 // TEST_ONLY
-#define BAT_LED_TEST_ENABLE 1 // 电池电量指示灯测试
+#define BAT_LED_TEST_ENABLE 0 // 电池电量指示灯测试
 
 // =====================================================================
 // =====================================================================
@@ -34,9 +34,9 @@
 // =====================================================================
 
 // 黄白灯一起亮（ YELLOW + WHITE ）
-#define BAT_WY_4LED_VOLTAGE ((u16)3700)
-#define BAT_WY_3LED_VOLTAGE ((u16)3600)
-#define BAT_WY_2LED_VOLTAGE ((u16)3500)
+#define BAT_WY_3LED_VOLTAGE ((u16)3700)
+#define BAT_WY_2LED_VOLTAGE ((u16)3600)
+#define BAT_WY_1LED_VOLTAGE ((u16)3500)
 #define BAT_WY_LOW_WARN_VOLTAGE ((u16)3250)
 // 死区电压
 #define BAT_WY_DEAD_ZONE_VOLTAGE ((u16)50)
@@ -88,6 +88,11 @@
 
 // =====================================================================
 // =====================================================================
+// 根据电池的充电曲线，得到对应的电压，单位：mV
+#define BAT_CHARGE_1LED_VOLTAGE ((u16)3920)
+#define BAT_CHARGE_2LED_VOLTAGE ((u16)4000)
+#define BAT_CHARGE_3LED_VOLTAGE ((u16)4140)
+
 #if (!BAT_LED_TEST_ENABLE)
 // 充电时，电量各个指示灯所需的充电时间，单位：s
 // 备注：最后一个灯要等充电ic输出充满电的信号
@@ -116,15 +121,18 @@
 #define LED_BAT_LEV_JUMP_DOWN_DEBOUNCE_MS ((u32)5 * 1000)
 #endif
 
+// 充电完成后快速填充每档间隔（ms），短时间内逐档上升显示
+#define LED_CHARGE_QUICK_FILL_INTERVAL_MS ((u32)1 * 10 * 1000)
+
 // 电池电量指示灯对应的挡位
 enum
 {
 	LED_BAT_LEV_OFF = 0x00, // 关灯
-	LED_BAT_LEV_ALERT, 
-	LED_BAT_LEV_1,			//
-	LED_BAT_LEV_2,			//
-	LED_BAT_LEV_3,			//
-	LED_BAT_LEV_4,			//
+	LED_BAT_LEV_ALERT,
+	LED_BAT_LEV_1, //
+	LED_BAT_LEV_2, //
+	LED_BAT_LEV_3, //
+	LED_BAT_LEV_4, //
 };
 typedef u8 led_bat_lev_t;
 
@@ -144,7 +152,8 @@ typedef u8 led_bat_lev_sta_t;
 extern volatile led_bat_lev_t led_bat_lev;
 extern volatile led_bat_lev_sta_t led_bat_lev_sta;
 
-void led_bat_lev_init(u8 dest_bat_lev);
+void led_bat_lev_init_by_vol(u16 voltage_mv);
+
 void led_bat_lev_handle(void);
 
 void led_bat_lev_dislplay_1ms_isr(void);

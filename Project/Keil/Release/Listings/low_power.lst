@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/16/2026 18:47:24 PAGE 1   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/17/2026 18:50:04 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LOW_POWER
@@ -32,11 +32,11 @@ line level    source
   21          // 进入低功耗的条件成立，则累加时间，满足时间后进入低功耗
   22          void low_power_enter_timer_callback(void)
   23          {
-  24   1          static u16 cnt = 0;
+  24   1          static volatile u32 cnt = 0;
   25   1          if (is_low_power_condition_establish())
   26   1          {
   27   2              cnt++;
-  28   2              // TODO 等几分钟，直到电池电压没有明显变化的时候再进入低功耗
+  28   2              // 等待较长时间，等到电池电压稳定后，再进入低功耗
   29   2              if (cnt >= LOW_POWER_ENTER_TIME_WHEN_POWER_OFF)
   30   2              {
   31   3                  cnt = 0;
@@ -53,8 +53,8 @@ line level    source
   42          void low_power_in(void)
   43          {
   44   1      #if USER_DEBUG_ENABLE
-  45   1          // printf("stop in\n");
-  46   1      #endif
+                  // printf("stop in\n");
+              #endif
   47   1      
   48   1          __DisableIRQ(TMR1_IRQn);  // 禁止 定时器 1 中断
   49   1          __DisableIRQ(TMR0_IRQn);  // 禁止 定时器 0 中断
@@ -62,7 +62,7 @@ line level    source
   51   1          __DisableIRQ(UART0_IRQn); // 禁止 串口 0 中断
   52   1      
   53   1          TMR1_CONL &= ~(TMR_MODE_SEL(0x03)); // 不使能计数
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/16/2026 18:47:24 PAGE 2   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/17/2026 18:50:04 PAGE 2   
 
   54   1          TMR0_CONL &= ~(TMR_MODE_SEL(0x03)); // 不使能计数
   55   1      
@@ -126,7 +126,7 @@ line level    source
  113   1          P2_MD0 &= ~GPIO_P22_MODE_SEL(0x3);
  114   1          FIN_S13 = GPIO_FIN_SEL_P22; // 配置 P22 为 通道3 输入唤醒端口
  115   1      
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/16/2026 18:47:24 PAGE 3   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/17/2026 18:50:04 PAGE 3   
 
  116   1          delay_ms(1); // 官方提供的低功耗SDK中，这里有延时操作
  117   1      
@@ -190,7 +190,7 @@ line level    source
  172   1          PMU_CON0 &= ~0x60;                 // 关闭VDD POR模块, 关闭VBG06_REF输出
  173   1          CLK_ACON0 &= ~CLK_AIP_HRC_EN(0x1); // 关闭HRC时钟
  174   1      
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/16/2026 18:47:24 PAGE 4   
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/17/2026 18:50:04 PAGE 4   
 
  175   1          // P17 = 1; // 用该引脚测试低功耗的时间
  176   1          // =============================================================
@@ -238,172 +238,169 @@ line level    source
  216          
  217          void low_power_handle(void)
  218          {
- 219   1          // static volatile u16 update_bat_percent_cnt = 0; // 计数值，计满一定次数后，更新电池
-             -电量信息
- 220   1          // u8 tmp_bat_percent;           // 临时存放的电池电量百分比
- 221   1          u8 is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
- 222   1          u8 is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
- 223   1          u8 is_key_sig_wkup = 0;       // 是否由ad按键唤醒
- 224   1          u16 adc_val;
- 225   1      
- 226   1          if (is_low_power_enter_enable)
- 227   1          {
- 228   2              is_low_power_enter_enable = 0;
- 229   2          }
- 230   1          else
- 231   1          {
- 232   2              return;
- 233   2          }
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/16/2026 18:47:24 PAGE 5   
+ 219   1          u8 is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
+ 220   1          u8 is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
+ 221   1          u8 is_key_sig_wkup = 0;       // 是否由ad按键唤醒
+ 222   1          u16 adc_val;
+ 223   1      
+ 224   1          if (is_low_power_enter_enable)
+ 225   1          {
+ 226   2              is_low_power_enter_enable = 0;
+ 227   2          }
+ 228   1          else
+ 229   1          {
+ 230   2              return;
+ 231   2          }
+ 232   1      
+ 233   1      #if USER_DEBUG_ENABLE
+                  printf("low power in\n");
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/17/2026 18:50:04 PAGE 5   
 
- 234   1      
- 235   1      #if USER_DEBUG_ENABLE
- 236   1          printf("low power in\n");
- 237   1      #endif
- 238   1      label_low_power_in:
- 239   1      
- 240   1          is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
- 241   1          is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
- 242   1          is_key_sig_wkup = 0;       // 是否由ad按键唤醒
- 243   1      
- 244   1          low_power_in();
- 245   1          low_power_out();
- 246   1      
- 247   1      #if USER_DEBUG_ENABLE
- 248   1          uart0_init();
- 249   1          printf("low power out\n");
- 250   1      #endif
- 251   1      
- 252   1          // 唤醒后，检测有没有按键操作、有没有充电，有则恢复工作，没有则回到低
+              #endif
+ 236   1      label_low_power_in:
+ 237   1      
+ 238   1          // 进入低功耗，给该标志位清零
+ 239   1          is_low_power_wakeup_initialize_enable = 0;
+ 240   1          low_power_wakeup_initialize_cnt = 0;
+ 241   1      
+ 242   1          is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
+ 243   1          is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
+ 244   1          is_key_sig_wkup = 0;       // 是否由ad按键唤醒
+ 245   1      
+ 246   1          // 进入低功耗，清空充电时间、清空放电时间
+ 247   1          charge_time_cnt = 0;
+ 248   1          discharge_time_cnt = 0;
+ 249   1      
+ 250   1          low_power_in();
+ 251   1          low_power_out();
+ 252   1      
+ 253   1      #if USER_DEBUG_ENABLE
+                  uart0_init();
+                  printf("low power out\n");
+              #endif
+ 257   1      
+ 258   1          // 唤醒后，检测有没有按键操作、有没有充电，有则恢复工作，没有则回到低
              -功耗
- 253   1          adc_pin_init();
- 254   1          adc_init_when_low_pwr_out();
- 255   1      
- 256   1          adc_channel_sel(ADC_CHANNEL_SEL_AD_KEY);
- 257   1          delay_ms(1);
- 258   1          adc_val = adc_get_val_once();
- 259   1          // 如果ad值小于ad按键的阈值，说明有按键按下
- 260   1          if (adc_val < AD_KEY_INDEX_MAX_VAL)
- 261   1          {
- 262   2              // 有按键按下
- 263   2              is_key_sig_wkup = 1;
- 264   2      #if USER_DEBUG_ENABLE
- 265   2              // printf("key down\n");
- 266   2      #endif
- 267   2          }
- 268   1      
- 269   1          adc_channel_sel(ADC_CHANNEL_SEL_SOLAR_DET);
- 270   1          delay_ms(1);
- 271   1          adc_val = adc_get_val_once();
- 272   1          // 如果检测到大于4.5V，认为有太阳能充电
- 273   1          if (((u32)adc_val * 2 * 2400 / 4096) >= 4500)
- 274   1          {
- 275   2              is_charge_sig_wkup = 1;
- 276   2      #if USER_DEBUG_ENABLE
- 277   2              // printf("charge by solar panel\n");
- 278   2      #endif
- 279   2          }
- 280   1      
- 281   1          // 如果是充电ic输出正在充电的信号，导致的唤醒
- 282   1          if (LP_WKPND & LP_WKUP_1_PND(0x01))
- 283   1          {
- 284   2      #if USER_DEBUG_ENABLE
- 285   2              printf("wake up by charging\n");
- 286   2      #endif
- 287   2              LP_WKPND |= LP_WKUP_1_PCLR(0x01); // 清空唤醒标志位
- 288   2              is_charge_sig_wkup = 1;
- 289   2          }
- 290   1      
- 291   1          if (LP_WKPND & LP_WKUP_3_PND(0x01))
- 292   1          {
- 293   2              // 如果是充电ic输出正在放电的信号，导致的唤醒
- 294   2              LP_WKPND |= LP_WKUP_3_PND(0x01); // 清空唤醒标志位
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/16/2026 18:47:24 PAGE 6   
+ 259   1          adc_pin_init();
+ 260   1          adc_init_when_low_pwr_out();
+ 261   1      
+ 262   1          adc_channel_sel(ADC_CHANNEL_SEL_AD_KEY);
+ 263   1          delay_ms(1);
+ 264   1          adc_val = adc_get_val_once();
+ 265   1          // 如果ad值小于ad按键的阈值，说明有按键按下
+ 266   1          if (adc_val < AD_KEY_INDEX_MAX_VAL)
+ 267   1          {
+ 268   2              // 有按键按下
+ 269   2              is_key_sig_wkup = 1;
+ 270   2      #if USER_DEBUG_ENABLE
+                      // printf("key down\n");
+              #endif
+ 273   2          }
+ 274   1      
+ 275   1          adc_channel_sel(ADC_CHANNEL_SEL_SOLAR_DET);
+ 276   1          delay_ms(1);
+ 277   1          adc_val = adc_get_val_once();
+ 278   1          // 如果检测到大于4.5V，认为有太阳能充电
+ 279   1          if (((u32)adc_val * 2 * 2400 / 4096) >= 4500)
+ 280   1          {
+ 281   2              is_charge_sig_wkup = 1;
+ 282   2      #if USER_DEBUG_ENABLE
+                      // printf("charge by solar panel\n");
+              #endif
+ 285   2          }
+ 286   1      
+ 287   1          // 如果是充电ic输出正在充电的信号，导致的唤醒
+ 288   1          if (LP_WKPND & LP_WKUP_1_PND(0x01))
+ 289   1          {
+ 290   2      #if USER_DEBUG_ENABLE
+                      printf("wake up by charging\n");
+              #endif
+ 293   2              LP_WKPND |= LP_WKUP_1_PCLR(0x01); // 清空唤醒标志位
+ 294   2              is_charge_sig_wkup = 1;
+ 295   2          }
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/17/2026 18:50:04 PAGE 6   
 
- 295   2      
- 296   2              is_discharge_sig_wkup = 1;
- 297   2      
- 298   2      #if USER_DEBUG_ENABLE
- 299   2              printf("wake up by discharge signal\n");
- 300   2      #endif
- 301   2          }
- 302   1      
- 303   1          adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
- 304   1          delay_ms(1);
- 305   1          // TODO 唤醒后，采集电池电压时，要多采集几次
- 306   1          // TODO 唤醒后，需要跟进入低功耗之前的电池电压进行比较
- 307   1          adc_val = adc_get_val_once();
- 308   1          avg_voltage_mv = get_battery_voltage_by_adc(adc_val);
- 309   1          
- 310   1          // TODO 
- 311   1          // 初始化电池充电、放电时间
- 312   1          // bat_charge_time_cnt_update(avg_voltage_mv);
- 313   1          // bat_discharge_time_cnt_update(avg_voltage_mv);
- 314   1      
- 315   1          /*
- 316   1              1. 按键唤醒，电池电压低，并且没有在充电，返回低功耗
- 317   1              2. 没有按键唤醒，并且没有在充电，返回低功耗
- 318   1          */
- 319   1          if ((is_key_sig_wkup &&
- 320   1               avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE &&
- 321   1               0 == is_charge_sig_wkup &&
- 322   1               0 == is_discharge_sig_wkup) ||
- 323   1              (0 == is_key_sig_wkup &&
- 324   1               0 == is_charge_sig_wkup &&
- 325   1               0 == is_discharge_sig_wkup))
- 326   1          {
- 327   2      #if USER_DEBUG_ENABLE
- 328   2              if ((is_key_sig_wkup &&
- 329   2                   avg_voltage_mv < BATTERY_EMPTY_VOLTAGE &&
- 330   2                   0 == is_charge_sig_wkup &&
- 331   2                   0 == is_discharge_sig_wkup))
- 332   2              {
- 333   3                  printf("key press, but bat is low\n");
- 334   3              }
- 335   2      
- 336   2              // printf("goto low power in\n");
- 337   2      #endif
- 338   2      
- 339   2              goto label_low_power_in;
- 340   2          }
- 341   1          // else if (is_charge_sig_wkup || is_discharge_sig_wkup)
- 342   1          // {
- 343   1          //     // 充电ic输出充电或放电信号，唤醒，不返回低功耗
- 344   1          // }
- 345   1      
- 346   1          // 成功退出低功耗之后，清除低电量报警和低电量关机的标志位
- 347   1          // 通过按键退出低功耗，也会清除这些标志位
- 348   1          is_sent_low_bat_alert = 0;
- 349   1          is_in_low_bat_alert = 0;
- 350   1          bat_vol_history_buff_init(avg_voltage_mv);
- 351   1          user_init();
- 352   1      }
- 353          
- 354          // wake up timer 中断服务函数
- 355          void WUT_IRQHandler(void) interrupt WUT_IRQn
- 356          {
-C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/16/2026 18:47:24 PAGE 7   
+ 296   1      
+ 297   1          if (LP_WKPND & LP_WKUP_3_PND(0x01))
+ 298   1          {
+ 299   2              // 如果是充电ic输出正在放电的信号，导致的唤醒
+ 300   2              LP_WKPND |= LP_WKUP_3_PND(0x01); // 清空唤醒标志位
+ 301   2      
+ 302   2              is_discharge_sig_wkup = 1;
+ 303   2      
+ 304   2      #if USER_DEBUG_ENABLE
+                      printf("wake up by discharge signal\n");
+              #endif
+ 307   2          }
+ 308   1      
+ 309   1          adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
+ 310   1          delay_ms(1);
+ 311   1          adc_val = adc_get_val_once();
+ 312   1          avg_voltage_mv = get_battery_voltage_by_adc(adc_val);
+ 313   1      
+ 314   1          /*
+ 315   1              1. 按键唤醒，电池电压低，并且没有在充电，返回低功耗
+ 316   1              2. 没有按键唤醒，并且没有在充电，返回低功耗
+ 317   1          */
+ 318   1          if ((is_key_sig_wkup &&
+ 319   1               avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE &&
+ 320   1               0 == is_charge_sig_wkup &&
+ 321   1               0 == is_discharge_sig_wkup) ||
+ 322   1              (0 == is_key_sig_wkup &&
+ 323   1               0 == is_charge_sig_wkup &&
+ 324   1               0 == is_discharge_sig_wkup))
+ 325   1          {
+ 326   2      #if USER_DEBUG_ENABLE
+                      if ((is_key_sig_wkup &&
+                           avg_voltage_mv < BATTERY_EMPTY_VOLTAGE &&
+                           0 == is_charge_sig_wkup &&
+                           0 == is_discharge_sig_wkup))
+                      {
+                          printf("key press, but bat is low\n");
+                      }
+              
+                      // printf("goto low power in\n");
+              #endif
+ 337   2      
+ 338   2              goto label_low_power_in;
+ 339   2          }
+ 340   1          // else if (is_charge_sig_wkup || is_discharge_sig_wkup)
+ 341   1          // {
+ 342   1          //     // 充电ic输出充电或放电信号，唤醒，不返回低功耗
+ 343   1          // }
+ 344   1      
+ 345   1          // 成功退出低功耗之后，清除低电量报警和低电量关机的标志位
+ 346   1          // 通过按键退出低功耗，也会清除这些标志位
+ 347   1          is_sent_low_bat_alert = 0;
+ 348   1          user_init();
+ 349   1          is_low_power_wakeup_initialize_enable = 1;
+ 350   1      }
+ 351          
+ 352          // wake up timer 中断服务函数
+ 353          void WUT_IRQHandler(void) interrupt WUT_IRQn
+ 354          {
+ 355   1          // 进入中断设置IP，不可删除
+ 356   1          __IRQnIPnPush(WUT_IRQn);
+ 357   1      
+C51 COMPILER V9.60.7.0   LOW_POWER                                                         07/17/2026 18:50:04 PAGE 7   
 
- 357   1          // 进入中断设置IP，不可删除
- 358   1          __IRQnIPnPush(WUT_IRQn);
+ 358   1          // ---------------- 用户函数处理 -------------------
  359   1      
- 360   1          // ---------------- 用户函数处理 -------------------
- 361   1      
- 362   1          // 周期中断
- 363   1          if (WUT_CONH & TMR_PRD_PND(0x1))
- 364   1          {
- 365   2              WUT_CONH |= TMR_PRD_PND(0x1); // 清除pending
- 366   2          }
- 367   1      
- 368   1          // 退出中断设置IP，不可删除
- 369   1          __IRQnIPnPop(WUT_IRQn);
- 370   1      }
+ 360   1          // 周期中断
+ 361   1          if (WUT_CONH & TMR_PRD_PND(0x1))
+ 362   1          {
+ 363   2              WUT_CONH |= TMR_PRD_PND(0x1); // 清除pending
+ 364   2          }
+ 365   1      
+ 366   1          // 退出中断设置IP，不可删除
+ 367   1          __IRQnIPnPop(WUT_IRQn);
+ 368   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    805    ----
-   CONSTANT SIZE    =    106    ----
-   XDATA SIZE       =      4       5
+   CODE SIZE        =    785    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =      6       5
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

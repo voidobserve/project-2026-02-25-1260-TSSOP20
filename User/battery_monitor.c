@@ -17,11 +17,16 @@ volatile u8 is_sent_low_bat_alert = 0;
 */
 static volatile u8 is_send_low_bat_repeatedly_enable = 0;
 
-// 是否处于低电量提示
-// 有充电、进入低功耗，都清除该标志位：
-volatile u8 is_in_low_bat_alert = 0; //
 volatile u32 discharge_time_cnt = 0; // 放电时间计数，单位：s
 volatile u32 charge_time_cnt = 0;    // 充电时间计数，单位：s
+
+/*
+    从低功耗唤醒 xx 时间后，再次初始化相关参数
+
+    关机后，该标志位要清零
+*/
+volatile u8 is_low_power_wakeup_initialize_enable = 0;
+volatile u16 low_power_wakeup_initialize_cnt = 0;
 
 // 控制发送低电量的周期
 void send_low_bat_timer_callback(void)
@@ -98,10 +103,26 @@ void batttery_monitor_1ms_isr(void)
     {
         cnt_1ms = 0;
     }
+
+    if (is_low_power_wakeup_initialize_enable)
+    {
+        low_power_wakeup_initialize_cnt++;
+        if (low_power_wakeup_initialize_cnt >= ((u16)15 * 1000))
+        {
+            low_power_wakeup_initialize_cnt = 0;
+            is_low_power_wakeup_initialize_enable = 0;
+            avg_voltage_mv = bat_vol_history_buff_get_avg();
+            bat_vol_history_buff_init(avg_voltage_mv);
+            bat_discharge_time_cnt_update(avg_voltage_mv);
+            bat_charge_time_cnt_update(avg_voltage_mv);
+        }
+    }
+    else
+    {
+        low_power_wakeup_initialize_cnt = 0;
+    }
 }
 
-
-#if 0
 /**
  * @brief 初始化电池充电时间
  *      1. 在低功耗唤醒后调用
@@ -110,64 +131,55 @@ void batttery_monitor_1ms_isr(void)
  */
 void bat_charge_time_cnt_update(u16 voltage_mv)
 {
-    static u8 is_initialized = 0;
-    if (0 == is_initialized)
+    if (0 == is_in_charging)
     {
-        // 没有初始化过 充电时间，直接根据当前电池电压，大致给出充电时间
-        is_initialized = 1;
+        // 没有在充电，
+        // 直接根据当前电池电压，大致给出充电时间
+
         // 根据黄白灯一起亮的数据来初始化充电时间
-        if (voltage_mv >= BAT_WY_4LED_VOLTAGE)
+        if (voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
         {
-            // 电池电压大于4个灯对应的电压
-            charge_time_cnt = BAT_CHARGE_3LED_TIME;
+            // 电池电压小于低电量提示电压
+            charge_time_cnt = 0;
         }
-        else if (voltage_mv >= BAT_WY_3LED_VOLTAGE)
-        {
-            // 电池电压大于3个灯对应的电压
-            charge_time_cnt = BAT_CHARGE_3LED_TIME;
-        }
-        else if (voltage_mv >= BAT_WY_2LED_VOLTAGE)
-        {
-            // 电池电压大于2个灯对应的电压
-            charge_time_cnt = BAT_CHARGE_2LED_TIME;
-        }
-        else if (voltage_mv >=
-                 (BAT_WY_LOW_WARN_VOLTAGE + BAT_WY_DEAD_ZONE_VOLTAGE))
-        {
-            // 电池电压大于低电量报警电压
-            charge_time_cnt = BAT_CHARGE_1LED_TIME;
-        }
-        else
+        else if (voltage_mv < BAT_WY_1LED_VOLTAGE)
         {
             charge_time_cnt = 0;
         }
-
-        return;
+        else if (voltage_mv < BAT_WY_2LED_VOLTAGE)
+        {
+            // 电池电压小于电池电量指示灯2个灯对应的电压
+            charge_time_cnt = BAT_CHARGE_1LED_TIME;
+        }
+        else if (voltage_mv < BAT_WY_3LED_VOLTAGE)
+        {
+            // 电池电压小于电池电量指示灯3个灯对应的电压
+            charge_time_cnt = BAT_CHARGE_2LED_TIME;
+        }
+        else
+        {
+            charge_time_cnt = BAT_CHARGE_3LED_TIME;
+        }
     }
-
-    // 如果已经初始化过，根据之前保存的电池电量指示灯状态，给充电时间赋值
-    switch (led_bat_lev_sta)
+    else
     {
-    case LED_BAT_LEV_STA_ALERT:
-        charge_time_cnt = 0;
-        break;
-
-    case LED_BAT_LEV_1:
-        // 之前点亮了第一颗指示灯
-        charge_time_cnt = BAT_CHARGE_1LED_TIME;
-        break;
-
-    case LED_BAT_LEV_2:
-        charge_time_cnt = BAT_CHARGE_2LED_TIME;
-        break;
-
-    case LED_BAT_LEV_3:
-        charge_time_cnt = BAT_CHARGE_3LED_TIME;
-        break;
-
-    case LED_BAT_LEV_4:
-        charge_time_cnt = BAT_CHARGE_3LED_TIME;
-        break;
+        // 正在充电
+        if (voltage_mv < BAT_CHARGE_1LED_VOLTAGE)
+        {
+            charge_time_cnt = 0;
+        }
+        else if (voltage_mv < BAT_CHARGE_2LED_VOLTAGE)
+        {
+            charge_time_cnt = BAT_CHARGE_1LED_TIME;
+        }
+        else if (voltage_mv < BAT_CHARGE_3LED_VOLTAGE)
+        {
+            charge_time_cnt = BAT_CHARGE_2LED_TIME;
+        }
+        else
+        {
+            charge_time_cnt = BAT_CHARGE_3LED_TIME;
+        }
     }
 }
 
@@ -179,173 +191,67 @@ void bat_charge_time_cnt_update(u16 voltage_mv)
  */
 void bat_discharge_time_cnt_update(u16 voltage_mv)
 {
-    static u8 is_initialized = 0;
-    if (0 == is_initialized)
+    // 根据黄白灯一起亮的数据来初始化放电时间
+    if (voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
     {
-        is_initialized = 1;
-
-        // 根据黄白灯一起亮的数据来初始化放电时间
-        if (voltage_mv >= BAT_WY_4LED_VOLTAGE)
+        if (discharge_time_cnt < BAT_WY_LOW_WARN_TIME)
         {
-            // 电池电压大于4个灯对应的电压
-            discharge_time_cnt = 0;
-        }
-        else if (voltage_mv >= BAT_WY_3LED_VOLTAGE)
-        {
-            // 电池电压大于3个灯对应的电压
-            discharge_time_cnt = BAT_WY_3LED_TIME;
-        }
-        else if (voltage_mv >= BAT_WY_2LED_VOLTAGE)
-        {
-            // 电池电压大于2个灯对应的电压
-            discharge_time_cnt = BAT_WY_2LED_TIME;
-        }
-        else if (voltage_mv >=
-                 (BAT_WY_LOW_WARN_VOLTAGE + BAT_WY_DEAD_ZONE_VOLTAGE))
-        {
-            // 电池电压大于低电量报警电压
-            discharge_time_cnt = BAT_WY_1LED_TIME;
-        }
-        else
-        {
+            /*
+                电池电压小于低电量提示电压，
+                并且放电时间小于低电量提示时间
+            */
             discharge_time_cnt = BAT_WY_LOW_WARN_TIME;
         }
-
-        return;
     }
-
-    // 如果已经初始化过，根据之前保存的电池电量指示灯状态，给放电时间赋值
-    switch (led_bat_lev_sta)
+    else if (voltage_mv < BAT_WY_1LED_VOLTAGE)
     {
-    case LED_BAT_LEV_STA_ALERT:
-        discharge_time_cnt = BAT_WY_LOW_WARN_TIME;
-        break;
-
-    case LED_BAT_LEV_1:
-        // 之前点亮了第一颗指示灯
-        discharge_time_cnt = BAT_WY_1LED_TIME;
-        break;
-
-    case LED_BAT_LEV_2:
-        discharge_time_cnt = BAT_WY_2LED_TIME;
-        break;
-
-    case LED_BAT_LEV_3:
-        discharge_time_cnt = BAT_WY_3LED_TIME;
-        break;
-
-    case LED_BAT_LEV_4:
+        if (discharge_time_cnt < BAT_WY_1LED_TIME)
+        {
+            /*
+                电池电压小于1个灯对应的电压
+                并且放电时间小于1个灯对应的放电时间
+            */
+            discharge_time_cnt = BAT_WY_1LED_TIME;
+        }
+    }
+    else if (voltage_mv < BAT_WY_2LED_VOLTAGE)
+    {
+        if (discharge_time_cnt < BAT_WY_2LED_TIME)
+        {
+            /*
+                电池电压小于2个灯对应的电压
+                并且放电时间小于2个灯对应的放电时间
+            */
+            discharge_time_cnt = BAT_WY_2LED_TIME;
+        }
+    }
+    else if (voltage_mv < BAT_WY_3LED_VOLTAGE)
+    {
+        if (discharge_time_cnt < BAT_WY_3LED_TIME)
+        {
+            /*
+                电池电压小于3个灯对应的电压
+                并且放电时间小于3个灯对应的放电时间
+            */
+            discharge_time_cnt = BAT_WY_3LED_TIME;
+        }
+    }
+    else
+    {
         discharge_time_cnt = 0;
-        break;
     }
 }
-#endif
 
 // 修改后的电池监控处理函数
 void battery_monitor_handle(void)
 {
-#if 0
-    // 控制电池电量指示灯
-    if (is_in_charging &&
-        (led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_BEGIN &&
-         led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM &&
-         led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGING &&
-         led_bat_level_sta != LED_BAT_LEVEL_STA_CHARGE_END))
-    {
-        led_bat_level_sta = LED_BAT_LEVEL_STA_CHARGE_BEGIN;
-    }
-    // 不在充电、蓝牙ic不工作、灯光关闭时，关闭电量指示灯
-    else if (is_in_charging == 0 &&
-             ble_ic.is_working == 0 &&
-             led_ctl.status == LED_STATUS_OFF &&
-             0 == is_in_discharging) // 充电ic没有输出放电的信号
-    {
-        led_bat_level_sta = LED_BAT_LEVEL_STA_IDLE;
-
-        // 关机后（不在工作），需要在这里清空对应标志位
-    }
-    // 不在充电，但是蓝牙ic或者灯光打开，根据电池电量来点亮对应指示灯
-    else if (is_in_charging == 0 &&
-             (ble_ic.is_working ||
-              led_ctl.status != LED_STATUS_OFF ||
-              is_in_discharging))
-    {
-        led_bat_level_sta = LED_BAT_LEVEL_STA_DISCHARGE;
-
-        // 到了关机对应的电压
-        if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
-        {
-#if USER_DEBUG_ENABLE
-            printf("detect bat power empty\n");
-            // printf("led_ctl.status == %u\n", (u16)led_ctl.status);
-            // printf("ble_ic.is_working == %u\n", (u16)ble_ic.is_working);
-#endif
-
-            // 关闭灯光
-            if (led_ctl.status != LED_STATUS_OFF)
-            {
-                led_status_set(LED_STATUS_OFF);
-            }
-
-            /*
-                关闭蓝牙，从低电量提示到低电量关机。
-                这个时间段会打开蓝牙，进行低电量提示。
-                到了低电量关机，这里需要能够重复进来，一直给蓝牙发送数据，确保蓝牙关机
-            */
-            if (ble_ic.is_working)
-            {
-                uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
-                // delay_ms(5000); // 这里要等蓝牙播报完成
-                delay_ms(30);
-                ble_ic_disable_pre();
-                delay_ms(100);
-            }
-
-            is_in_low_bat_alert = 0; // 关机，取消低电量报警
-        }
-        /*
-            低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
-            电池电量在关机电压和低电量阈值之间，才打开蓝牙
-        */
-        else if (is_sent_low_bat_alert == 0 &&
-                 /* 扩展低电量触发阈值，使用模式配置中的低电警告阈值（参考客户要求） */
-                 avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
-        {
-            // u8 i; // 循环计数值，控制连续发送低电量报警的次数
-#if USER_DEBUG_ENABLE
-            // printf("detect low power\n");
-#endif
-            if (ble_ic.is_working == 0)
-            {
-                ble_ic_enable();
-            }
-
-            uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
-            is_sent_low_bat_alert = 1;
-            is_in_low_bat_alert = 1;
-        }
-
-        // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间发送一次低电量报警：
-        if (is_send_low_bat_repeatedly_enable)
-        {
-            uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
-            is_send_low_bat_repeatedly_enable = 0;
-
-#if USER_DEBUG_ENABLE
-            printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
-#endif
-        }
-    }
-#endif
-
-#if 1
-    if (led_bat_lev_sta != LED_BAT_LEV_STA_DISCHARGE)
+    // REVIEW ，进入到这里进行判断，至少要等开机后10秒，否则电压值不准确
+    if ((led_bat_lev_sta != LED_BAT_LEV_STA_DISCHARGE) &&
+        led_bat_lev_sta != LED_BAT_LEV_STA_ALERT)
     {
         // 不在放电，直接返回
         return;
     }
-
-    // TODO 如果先到3.2V，几秒后又变成3.0V，这种情况不应该开蓝牙
 
     // 到了关机对应的电压
     if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
@@ -376,15 +282,22 @@ void battery_monitor_handle(void)
             delay_ms(100);
         }
 
-        is_in_low_bat_alert = 0; // 关机，取消低电量报警
+        return; // 提前退出，不再往下执行
     }
+
+    if (is_low_power_wakeup_initialize_enable)
+    {
+        // 刚从低功耗期间唤醒，还没有得到稳定的电池电压，直接返回
+        return;
+    }
+
     /*
         低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
         电池电量在关机电压和低电量阈值之间，才打开蓝牙
     */
-    else if (is_sent_low_bat_alert == 0 &&
-             /* 扩展低电量触发阈值，使用模式配置中的低电警告阈值（参考客户要求） */
-             avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
+    if (is_sent_low_bat_alert == 0 &&
+        /* 扩展低电量触发阈值，使用模式配置中的低电警告阈值（参考客户要求） */
+        avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
     {
         // u8 i; // 循环计数值，控制连续发送低电量报警的次数
 #if USER_DEBUG_ENABLE
@@ -392,12 +305,16 @@ void battery_monitor_handle(void)
 #endif
         if (ble_ic.is_working == 0)
         {
+#if USER_DEBUG_ENABLE
+            printf("is_low_power_wakeup_initialize_enable == %u\n",
+                   (u16)is_low_power_wakeup_initialize_enable);
+            printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+#endif
             ble_ic_enable();
         }
 
         uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
         is_sent_low_bat_alert = 1;
-        is_in_low_bat_alert = 1;
     }
 
     // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间发送一次低电量报警：
@@ -410,5 +327,4 @@ void battery_monitor_handle(void)
         printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
 #endif
     }
-#endif
 }

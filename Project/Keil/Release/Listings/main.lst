@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              07/16/2026 18:47:23 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              07/17/2026 18:50:03 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -62,13 +62,13 @@ line level    source
   51   1          timer0_init();
   52   1          timer1_init();
   53   1      
-C51 COMPILER V9.60.7.0   MAIN                                                              07/16/2026 18:47:23 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              07/17/2026 18:50:03 PAGE 2   
 
   54   1      #if USER_DEBUG_ENABLE
-  55   1          user_debug_pin_init();
-  56   1          // timebase_init();
-  57   1          printf("sys init\n");
-  58   1      #endif
+                  user_debug_pin_init();
+                  // timebase_init();
+                  printf("sys init\n");
+              #endif
   59   1      }
   60          void main(void)
   61          {
@@ -102,17 +102,17 @@ line level    source
   87   2              ad_key_handle();        
   88   2              uart_data_handle();
   89   2      
-  90   2              charge_det();
+  90   2              charge_det(); // 充电IC检测（充电和放电信号检测）
   91   2      
   92   2              bat_scan(); // 得到稳定的电池电压并更新
   93   2              led_bat_lev_handle();
-  94   2              // battery_monitor_handle(); // 测试时屏蔽
+  94   2              battery_monitor_handle(); // 
   95   2      
-  96   2              // low_power_handle();// 测试时屏蔽
+  96   2              low_power_handle(); //  
   97   2      
   98   2      #if USER_DEBUG_ENABLE
-  99   2              // user_test_main();
- 100   2      #endif
+                      // user_test_main();
+              #endif
  101   2          }
  102   1      }
  103          
@@ -124,9 +124,9 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    122    ----
-   CONSTANT SIZE    =     10    ----
-C51 COMPILER V9.60.7.0   MAIN                                                              07/16/2026 18:47:23 PAGE 3   
+   CODE SIZE        =    116    ----
+   CONSTANT SIZE    =   ----    ----
+C51 COMPILER V9.60.7.0   MAIN                                                              07/17/2026 18:50:03 PAGE 3   
 
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
