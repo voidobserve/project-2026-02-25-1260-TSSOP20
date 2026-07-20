@@ -8,12 +8,8 @@
 
 volatile led_ctl_t led_ctl;
 
-
-
-
 // 电池指示灯跳级向下的去抖时间（ms），发生跳级时，每隔该时间降一档
 #define LED_BAT_JUMP_DOWN_DEBOUNCE_MS ((u32)10 * 60 * 1000)
-
 
 void led_init(void)
 {
@@ -66,7 +62,6 @@ void led_ctl_init(void)
     // 目前可以用这个来代替
     memset(&led_ctl, 0, sizeof(led_ctl_t));
 }
-
 
 #if 0
 /**
@@ -425,12 +420,14 @@ void led_slow_adjust_isr(void)
             // 如果当前占空比 小于 目标占空比（当前灯光亮度大于目标亮度）
             // 要按照 正常工作 的缓慢速度进行调节
 
+#if 1 // REVIEW 测试时屏蔽
             if (led_ctl.working_time <= (u32)180 * 1000)
             {
                 // 开灯的前180s不调节
                 led_ctl.adjust_time_cnt = 0;
                 return;
             }
+#endif
 
             if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT)
             {
@@ -500,5 +497,5 @@ void led_slow_adjust_isr(void)
  *
  */
 // void led_bat_instruction_timer_callback(void)
-// { 
+// {
 // }

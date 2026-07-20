@@ -2,6 +2,7 @@
 #define __BAT_SCAN_H__
 
 #include "typedef.h"
+#include "user_config.h"
 
 // 电池电量更新模块的状态
 enum
@@ -39,14 +40,19 @@ typedef u8 bat_vol_update_sta_t;
 #define BATTERY_VOLTAGE_UPDATE_PERIOD ((u16)4000)
 
 // 电池电压滑动平局数据的大小：
-#define VOLTAGE_HISTORY_SIZE 10
+#define VOLTAGE_HISTORY_SIZE 100
 // 每隔多久将采集的电池电压放入缓存中，单位：ms
 #define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER ((u32)100)
 // 每隔多久将缓存中的电池电压提取出来，单位：ms
+#if 0
 #define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT \
-	(BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER * VOLTAGE_HISTORY_SIZE)
+	((u32)BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER * VOLTAGE_HISTORY_SIZE)
+#endif
+#define BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT \
+	((u32)1000)
 
-extern volatile u16 avg_voltage_mv; // @attention 在当前.c文件外调用时，慎用
+extern volatile u16 avg_voltage_mv;	   // @attention 在当前.c文件外调用时，慎用
+extern volatile u16 voltage_mv_global; // 只在测试时引到外部，打印
 
 u16 bat_vol_history_buff_get_avg(void);
 

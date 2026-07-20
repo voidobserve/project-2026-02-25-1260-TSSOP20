@@ -9,7 +9,7 @@ extern volatile u8 is_sent_low_bat_alert;
 
 // 从低功耗唤醒 xx 时间后，再次初始化相关参数
 extern volatile u8 is_low_power_wakeup_initialize_enable;
-extern volatile u16 low_power_wakeup_initialize_cnt;
+extern volatile u32 low_power_wakeup_initialize_cnt;
 
 extern volatile u32 discharge_time_cnt; // 放电时间计数，单位：s
 extern volatile u32 charge_time_cnt;	// 充电时间计数，单位：s

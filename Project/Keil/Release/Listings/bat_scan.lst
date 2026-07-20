@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/17/2026 18:50:04 PAGE 1   
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/20/2026 17:15:20 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BAT_SCAN
@@ -18,80 +18,86 @@ line level    source
    7          
    8          #include "user_config.h"
    9          
-  10          // ====================================================================
-  11          // static volatile u8 is_bat_vol_buff_add_enable = 0; // 是否允许往电池电压数组中放入数据
-  12          
-  13          // 控制一段时间内采集电池电压峰值（电压最大值）
-  14          static volatile bat_vol_update_sta_t bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
-  15          static volatile u16 bat_vol_update_cnt = 0;
-  16          
-  17          // 记录一段时间内采集到的电压值：
-  18          static volatile u16 bat_vol_history_buff[VOLTAGE_HISTORY_SIZE] = {0};
-  19          static volatile u8 bat_vol_history_buff_idx = 0;
-  20          // ====================================================================
-  21          
-  22          static volatile u16 max_voltage_mv = 0;    // 存放一段时间内采集到的最大电压值（只在采
-             -集使用，不能作为最终的判断使用）
-  23          static volatile u16 voltage_mv_global = 0; //
-  24          
-  25          // 采集电池电压的定时计数器
-  26          static volatile u32 bat_avg_vol_scan_period_cnt = 0;
-  27          // 最后得到的、稳定的电池电压
-  28          volatile u16 avg_voltage_mv = 0; //
-  29          
-  30          void bat_get_avg_vol_period_add(void)
-  31          {
-  32   1              if (bat_avg_vol_scan_period_cnt < ((u32)-1))
-  33   1              {
-  34   2                      bat_avg_vol_scan_period_cnt++;
-  35   2              }
-  36   1      }
-  37          
-  38          // 由定时器调用，控制一段时间，获取电池电压的最大值（测试发现在充电和放�
+  10          /*
+  11                  控制一段时间内采集电池电压的状态机
+  12          */
+  13          static volatile bat_vol_update_sta_t bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
+  14          static volatile u16 bat_vol_update_cnt = 0;
+  15          
+  16          // 记录一段时间内采集到的电压值：
+  17          static volatile u16 bat_vol_history_buff[VOLTAGE_HISTORY_SIZE] = {0};
+  18          static volatile u8 bat_vol_history_buff_idx = 0;
+  19          // ====================================================================
+  20          
+  21          #if 0
+              static volatile u16 max_voltage_mv = 0; // 存放一段时间内采集到的最大电压值（只在采集
+             -使用，不能作为最终的判断使用）
+              #endif
+  24          static volatile u16 min_voltage_mv = ((u16)-1); // 存放一段时间内采集到的最小电压值（只�
+             -��采集使用，不能作为最终的判断使用）
+  25          volatile u16 voltage_mv_global = 0;             //
+  26          
+  27          // 采集电池电压的定时计数器
+  28          static volatile u32 bat_avg_vol_scan_period_cnt = 0;
+  29          // 最后得到的、稳定的电池电压
+  30          volatile u16 avg_voltage_mv = 0; //
+  31          
+  32          void bat_get_avg_vol_period_add(void)
+  33          {
+  34   1              if (bat_avg_vol_scan_period_cnt < ((u32)-1))
+  35   1              {
+  36   2                      bat_avg_vol_scan_period_cnt++;
+  37   2              }
+  38   1      }
+  39          
+  40          // 由定时器调用，控制一段时间，获取电池电压的最大值（测试发现在充电和放�
              -��时，一段时间内电池电压的最大值是最接近电池电压实际值的）
-  39          void bat_vol_update_timer_callback(void)
-  40          {
-  41   1              if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_IDLE)
-  42   1              {
-  43   2                      bat_vol_update_cnt = 0;
-  44   2                      bat_vol_update_sta = BAT_VOL_UPDATE_STA_CAPTURING;
-  45   2              }
-  46   1              else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
-  47   1              {
-  48   2                      // 已经采集完成，直接返回
-  49   2                      return;
-  50   2              }
-  51   1      
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/17/2026 18:50:04 PAGE 2   
+  41          void bat_vol_update_timer_callback(void)
+  42          {
+  43   1              if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_IDLE)
+  44   1              {
+  45   2                      bat_vol_update_cnt = 0;
+  46   2                      bat_vol_update_sta = BAT_VOL_UPDATE_STA_CAPTURING;
+  47   2              }
+  48   1              else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
+  49   1              {
+  50   2                      // 已经采集完成，直接返回
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/20/2026 17:15:20 PAGE 2   
 
-  52   1              bat_vol_update_cnt++;
-  53   1              if (bat_vol_update_cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD)
-  54   1              {
-  55   2                      /*
-  56   2                              这里可以不用清零，只有 bat_vol_update_sta
-  57   2                              刚进入 BAT_VOL_UPDATE_STA_IDLE 时清零
-  58   2                      */
-  59   2                      // bat_vol_update_cnt = 0;
-  60   2                      bat_vol_update_sta = BAT_VOL_UPDATE_STA_COMPLETED;
-  61   2              }
-  62   1      }
-  63          
-  64          // 根据ad值，转换成对应的电池电压值(单位：mV)
-  65          u16 get_battery_voltage_by_adc(u16 adc_val)
-  66          {
-  67   1              u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
-  68   1      
-  69   1      #if 1
-  70   1              // printf("voltage_mv == %u\n", voltage_mv);
-  71   1              if (voltage_mv > 70)
-  72   1              {
-  73   2                      // 这里做电压补偿
-  74   2                      voltage_mv -= 70;
-  75   2              }
-  76   1              // printf("voltage_mv == %u\n", voltage_mv);
-  77   1      #endif
-  78   1      
-  79   1      #if 0
+  51   2                      return;
+  52   2              }
+  53   1      
+  54   1              bat_vol_update_cnt++;
+  55   1              if (bat_vol_update_cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD)
+  56   1              {
+  57   2                      /*
+  58   2                              这里可以不用清零，只有 bat_vol_update_sta
+  59   2                              刚进入 BAT_VOL_UPDATE_STA_IDLE 时清零
+  60   2                      */
+  61   2                      // bat_vol_update_cnt = 0;
+  62   2                      bat_vol_update_sta = BAT_VOL_UPDATE_STA_COMPLETED;
+  63   2              }
+  64   1      }
+  65          
+  66          // 根据ad值，转换成对应的电池电压值(单位：mV)
+  67          u16 get_battery_voltage_by_adc(u16 adc_val)
+  68          {
+  69   1              u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
+  70   1      
+  71   1      #if 0
+                      // printf("voltage_mv == %u\n", voltage_mv);
+                      if (voltage_mv > 70)
+                      {
+                              // 这里做电压补偿
+                              voltage_mv -= 70;
+                      }
+              
+              #if USER_DEBUG_ENABLE
+                      printf("voltage_mv == %u\n", voltage_mv);
+              #endif
+              #endif
+  83   1      
+  84   1      #if 0
                   if (is_in_charging)
                   {
                       // 充电时，减去 0.1 V，作为补偿。如果电压接近 4.2V 时，不用补偿
@@ -101,170 +107,196 @@ line level    source
                       }
                   }
               #endif
-  89   1      
-  90   1              return voltage_mv;
-  91   1      }
-  92          
-  93          void bat_vol_history_buff_init(u16 voltage_mv)
-  94          {
-  95   1              u8 i;
-  96   1              for (i = 0; i < VOLTAGE_HISTORY_SIZE; i++)
-  97   1              {
-  98   2                      bat_vol_history_buff[i] = voltage_mv;
-  99   2              }
- 100   1              bat_vol_history_buff_idx = 0;
- 101   1      }
- 102          
- 103          void bat_vol_history_buff_add(u16 voltage_mv)
- 104          {
- 105   1              bat_vol_history_buff[bat_vol_history_buff_idx] = voltage_mv;
- 106   1              bat_vol_history_buff_idx = (bat_vol_history_buff_idx + 1) % VOLTAGE_HISTORY_SIZE;
- 107   1              // bat_vol_history_buff_idx++;
- 108   1              // if (bat_vol_history_buff_idx >= VOLTAGE_HISTORY_SIZE)
- 109   1              // {
- 110   1              //     bat_vol_history_buff_idx = 0;
- 111   1              // }
- 112   1      }
- 113          
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/17/2026 18:50:04 PAGE 3   
+  94   1      
+  95   1              return voltage_mv;
+  96   1      }
+  97          
+  98          void bat_vol_history_buff_init(u16 voltage_mv)
+  99          {
+ 100   1              u8 i;
+ 101   1              for (i = 0; i < VOLTAGE_HISTORY_SIZE; i++)
+ 102   1              {
+ 103   2                      bat_vol_history_buff[i] = voltage_mv;
+ 104   2              }
+ 105   1              bat_vol_history_buff_idx = 0;
+ 106   1      }
+ 107          
+ 108          static void bat_vol_history_buff_add(u16 voltage_mv)
+ 109          {
+ 110   1              bat_vol_history_buff[bat_vol_history_buff_idx] = voltage_mv;
+ 111   1              bat_vol_history_buff_idx = (bat_vol_history_buff_idx + 1) % VOLTAGE_HISTORY_SIZE;
+ 112   1              // bat_vol_history_buff_idx++;
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/20/2026 17:15:20 PAGE 3   
 
- 114          // 获取缓冲区中所有元素的平均值
- 115          u16 bat_vol_history_buff_get_avg(void)
- 116          {
- 117   1              u8 i;
- 118   1              u32 ret = 0;
- 119   1              for (i = 0; i < VOLTAGE_HISTORY_SIZE; i++)
- 120   1              {
- 121   2                      ret += bat_vol_history_buff[i];
- 122   2              }
- 123   1              return (u16)(ret / VOLTAGE_HISTORY_SIZE);
- 124   1      }
- 125          
- 126          /**
- 127           * @brief 更新电池电压
- 128           *              由adc中断服务函数调用
- 129           *              函数内部会更新最新得到的电池电压
- 130           *
- 131           */
- 132          void battery_voltage_update_by_isr(void)
- 133          {
- 134   1              static volatile u8 is_initialized = 0;
- 135   1              volatile u16 adc_val = 0;
- 136   1              volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
- 137   1      
- 138   1              // 获取AD值（ad值有更新才获取）
- 139   1              if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
- 140   1              {
- 141   2                      adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
- 142   2                      adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
- 143   2                      // printf("bat adc val == %u\n", adc_val);
- 144   2                      cur_voltage_mv = get_battery_voltage_by_adc(adc_val);
- 145   2                      // printf("cur_voltage_mv == %u\n", cur_voltage_mv);
- 146   2      
- 147   2                      if (0 == is_initialized)
- 148   2                      {
- 149   3                              is_initialized = 1;
- 150   3                              // 如果还没有采集过电池电压，直接将第一次采集到的ad值转换成电池电压
- 151   3                              voltage_mv_global = cur_voltage_mv;
- 152   3                              avg_voltage_mv = cur_voltage_mv;
- 153   3      
- 154   3                              bat_vol_history_buff_init(avg_voltage_mv);
- 155   3                              // 刚上电时，直接根据对应的电池电压，给充电时间、放电时间进行赋值
- 156   3                              led_bat_lev_init_by_vol(avg_voltage_mv);
- 157   3                              bat_charge_time_cnt_update(avg_voltage_mv);
- 158   3                              bat_discharge_time_cnt_update(avg_voltage_mv);
- 159   3      
- 160   3      #if USER_DEBUG_ENABLE
-                                      printf("bat monitor init\n");
-                                      printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+ 113   1              // if (bat_vol_history_buff_idx >= VOLTAGE_HISTORY_SIZE)
+ 114   1              // {
+ 115   1              //      bat_vol_history_buff_idx = 0;
+ 116   1              // }
+ 117   1      }
+ 118          
+ 119          // 获取缓冲区中所有元素的平均值
+ 120          u16 bat_vol_history_buff_get_avg(void)
+ 121          {
+ 122   1              volatile u8 i;
+ 123   1              volatile u32 ret = 0;
+ 124   1              for (i = 0; i < VOLTAGE_HISTORY_SIZE; i++)
+ 125   1              {
+ 126   2                      ret += bat_vol_history_buff[i];
+ 127   2              }
+ 128   1      
+ 129   1              #if USER_DEBUG_ENABLE
+ 130   1              printf("ret == %lu\n", (u32)ret);
+ 131   1              printf("ret / VOLTAGE_HISTORY_SIZE == %u\n", (u16)(ret / VOLTAGE_HISTORY_SIZE));
+ 132   1              #endif
+ 133   1      
+ 134   1              return (u16)((u32)ret / VOLTAGE_HISTORY_SIZE);
+ 135   1      }
+ 136          
+ 137          /**
+ 138           * @brief 更新电池电压
+ 139           *              由adc中断服务函数调用
+ 140           *              函数内部会更新最新得到的电池电压
+ 141           *
+ 142           */
+ 143          void battery_voltage_update_by_isr(void)
+ 144          {
+ 145   1              static volatile u8 is_initialized = 0;
+ 146   1              volatile u16 adc_val = 0;
+ 147   1              volatile u16 cur_voltage_mv = 0; // 存放当前采集到的电压值
+ 148   1      
+ 149   1              // 获取AD值（ad值有更新才获取）
+ 150   1              if (adc_get_update_flag(ADC_CHANNEL_SEL_BAT_DET))
+ 151   1              {
+ 152   2                      adc_clear_update_flag(ADC_CHANNEL_SEL_BAT_DET);
+ 153   2                      adc_val = adc_get_val(ADC_CHANNEL_SEL_BAT_DET);
+ 154   2                      // printf("bat adc val == %u\n", adc_val);
+ 155   2                      cur_voltage_mv = get_battery_voltage_by_adc(adc_val);
+ 156   2                      // printf("cur_voltage_mv == %u\n", cur_voltage_mv);
+ 157   2      
+ 158   2                      if (0 == is_initialized)
+ 159   2                      {
+ 160   3                              is_initialized = 1;
+ 161   3                              // 如果还没有采集过电池电压，直接将第一次采集到的ad值转换成电池电压
+ 162   3                              voltage_mv_global = cur_voltage_mv;
+ 163   3                              avg_voltage_mv = cur_voltage_mv;
+ 164   3      
+ 165   3                              bat_vol_history_buff_init(avg_voltage_mv);
+ 166   3                              // 刚上电时，直接根据对应的电池电压，给充电时间、放电时间进行赋值
+ 167   3                              led_bat_lev_init_by_vol(avg_voltage_mv);
+ 168   3                              bat_charge_time_cnt_update(avg_voltage_mv);
+ 169   3                              bat_discharge_time_cnt_update(avg_voltage_mv);
+ 170   3      
+ 171   3      #if USER_DEBUG_ENABLE
+ 172   3                              printf("bat monitor init\n");
+ 173   3                              printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+ 174   3      #endif
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/20/2026 17:15:20 PAGE 4   
+
+ 175   3                      }
+ 176   2      
+ 177   2      #if 0
+                              // 采集一段时间的电压值，取其中最大的值作为电池电压             
+                              if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
+                              {
+                                      // 如果已经采集了一段时间的电压值，则将 voltage_mv_global 赋值为 max_voltage_mv
+                                      voltage_mv_global = max_voltage_mv;
+              
+                                      max_voltage_mv = 0; // 清零，准备下一轮采集
+                                      bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
+              
+                                      // 输出计算结果 (调试用)
+                                      // printf("voltage_mv_global: %umV\n", voltage_mv_global);
+                              }
+                              else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_CAPTURING)
+                              {
+                                      // 如果还在采集时间内，更新采集到的最大电压值 max_voltage_mv
+                                      if (max_voltage_mv < cur_voltage_mv)
+                                      {
+                                              max_voltage_mv = cur_voltage_mv;
+                                      }
+                              }
               #endif
- 164   3                      }
- 165   2      
- 166   2                      // 采集一段时间的电压值，取其中最大的值作为电池电压
- 167   2                      /*
- 168   2                              @attention
- 169   2                              测试时，如果需要改变电池电压和电量百分比，需要屏蔽下面这段程序。
- 170   2                              否则会更新 voltage_mv_global 和 max_voltage_mv，可能会被赋值为0，
- 171   2                              导致又进入了 电池电量相关变量的初始化
- 172   2                      */
- 173   2                      /*
- 174   2                              @attention 这里没有判断上一次的电压值，会实时更新 voltage_mv_global
- 175   2                              在充电时，哪怕电压有下降，也会更新 voltage_mv_global
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/17/2026 18:50:04 PAGE 4   
-
- 176   2                              在放电时，电压有上升，也会更新 voltage_mv_global
- 177   2                      */
- 178   2                      if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
- 179   2                      {
- 180   3                              // 如果已经采集了一段时间的电压值，则将 voltage_mv_global 赋值为 max_voltage_mv
- 181   3                              voltage_mv_global = max_voltage_mv;
- 182   3      
- 183   3                              max_voltage_mv = 0; // 清零，准备下一轮采集
- 184   3                              bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
- 185   3      
- 186   3                              // 输出计算结果 (调试用)
- 187   3                              // printf("voltage_mv_global: %umV\n", voltage_mv_global);
- 188   3                      }
- 189   2                      else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_CAPTURING)
- 190   2                      {
- 191   3                              // 如果还在采集时间内，更新采集到的最大电压值 max_voltage_mv
- 192   3                              if (max_voltage_mv < cur_voltage_mv)
- 193   3                              {
- 194   4                                      max_voltage_mv = cur_voltage_mv;
- 195   4                              }
- 196   3                      }
- 197   2              }
- 198   1      }
- 199          
- 200          /**
- 201           * @brief 定期给存放电池电压的滑动平均数组添加数据
- 202           *              由 1ms 定时器调用
- 203           *
- 204           */
- 205          void bat_vol_history_buff_add_timer_callback(void)
- 206          {
- 207   1      
- 208   1              static u32 cnt = 0;
- 209   1              cnt++;
- 210   1              if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER)
- 211   1              {
- 212   2                      cnt = 0;
- 213   2                      // 每隔一段时间，将采集到的电压值放入数组
- 214   2                      bat_vol_history_buff_add(voltage_mv_global);
- 215   2              }
- 216   1      }
- 217          
- 218          void bat_scan(void)
- 219          {
- 220   1              if (voltage_mv_global == 0)
- 221   1              {
- 222   2                      return; // 尚未获取到电压值，不执行以下操作
- 223   2              }
- 224   1      
- 225   1              if (is_low_power_wakeup_initialize_enable)
- 226   1              {
- 227   2                      // 低功耗唤醒后的一段时间内，不采集电池电压，等电压稳定之后再采集
- 228   2                      return;
- 229   2              }
- 230   1      
- 231   1              // 每隔一段时间，将数组中的数据进行平均
- 232   1              if (bat_avg_vol_scan_period_cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT)
- 233   1              {
- 234   2                      bat_avg_vol_scan_period_cnt = 0;
- 235   2                      avg_voltage_mv = bat_vol_history_buff_get_avg();
- 236   2      #if USER_DEBUG_ENABLE
-                              printf("avg_voltage_mv == %u\n", avg_voltage_mv);
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/17/2026 18:50:04 PAGE 5   
-
+ 199   2      
+ 200   2      #if 0
+                              // 采集一段时间的电压值，取其中最小的值作为电池电压
+                              if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
+                              {
+                                      // 如果已经采集了一段时间的电压值，则将 voltage_mv_global 赋值为 min_voltage_mv
+                                      voltage_mv_global = min_voltage_mv;
+              
+                                      min_voltage_mv = ((u16)-1); // 清零，准备下一轮采集
+                                      bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
+              
+                                      // 输出计算结果 (调试用)
+                                      // printf("voltage_mv_global: %umV\n", voltage_mv_global);
+                              }
+                              else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_CAPTURING)
+                              {
+                                      // 如果还在采集时间内，更新采集到的最小电压值 min_voltage_mv
+                                      if (min_voltage_mv > cur_voltage_mv)
+                                      {
+                                              min_voltage_mv = cur_voltage_mv;
+                                      }
+                              }
               #endif
- 239   2              }
- 240   1      }
+ 222   2      
+ 223   2                      voltage_mv_global = cur_voltage_mv;
+ 224   2              }
+ 225   1      }
+ 226          
+ 227          /**
+ 228           * @brief 定期给存放电池电压的滑动平均数组添加数据
+ 229           *              由 1ms 定时器调用
+ 230           *
+ 231           */
+ 232          void bat_vol_history_buff_add_timer_callback(void)
+ 233          {
+ 234   1      
+ 235   1              static u32 cnt = 0;
+ 236   1              cnt++;
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/20/2026 17:15:20 PAGE 5   
+
+ 237   1              if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER)
+ 238   1              {
+ 239   2                      cnt = 0;
+ 240   2                      // 每隔一段时间，将采集到的电压值放入数组
+ 241   2                      bat_vol_history_buff_add(voltage_mv_global);
+ 242   2      
+ 243   2      #if USER_DEBUG_ENABLE
+ 244   2                      printf("voltage_mv_global == %u\n", voltage_mv_global);
+ 245   2      #endif
+ 246   2              }
+ 247   1      }
+ 248          
+ 249          void bat_scan(void)
+ 250          {
+ 251   1              if (voltage_mv_global == 0)
+ 252   1              {
+ 253   2                      return; // 尚未获取到电压值，不执行以下操作
+ 254   2              }
+ 255   1      
+ 256   1              if (is_low_power_wakeup_initialize_enable)
+ 257   1              {
+ 258   2                      // 低功耗唤醒后的一段时间内，不采集电池电压，等电压稳定之后再采集
+ 259   2                      return;
+ 260   2              }
+ 261   1      
+ 262   1              // 每隔一段时间，将数组中的数据进行平均
+ 263   1              if (bat_avg_vol_scan_period_cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER_EXTRACT)
+ 264   1              {
+ 265   2                      bat_avg_vol_scan_period_cnt = 0;
+ 266   2                      avg_voltage_mv = bat_vol_history_buff_get_avg();
+ 267   2      #if USER_DEBUG_ENABLE
+ 268   2                      printf("avg_voltage_mv == %u\n", (u16)avg_voltage_mv);
+ 269   2      #endif
+ 270   2              }
+ 271   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    587    ----
-   CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =     39       9
+   CODE SIZE        =    597    ----
+   CONSTANT SIZE    =    111    ----
+   XDATA SIZE       =    219       9
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----

@@ -2,6 +2,7 @@
 #define __LED_BAT_LEV_H__
 
 #include "typedef.h"
+#include "user_config.h"
 
 // TEST_ONLY
 #define BAT_LED_TEST_ENABLE 0 // 电池电量指示灯测试

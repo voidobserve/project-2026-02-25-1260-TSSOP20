@@ -26,7 +26,7 @@ volatile u32 charge_time_cnt = 0;    // 充电时间计数，单位：s
     关机后，该标志位要清零
 */
 volatile u8 is_low_power_wakeup_initialize_enable = 0;
-volatile u16 low_power_wakeup_initialize_cnt = 0;
+volatile u32 low_power_wakeup_initialize_cnt = 0;
 
 // 控制发送低电量的周期
 void send_low_bat_timer_callback(void)
@@ -107,14 +107,35 @@ void batttery_monitor_1ms_isr(void)
     if (is_low_power_wakeup_initialize_enable)
     {
         low_power_wakeup_initialize_cnt++;
-        if (low_power_wakeup_initialize_cnt >= ((u16)15 * 1000))
+        // if (low_power_wakeup_initialize_cnt >= ((u16)15 * 1000))
+        /*
+            REVIEW 
+            从低功耗唤醒后，
+            如果是开着灯，至少要等灯光缓慢调节完毕，再获取调节完成后，对应的电池电压
+        */
+        if (low_power_wakeup_initialize_cnt >= ((u32)10 * 60 * 1000))
+        // if (low_power_wakeup_initialize_cnt >= ((u32)330 * 1000)) // TEST ONLY
+        // if (low_power_wakeup_initialize_cnt >= ((u32)10 * 1000)) // TEST ONLY
         {
             low_power_wakeup_initialize_cnt = 0;
             is_low_power_wakeup_initialize_enable = 0;
+
+            avg_voltage_mv = voltage_mv_global;
+            bat_vol_history_buff_init(avg_voltage_mv);
+            bat_discharge_time_cnt_update(avg_voltage_mv);
+            bat_charge_time_cnt_update(avg_voltage_mv);
+#if 0
+            // 不能直接取缓冲区中的平均电压，可能
             avg_voltage_mv = bat_vol_history_buff_get_avg();
             bat_vol_history_buff_init(avg_voltage_mv);
             bat_discharge_time_cnt_update(avg_voltage_mv);
             bat_charge_time_cnt_update(avg_voltage_mv);
+#endif
+
+#if USER_DEBUG_ENABLE
+            printf("low power wakeup initialize enable\n");
+            printf("avg_voltage_mv == %u\n", (u16)avg_voltage_mv);
+#endif
         }
     }
     else
@@ -246,6 +267,8 @@ void bat_discharge_time_cnt_update(u16 voltage_mv)
 void battery_monitor_handle(void)
 {
     // REVIEW ，进入到这里进行判断，至少要等开机后10秒，否则电压值不准确
+
+
     if ((led_bat_lev_sta != LED_BAT_LEV_STA_DISCHARGE) &&
         led_bat_lev_sta != LED_BAT_LEV_STA_ALERT)
     {
@@ -305,11 +328,6 @@ void battery_monitor_handle(void)
 #endif
         if (ble_ic.is_working == 0)
         {
-#if USER_DEBUG_ENABLE
-            printf("is_low_power_wakeup_initialize_enable == %u\n",
-                   (u16)is_low_power_wakeup_initialize_enable);
-            printf("avg_voltage_mv == %u\n", avg_voltage_mv);
-#endif
             ble_ic_enable();
         }
 

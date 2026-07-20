@@ -7,10 +7,9 @@
 
 #include "user_config.h"
 
-// ====================================================================
-// static volatile u8 is_bat_vol_buff_add_enable = 0; // 是否允许往电池电压数组中放入数据
-
-// 控制一段时间内采集电池电压峰值（电压最大值）
+/*
+	控制一段时间内采集电池电压的状态机
+*/
 static volatile bat_vol_update_sta_t bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
 static volatile u16 bat_vol_update_cnt = 0;
 
@@ -19,8 +18,11 @@ static volatile u16 bat_vol_history_buff[VOLTAGE_HISTORY_SIZE] = {0};
 static volatile u8 bat_vol_history_buff_idx = 0;
 // ====================================================================
 
-static volatile u16 max_voltage_mv = 0;	   // 存放一段时间内采集到的最大电压值（只在采集使用，不能作为最终的判断使用）
-static volatile u16 voltage_mv_global = 0; //
+#if 0
+static volatile u16 max_voltage_mv = 0; // 存放一段时间内采集到的最大电压值（只在采集使用，不能作为最终的判断使用）
+#endif
+static volatile u16 min_voltage_mv = ((u16)-1); // 存放一段时间内采集到的最小电压值（只在采集使用，不能作为最终的判断使用）
+volatile u16 voltage_mv_global = 0;				//
 
 // 采集电池电压的定时计数器
 static volatile u32 bat_avg_vol_scan_period_cnt = 0;
@@ -66,14 +68,17 @@ u16 get_battery_voltage_by_adc(u16 adc_val)
 {
 	u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
 
-#if 1
+#if 0
 	// printf("voltage_mv == %u\n", voltage_mv);
 	if (voltage_mv > 70)
 	{
 		// 这里做电压补偿
 		voltage_mv -= 70;
 	}
-	// printf("voltage_mv == %u\n", voltage_mv);
+
+#if USER_DEBUG_ENABLE
+	printf("voltage_mv == %u\n", voltage_mv);
+#endif
 #endif
 
 #if 0
@@ -100,27 +105,33 @@ void bat_vol_history_buff_init(u16 voltage_mv)
 	bat_vol_history_buff_idx = 0;
 }
 
-void bat_vol_history_buff_add(u16 voltage_mv)
+static void bat_vol_history_buff_add(u16 voltage_mv)
 {
 	bat_vol_history_buff[bat_vol_history_buff_idx] = voltage_mv;
-	bat_vol_history_buff_idx = (bat_vol_history_buff_idx + 1) % VOLTAGE_HISTORY_SIZE;
-	// bat_vol_history_buff_idx++;
-	// if (bat_vol_history_buff_idx >= VOLTAGE_HISTORY_SIZE)
-	// {
-	//     bat_vol_history_buff_idx = 0;
-	// }
+	// bat_vol_history_buff_idx = (bat_vol_history_buff_idx + 1) % VOLTAGE_HISTORY_SIZE;
+	bat_vol_history_buff_idx++;
+	if (bat_vol_history_buff_idx >= VOLTAGE_HISTORY_SIZE)
+	{
+		bat_vol_history_buff_idx = 0;
+	}
 }
 
 // 获取缓冲区中所有元素的平均值
 u16 bat_vol_history_buff_get_avg(void)
 {
-	u8 i;
-	u32 ret = 0;
+	volatile u8 i;
+	volatile u32 ret = 0;
 	for (i = 0; i < VOLTAGE_HISTORY_SIZE; i++)
 	{
 		ret += bat_vol_history_buff[i];
 	}
-	return (u16)(ret / VOLTAGE_HISTORY_SIZE);
+
+#if USER_DEBUG_ENABLE
+	// printf("ret == %lu\n", (u32)ret);
+	// printf("ret / VOLTAGE_HISTORY_SIZE == %u\n", (u16)(ret / VOLTAGE_HISTORY_SIZE));
+#endif
+
+	return (u16)((u32)ret / VOLTAGE_HISTORY_SIZE);
 }
 
 /**
@@ -163,18 +174,8 @@ void battery_voltage_update_by_isr(void)
 #endif
 		}
 
-		// 采集一段时间的电压值，取其中最大的值作为电池电压
-		/*
-			@attention
-			测试时，如果需要改变电池电压和电量百分比，需要屏蔽下面这段程序。
-			否则会更新 voltage_mv_global 和 max_voltage_mv，可能会被赋值为0，
-			导致又进入了 电池电量相关变量的初始化
-		*/
-		/*
-			@attention 这里没有判断上一次的电压值，会实时更新 voltage_mv_global
-			在充电时，哪怕电压有下降，也会更新 voltage_mv_global
-			在放电时，电压有上升，也会更新 voltage_mv_global
-		*/
+#if 0
+		// 采集一段时间的电压值，取其中最大的值作为电池电压		
 		if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
 		{
 			// 如果已经采集了一段时间的电压值，则将 voltage_mv_global 赋值为 max_voltage_mv
@@ -194,6 +195,32 @@ void battery_voltage_update_by_isr(void)
 				max_voltage_mv = cur_voltage_mv;
 			}
 		}
+#endif
+
+#if 0
+		// 采集一段时间的电压值，取其中最小的值作为电池电压
+		if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
+		{
+			// 如果已经采集了一段时间的电压值，则将 voltage_mv_global 赋值为 min_voltage_mv
+			voltage_mv_global = min_voltage_mv;
+
+			min_voltage_mv = ((u16)-1); // 清零，准备下一轮采集
+			bat_vol_update_sta = BAT_VOL_UPDATE_STA_IDLE;
+
+			// 输出计算结果 (调试用)
+			// printf("voltage_mv_global: %umV\n", voltage_mv_global);
+		}
+		else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_CAPTURING)
+		{
+			// 如果还在采集时间内，更新采集到的最小电压值 min_voltage_mv
+			if (min_voltage_mv > cur_voltage_mv)
+			{
+				min_voltage_mv = cur_voltage_mv;
+			}
+		}
+#endif
+
+		voltage_mv_global = cur_voltage_mv;
 	}
 }
 
@@ -204,14 +231,17 @@ void battery_voltage_update_by_isr(void)
  */
 void bat_vol_history_buff_add_timer_callback(void)
 {
-
-	static u32 cnt = 0;
+	static volatile u32 cnt = 0;
 	cnt++;
 	if (cnt >= BATTERY_VOLTAGE_UPDATE_PERIOD_IN_BUFFER)
 	{
 		cnt = 0;
 		// 每隔一段时间，将采集到的电压值放入数组
 		bat_vol_history_buff_add(voltage_mv_global);
+
+#if USER_DEBUG_ENABLE
+		printf("voltage_mv_global == %u\n", voltage_mv_global);
+#endif
 	}
 }
 
@@ -234,7 +264,7 @@ void bat_scan(void)
 		bat_avg_vol_scan_period_cnt = 0;
 		avg_voltage_mv = bat_vol_history_buff_get_avg();
 #if USER_DEBUG_ENABLE
-		printf("avg_voltage_mv == %u\n", avg_voltage_mv);
+		printf("avg_voltage_mv == %u\n", (u16)avg_voltage_mv);
 #endif
 	}
 }

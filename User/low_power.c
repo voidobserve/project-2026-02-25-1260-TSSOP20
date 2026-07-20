@@ -220,6 +220,7 @@ void low_power_handle(void)
     u8 is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
     u8 is_key_sig_wkup = 0;       // 是否由ad按键唤醒
     u16 adc_val;
+    u16 tmp_voltage_mv = 0;
 
     if (is_low_power_enter_enable)
     {
@@ -309,14 +310,14 @@ label_low_power_in:
     adc_channel_sel(ADC_CHANNEL_SEL_BAT_DET);
     delay_ms(1);
     adc_val = adc_get_val_once();
-    avg_voltage_mv = get_battery_voltage_by_adc(adc_val);
+    tmp_voltage_mv = get_battery_voltage_by_adc(adc_val);
 
     /*
         1. 按键唤醒，电池电压低，并且没有在充电，返回低功耗
         2. 没有按键唤醒，并且没有在充电，返回低功耗
     */
     if ((is_key_sig_wkup &&
-         avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE &&
+         tmp_voltage_mv <= BATTERY_EMPTY_VOLTAGE &&
          0 == is_charge_sig_wkup &&
          0 == is_discharge_sig_wkup) ||
         (0 == is_key_sig_wkup &&
@@ -325,7 +326,7 @@ label_low_power_in:
     {
 #if USER_DEBUG_ENABLE
         if ((is_key_sig_wkup &&
-             avg_voltage_mv < BATTERY_EMPTY_VOLTAGE &&
+             tmp_voltage_mv < BATTERY_EMPTY_VOLTAGE &&
              0 == is_charge_sig_wkup &&
              0 == is_discharge_sig_wkup))
         {

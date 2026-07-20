@@ -28,16 +28,20 @@ Project File Date:  07/16/2026
 Build target 'Target 1'
 linking...
 *** WARNING L15: MULTIPLE CALL TO SEGMENT
-    SEGMENT: ?PR?BAT_VOL_HISTORY_BUFF_GET_AVG?BAT_SCAN
+    SEGMENT: ?PR?PRINTF?PRINTF
     CALLER1: ?C_C51STARTUP
+    CALLER2: ?PR?ADC_IRQHANDLER?ADC
+*** WARNING L15: MULTIPLE CALL TO SEGMENT
+    SEGMENT: ?PR?PRINTF?PRINTF
+    CALLER1: ?PR?ADC_IRQHANDLER?ADC
     CALLER2: ?PR?TIMR0_IRQHANDLER?TIMER0
 *** WARNING L15: MULTIPLE CALL TO SEGMENT
     SEGMENT: ?PR?_BAT_DISCHARGE_TIME_CNT_UPDATE?BATTERY_MONITOR
     CALLER1: ?PR?ADC_IRQHANDLER?ADC
     CALLER2: ?PR?TIMR0_IRQHANDLER?TIMER0
-Program Size: data=9.5 xdata=393 code=10551
+Program Size: data=28.0 xdata=690 code=12940
 creating hex file from ".\Release\Objects\Demo"...
-".\Release\Objects\Demo" - 0 Error(s), 2 Warning(s).
+".\Release\Objects\Demo" - 0 Error(s), 3 Warning(s).
 Build Time Elapsed:  00:00:00
 </pre>
 </body>

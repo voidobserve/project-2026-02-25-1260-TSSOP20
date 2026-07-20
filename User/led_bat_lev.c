@@ -6,6 +6,8 @@
 #include "bluetooth_ic_handle.h"
 #include "battery_monitor.h"
 
+#include "user_config.h"
+
 // 电池电量指示灯挡位
 volatile led_bat_lev_t led_bat_lev = LED_BAT_LEV_OFF;
 // 电池电量指示灯状态
