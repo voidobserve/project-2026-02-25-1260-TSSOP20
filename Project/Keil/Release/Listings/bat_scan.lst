@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:50:19 PAGE 1   
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:51:08 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BAT_SCAN
@@ -62,7 +62,7 @@ line level    source
   48   1              else if (bat_vol_update_sta == BAT_VOL_UPDATE_STA_COMPLETED)
   49   1              {
   50   2                      // 已经采集完成，直接返回
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:50:19 PAGE 2   
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:51:08 PAGE 2   
 
   51   2                      return;
   52   2              }
@@ -126,7 +126,7 @@ line level    source
  110   1              bat_vol_history_buff[bat_vol_history_buff_idx] = voltage_mv;
  111   1              // bat_vol_history_buff_idx = (bat_vol_history_buff_idx + 1) % VOLTAGE_HISTORY_SIZE;
  112   1              bat_vol_history_buff_idx++;
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:50:19 PAGE 3   
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:51:08 PAGE 3   
 
  113   1              if (bat_vol_history_buff_idx >= VOLTAGE_HISTORY_SIZE)
  114   1              {
@@ -190,7 +190,7 @@ line level    source
  172   3                                      第一次上电，初始化完成后，也给该标志位置一
  173   3                                      防止第一次上电，没有进入低功耗就开机，
  174   3                                      电压突然从4.0V拉低到3.5V，导致电池电量挡位误判断
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:50:19 PAGE 4   
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:51:08 PAGE 4   
 
  175   3                              */ 
  176   3                              is_low_power_wakeup_initialize_enable = 1; 
@@ -254,7 +254,7 @@ line level    source
  234          /**
  235           * @brief 定期给存放电池电压的滑动平均数组添加数据
  236           *              由 1ms 定时器调用
-C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:50:19 PAGE 5   
+C51 COMPILER V9.60.7.0   BAT_SCAN                                                          07/21/2026 18:51:08 PAGE 5   
 
  237           *
  238           */

@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 1   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED_BAT_LEV
@@ -62,7 +62,7 @@ line level    source
   50   1              else
   51   1              {
   52   2                      led_bat_lev = LED_BAT_LEV_4;
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 2   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 2   
 
   53   2              }
   54   1      }
@@ -126,7 +126,7 @@ line level    source
  111   2                      else if (avg_voltage_mv < BAT_SINGLE_LIGHT_1LED_VOLTAGE)
  112   2                      {
  113   3                              target_bat_lev = LED_BAT_LEV_1;
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 3   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 3   
 
  114   3                      }
  115   2                      else if (avg_voltage_mv < BAT_SINGLE_LIGHT_2LED_VOLTAGE)
@@ -190,7 +190,7 @@ line level    source
  173   1                      如果不相等，
  174   1                              - 判断挡位相差是否在1以内
  175   1                                      如果在1以内，判断放电时间是否满足挡位对应的事件
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 4   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 4   
 
  176   1                                      如果不再1以内，需要跳级
  177   1              */
@@ -254,7 +254,7 @@ line level    source
  235   5                                      case LED_BAT_LEV_3:
  236   5                                              if (discharge_time_cnt >= BAT_WY_3LED_TIME)
  237   5                                              {
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 5   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 5   
 
  238   6                                                      led_bat_lev = target_bat_lev;
  239   6                                              }
@@ -318,7 +318,7 @@ line level    source
  297   4                                      {
  298   5                                              // 单色灯
  299   5                                              switch (led_bat_lev)
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 6   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 6   
 
  300   5                                              {
  301   6                                              case LED_BAT_LEV_3:
@@ -382,7 +382,7 @@ line level    source
  359   7                                                                      ((BAT_WY_2LED_TIME +
  360   7                                                                        BAT_WY_1LED_TIME) /
  361   7                                                                       2);
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 7   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 7   
 
  362   7                                                      }
  363   6                                                      break;
@@ -446,7 +446,7 @@ line level    source
  421   2              case LED_BAT_LEV_3:
  422   2                      LED_100_PERCENT_OFF();
  423   2                      LED_75_PERCENT_ON();
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 8   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 8   
 
  424   2                      LED_50_PERCENT_ON();
  425   2                      LED_25_PERCENT_ON();
@@ -510,7 +510,7 @@ line level    source
  483   2                      else if (led_charge_anim_phase == 1 &&
  484   2                                       LED_BAT_LEV_2 <= led_bat_lev)
  485   2                      {
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 9   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 9   
 
  486   3                              LED_50_PERCENT_ON();
  487   3                              led_charge_anim_phase = 2;
@@ -574,7 +574,7 @@ line level    source
  545   3                              // 如果已经满电，但是当前没有显示4个指示灯
  546   3                              // 快速填充：以较短时间逐档上升显示（由 led_quick_fill_cnt 驱动）
  547   3                              if (led_quick_fill_cnt < ((u32)-1))
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 10  
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 10  
 
  548   3                              {
  549   4                                      led_quick_fill_cnt++;
@@ -638,7 +638,7 @@ line level    source
  607          
  608          void led_bat_lev_dislplay_1ms_isr(void)
  609          {
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:50:19 PAGE 11  
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 11  
 
  610   1              switch (led_bat_lev_sta)
  611   1              {
