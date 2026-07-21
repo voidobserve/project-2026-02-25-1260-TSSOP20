@@ -125,7 +125,11 @@ void batttery_monitor_1ms_isr(void)
             bat_discharge_time_cnt_update(avg_voltage_mv);
             bat_charge_time_cnt_update(avg_voltage_mv);
 #if 0
-            // 不能直接取缓冲区中的平均电压，可能
+            /*
+                不能直接取缓冲区中的平均电压                
+                关机后，会等几秒再进入低功耗。
+                进低功耗的这段时间再采集电压，会比放电期间的电压还要高
+            */ 
             avg_voltage_mv = bat_vol_history_buff_get_avg();
             bat_vol_history_buff_init(avg_voltage_mv);
             bat_discharge_time_cnt_update(avg_voltage_mv);

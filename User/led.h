@@ -45,7 +45,8 @@
 #define PWM_DUTY_SLOW_ADJUST_TIME ((u32)300 * 1000) // 黄灯和白灯的pwm占空比缓慢调节时间，单位：ms
 
 // 缓慢调节完成后，最终要调节到的占空比值，单位：百分比
-#define PWM_DEST_DUTY_PERCENT ((u8)100 - 60)
+// #define PWM_DEST_DUTY_PERCENT ((u8)100 - 60)
+#define PWM_DEST_DUTY_PERCENT ((u8)100 - 65)
 // 充电期间，最终要调节到的占空比值，单位：百分比
 #define PWM_DEST_DUTY_PERCENT_DURING_CHARGING ((u8)100 - 35)
 

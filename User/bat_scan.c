@@ -68,16 +68,16 @@ u16 get_battery_voltage_by_adc(u16 adc_val)
 {
 	u16 voltage_mv = ADC_TO_BATTERY_VOLTAGE_MV(adc_val);
 
-#if 0
+#if 1
 	// printf("voltage_mv == %u\n", voltage_mv);
-	if (voltage_mv > 70)
+	if (voltage_mv > 60)
 	{
 		// 这里做电压补偿
-		voltage_mv -= 70;
+		voltage_mv -= 60;
 	}
 
 #if USER_DEBUG_ENABLE
-	printf("voltage_mv == %u\n", voltage_mv);
+	// printf("voltage_mv == %u\n", voltage_mv);
 #endif
 #endif
 
@@ -167,6 +167,13 @@ void battery_voltage_update_by_isr(void)
 			led_bat_lev_init_by_vol(avg_voltage_mv);
 			bat_charge_time_cnt_update(avg_voltage_mv);
 			bat_discharge_time_cnt_update(avg_voltage_mv);
+
+			/*
+				第一次上电，初始化完成后，也给该标志位置一
+				防止第一次上电，没有进入低功耗就开机，
+				电压突然从4.0V拉低到3.5V，导致电池电量挡位误判断
+			*/ 
+			is_low_power_wakeup_initialize_enable = 1; 
 
 #if USER_DEBUG_ENABLE
 			printf("bat monitor init\n");

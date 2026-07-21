@@ -23,6 +23,7 @@ static volatile u16 led_charge_anim_cnt = 0;  // 充电动画计数
  *
  * 		目前只在第一次上电后调用
  *
+ * @note 刚接电池时，根据电池的放电曲线对应的电压来给电量指示灯挡位作划分
  */
 void led_bat_lev_init_by_vol(u16 voltage_mv)
 {
@@ -34,15 +35,15 @@ void led_bat_lev_init_by_vol(u16 voltage_mv)
 	{
 		led_bat_lev = LED_BAT_LEV_ALERT;
 	}
-	else if (voltage_mv < BAT_WY_1LED_VOLTAGE)
+	else if (voltage_mv < LED_BAT_LEV_25_PERCENT_MAP_TO_VOLTAGE_DURING_DISCHARGING)
 	{
 		led_bat_lev = LED_BAT_LEV_1;
 	}
-	else if (voltage_mv < BAT_WY_2LED_VOLTAGE)
+	else if (voltage_mv < LED_BAT_LEV_50_PERCENT_MAP_TO_VOLTAGE_DURING_DISCHARGING)
 	{
 		led_bat_lev = LED_BAT_LEV_2;
 	}
-	else if (voltage_mv < BAT_WY_3LED_VOLTAGE)
+	else if (voltage_mv < LED_BAT_LEV_75_PERCENT_MAP_TO_VOLTAGE_DURING_DISCHARGING)
 	{
 		led_bat_lev = LED_BAT_LEV_3;
 	}

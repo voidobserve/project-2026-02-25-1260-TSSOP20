@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   MAIN                                                              07/20/2026 16:48:07 PAGE 1   
+C51 COMPILER V9.60.7.0   MAIN                                                              07/21/2026 18:50:17 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE MAIN
@@ -62,13 +62,13 @@ line level    source
   51   1          timer0_init();
   52   1          timer1_init();
   53   1      
-C51 COMPILER V9.60.7.0   MAIN                                                              07/20/2026 16:48:07 PAGE 2   
+C51 COMPILER V9.60.7.0   MAIN                                                              07/21/2026 18:50:17 PAGE 2   
 
   54   1      #if USER_DEBUG_ENABLE
-  55   1          user_debug_pin_init();
-  56   1          // timebase_init();
-  57   1          printf("sys init\n");
-  58   1      #endif
+                  user_debug_pin_init();
+                  // timebase_init();
+                  printf("sys init\n");
+              #endif
   59   1      }
   60          void main(void)
   61          {
@@ -111,9 +111,9 @@ line level    source
   96   2              low_power_handle(); //
   97   2      
   98   2      #if USER_DEBUG_ENABLE
-  99   2      
- 100   2              // user_test_main();
- 101   2      #endif
+              
+                      // user_test_main();
+              #endif
  102   2          }
  103   1      }
  104          
@@ -125,10 +125,10 @@ line level    source
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    128    ----
-C51 COMPILER V9.60.7.0   MAIN                                                              07/20/2026 16:48:07 PAGE 3   
+   CODE SIZE        =    116    ----
+C51 COMPILER V9.60.7.0   MAIN                                                              07/21/2026 18:50:17 PAGE 3   
 
-   CONSTANT SIZE    =     10    ----
+   CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----
