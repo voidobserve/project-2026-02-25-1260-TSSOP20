@@ -130,7 +130,8 @@ static void led_bat_lev_sta_discharge_handle(void)
 			// 特殊情况
 		}
 	}
-	else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+	// else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+	else // 如果是黄白灯都亮，或者是只开蓝牙，又或者是只通过type-c放电
 	{
 		// 黄白灯都亮
 		if (avg_voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
@@ -557,7 +558,7 @@ static void led_bat_lev_sta_charging_handle(void)
 					REVIEW, 如果 led_bat_lev 和 led_charge_anim_phase
 					的数值并不对应，这里需要重新映射，建立对应关系
 				*/
-				led_bat_lev++;
+				led_bat_lev++; // 如果是充满电，这里会对应满电的值
 				led_charge_anim_phase++;
 			}
 		}

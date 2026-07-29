@@ -43,7 +43,7 @@ void ble_ic_disable_post(void)
 
 void bluetooth_ic_handle_init(void)
 {
-    // 连接到蓝牙ic的 power key，蓝牙开机时输出低电平，蓝牙关机之后输出高电平
+    // 连接到蓝牙ic的 power key ，蓝牙开机时输出低电平，蓝牙关机之后输出高电平
     P2_MD0 &= ~GPIO_P23_MODE_SEL(0x03);
     P2_MD0 |= GPIO_P23_MODE_SEL(0x01);
     FOUT_S23 = GPIO_FOUT_AF_FUNC;

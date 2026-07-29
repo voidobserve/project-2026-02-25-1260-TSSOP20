@@ -193,6 +193,16 @@ void led_status_switch(void)
         led_status_set(LED_STATUS_OFF);
         break;
     }
+
+    /*
+        补丁：由于每次切换挡位，灯光都会从100%开始放电，
+            这个时候电池电压会被拉得很低，导致电池电压检测不准确，
+            电池电量显示也不准确
+
+        这里每次切换挡位时，都重置下一次检测电池电压的时间
+    */
+    cancel_shielding_bat_vol_scan_cnt = 0;
+    is_shielding_bat_vol_scan = 1;
 }
 
 // 设置led灯的状态

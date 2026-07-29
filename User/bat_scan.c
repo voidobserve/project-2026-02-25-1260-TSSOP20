@@ -173,7 +173,7 @@ void battery_voltage_update_by_isr(void)
 				防止第一次上电，没有进入低功耗就开机，
 				电压突然从4.0V拉低到3.5V，导致电池电量挡位误判断
 			*/ 
-			is_low_power_wakeup_initialize_enable = 1; 
+			is_shielding_bat_vol_scan = 1; 
 
 #if USER_DEBUG_ENABLE
 			printf("bat monitor init\n");
@@ -259,7 +259,7 @@ void bat_scan(void)
 		return; // 尚未获取到电压值，不执行以下操作
 	}
 
-	if (is_low_power_wakeup_initialize_enable)
+	if (is_shielding_bat_vol_scan)
 	{
 		// 低功耗唤醒后的一段时间内，不采集电池电压，等电压稳定之后再采集
 		return;

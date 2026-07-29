@@ -21,12 +21,14 @@ volatile u32 discharge_time_cnt = 0; // 放电时间计数，单位：s
 volatile u32 charge_time_cnt = 0;    // 充电时间计数，单位：s
 
 /*
-    从低功耗唤醒 xx 时间后，再次初始化相关参数
+    是否屏蔽电池电压扫描，灯光都会从100%开始放电时，电池电压会拉得很低，
+    灯光缓慢降到一定时，电池电压才回升，这个时候再去检测电池电压
 
     关机后，该标志位要清零
 */
-volatile u8 is_low_power_wakeup_initialize_enable = 0;
-volatile u32 low_power_wakeup_initialize_cnt = 0;
+volatile u8 is_shielding_bat_vol_scan = 0;
+// 取消屏蔽电池电压扫描的计数
+volatile u32 cancel_shielding_bat_vol_scan_cnt = 0;
 
 // 控制发送低电量的周期
 void send_low_bat_timer_callback(void)
@@ -104,21 +106,21 @@ void batttery_monitor_1ms_isr(void)
         cnt_1ms = 0;
     }
 
-    if (is_low_power_wakeup_initialize_enable)
+    if (is_shielding_bat_vol_scan)
     {
-        low_power_wakeup_initialize_cnt++;
-        // if (low_power_wakeup_initialize_cnt >= ((u16)15 * 1000))
+        cancel_shielding_bat_vol_scan_cnt++;
+        // if (cancel_shielding_bat_vol_scan_cnt >= ((u16)15 * 1000))
         /*
             REVIEW 
             从低功耗唤醒后，
             如果是开着灯，至少要等灯光缓慢调节完毕，再获取调节完成后，对应的电池电压
         */
-        if (low_power_wakeup_initialize_cnt >= ((u32)10 * 60 * 1000))
-        // if (low_power_wakeup_initialize_cnt >= ((u32)330 * 1000)) // TEST ONLY
-        // if (low_power_wakeup_initialize_cnt >= ((u32)10 * 1000)) // TEST ONLY
+        if (cancel_shielding_bat_vol_scan_cnt >= ((u32)10 * 60 * 1000))
+        // if (cancel_shielding_bat_vol_scan_cnt >= ((u32)330 * 1000)) // TEST ONLY
+        // if (cancel_shielding_bat_vol_scan_cnt >= ((u32)10 * 1000)) // TEST ONLY
         {
-            low_power_wakeup_initialize_cnt = 0;
-            is_low_power_wakeup_initialize_enable = 0;
+            cancel_shielding_bat_vol_scan_cnt = 0;
+            is_shielding_bat_vol_scan = 0;
 
             avg_voltage_mv = voltage_mv_global;
             bat_vol_history_buff_init(avg_voltage_mv);
@@ -144,7 +146,7 @@ void batttery_monitor_1ms_isr(void)
     }
     else
     {
-        low_power_wakeup_initialize_cnt = 0;
+        cancel_shielding_bat_vol_scan_cnt = 0;
     }
 }
 
@@ -270,7 +272,7 @@ void bat_discharge_time_cnt_update(u16 voltage_mv)
 // 修改后的电池监控处理函数
 void battery_monitor_handle(void)
 {
-    // REVIEW ，进入到这里进行判断，至少要等开机后10秒，否则电压值不准确
+    // REVIEW ，进入到这里进行判断，至少要等灯光缓慢降到预定值之后，否则电压值不准确
 
 
     if ((led_bat_lev_sta != LED_BAT_LEV_STA_DISCHARGE) &&
@@ -312,7 +314,7 @@ void battery_monitor_handle(void)
         return; // 提前退出，不再往下执行
     }
 
-    if (is_low_power_wakeup_initialize_enable)
+    if (is_shielding_bat_vol_scan)
     {
         // 刚从低功耗期间唤醒，还没有得到稳定的电池电压，直接返回
         return;

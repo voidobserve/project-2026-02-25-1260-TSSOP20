@@ -237,8 +237,8 @@ void low_power_handle(void)
 label_low_power_in:
 
     // 进入低功耗，给该标志位清零
-    is_low_power_wakeup_initialize_enable = 0;
-    low_power_wakeup_initialize_cnt = 0;
+    is_shielding_bat_vol_scan = 0;
+    cancel_shielding_bat_vol_scan_cnt = 0;
 
     is_charge_sig_wkup = 0;    // 是否由充电信号唤醒
     is_discharge_sig_wkup = 0; // 是否由放电信号唤醒
@@ -347,7 +347,7 @@ label_low_power_in:
     // 通过按键退出低功耗，也会清除这些标志位
     is_sent_low_bat_alert = 0;
     user_init();
-    is_low_power_wakeup_initialize_enable = 1;
+    is_shielding_bat_vol_scan = 1;
 }
 
 // wake up timer 中断服务函数

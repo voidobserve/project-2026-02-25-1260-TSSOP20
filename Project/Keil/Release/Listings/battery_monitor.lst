@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/21/2026 18:51:07 PAGE 1   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BATTERY_MONITOR
@@ -34,115 +34,117 @@ line level    source
   21          volatile u32 charge_time_cnt = 0;    // 充电时间计数，单位：s
   22          
   23          /*
-  24              从低功耗唤醒 xx 时间后，再次初始化相关参数
-  25          
-  26              关机后，该标志位要清零
-  27          */
-  28          volatile u8 is_low_power_wakeup_initialize_enable = 0;
-  29          volatile u32 low_power_wakeup_initialize_cnt = 0;
-  30          
-  31          // 控制发送低电量的周期
-  32          void send_low_bat_timer_callback(void)
-  33          {
-  34   1          static volatile u32 cnt = 0;
-  35   1          /*
-  36   1             刚打开蓝牙，发送低电量报警，
-  37   1             需要隔一时间再发送，又不能隔太长时间，否则蓝牙会自动关机
-  38   1             这里控制刚打开蓝牙之后，发送低电量报警
-  39   1          */
-  40   1          static volatile u8 is_first_time_to_send = 0;
-  41   1      
-  42   1          if (is_sent_low_bat_alert)
-  43   1          {
-  44   2              cnt++;
-  45   2              if ((is_first_time_to_send && cnt >= (u16)3 * 1000) ||
-  46   2                  (cnt >= SEND_LOW_BAT_TIME_PERIOD))
-  47   2              {
-  48   3                  if (is_first_time_to_send)
-  49   3                  {
-  50   4                      is_first_time_to_send = 0;
-  51   4                  }
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/21/2026 18:51:07 PAGE 2   
+  24              是否屏蔽电池电压扫描，灯光都会从100%开始放电时，电池电压会拉得很低，
+  25              灯光缓慢降到一定时，电池电压才回升，这个时候再去检测电池电压
+  26          
+  27              关机后，该标志位要清零
+  28          */
+  29          volatile u8 is_shielding_bat_vol_scan = 0;
+  30          // 取消屏蔽电池电压扫描的计数
+  31          volatile u32 cancel_shielding_bat_vol_scan_cnt = 0;
+  32          
+  33          // 控制发送低电量的周期
+  34          void send_low_bat_timer_callback(void)
+  35          {
+  36   1          static volatile u32 cnt = 0;
+  37   1          /*
+  38   1             刚打开蓝牙，发送低电量报警，
+  39   1             需要隔一时间再发送，又不能隔太长时间，否则蓝牙会自动关机
+  40   1             这里控制刚打开蓝牙之后，发送低电量报警
+  41   1          */
+  42   1          static volatile u8 is_first_time_to_send = 0;
+  43   1      
+  44   1          if (is_sent_low_bat_alert)
+  45   1          {
+  46   2              cnt++;
+  47   2              if ((is_first_time_to_send && cnt >= (u16)3 * 1000) ||
+  48   2                  (cnt >= SEND_LOW_BAT_TIME_PERIOD))
+  49   2              {
+  50   3                  if (is_first_time_to_send)
+  51   3                  {
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 2   
 
-  52   3      
-  53   3                  cnt = 0;
-  54   3                  is_send_low_bat_repeatedly_enable = 1;
-  55   3              }
-  56   2          }
-  57   1          else
-  58   1          {
-  59   2              cnt = 0;
-  60   2      
-  61   2              // 低电量报警标志没有使能，给标志位置一
-  62   2              is_first_time_to_send = 1;
-  63   2          }
-  64   1      }
-  65          
-  66          void batttery_monitor_1ms_isr(void)
-  67          {
-  68   1          static volatile u16 cnt_1ms = 0;
-  69   1      
-  70   1          if (cnt_1ms < ((u16)-1))
-  71   1          {
-  72   2              cnt_1ms++;
-  73   2          }
-  74   1      
-  75   1          if (is_in_charging)
-  76   1          {
-  77   2              // 正在充电，累计充电时间
-  78   2              if (cnt_1ms >= 1000)
-  79   2              {
-  80   3                  cnt_1ms = 0;
-  81   3                  if (charge_time_cnt < ((u32)-1))
-  82   3                  {
-  83   4                      charge_time_cnt++;
-  84   4                  }
-  85   3              }
-  86   2          }
-  87   1          else if (is_in_charging == 0 &&
-  88   1                   (ble_ic.is_working ||
-  89   1                    led_ctl.status != LED_STATUS_OFF ||
-  90   1                    is_in_discharging))
-  91   1          {
-  92   2              // 正在放电，累计放电时间
-  93   2              if (cnt_1ms >= 1000)
-  94   2              {
-  95   3                  cnt_1ms = 0;
-  96   3                  if (discharge_time_cnt < ((u32)-1))
-  97   3                  {
-  98   4                      discharge_time_cnt++;
-  99   4                  }
- 100   3              }
- 101   2          }
- 102   1          else
- 103   1          {
- 104   2              cnt_1ms = 0;
- 105   2          }
- 106   1      
- 107   1          if (is_low_power_wakeup_initialize_enable)
- 108   1          {
- 109   2              low_power_wakeup_initialize_cnt++;
- 110   2              // if (low_power_wakeup_initialize_cnt >= ((u16)15 * 1000))
- 111   2              /*
- 112   2                  REVIEW 
- 113   2                  从低功耗唤醒后，
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/21/2026 18:51:07 PAGE 3   
+  52   4                      is_first_time_to_send = 0;
+  53   4                  }
+  54   3      
+  55   3                  cnt = 0;
+  56   3                  is_send_low_bat_repeatedly_enable = 1;
+  57   3              }
+  58   2          }
+  59   1          else
+  60   1          {
+  61   2              cnt = 0;
+  62   2      
+  63   2              // 低电量报警标志没有使能，给标志位置一
+  64   2              is_first_time_to_send = 1;
+  65   2          }
+  66   1      }
+  67          
+  68          void batttery_monitor_1ms_isr(void)
+  69          {
+  70   1          static volatile u16 cnt_1ms = 0;
+  71   1      
+  72   1          if (cnt_1ms < ((u16)-1))
+  73   1          {
+  74   2              cnt_1ms++;
+  75   2          }
+  76   1      
+  77   1          if (is_in_charging)
+  78   1          {
+  79   2              // 正在充电，累计充电时间
+  80   2              if (cnt_1ms >= 1000)
+  81   2              {
+  82   3                  cnt_1ms = 0;
+  83   3                  if (charge_time_cnt < ((u32)-1))
+  84   3                  {
+  85   4                      charge_time_cnt++;
+  86   4                  }
+  87   3              }
+  88   2          }
+  89   1          else if (is_in_charging == 0 &&
+  90   1                   (ble_ic.is_working ||
+  91   1                    led_ctl.status != LED_STATUS_OFF ||
+  92   1                    is_in_discharging))
+  93   1          {
+  94   2              // 正在放电，累计放电时间
+  95   2              if (cnt_1ms >= 1000)
+  96   2              {
+  97   3                  cnt_1ms = 0;
+  98   3                  if (discharge_time_cnt < ((u32)-1))
+  99   3                  {
+ 100   4                      discharge_time_cnt++;
+ 101   4                  }
+ 102   3              }
+ 103   2          }
+ 104   1          else
+ 105   1          {
+ 106   2              cnt_1ms = 0;
+ 107   2          }
+ 108   1      
+ 109   1          if (is_shielding_bat_vol_scan)
+ 110   1          {
+ 111   2              cancel_shielding_bat_vol_scan_cnt++;
+ 112   2              // if (cancel_shielding_bat_vol_scan_cnt >= ((u16)15 * 1000))
+ 113   2              /*
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 3   
 
- 114   2                  如果是开着灯，至少要等灯光缓慢调节完毕，再获取调节完成后，对应�
+ 114   2                  REVIEW 
+ 115   2                  从低功耗唤醒后，
+ 116   2                  如果是开着灯，至少要等灯光缓慢调节完毕，再获取调节完成后，对应�
              -��电池电压
- 115   2              */
- 116   2              if (low_power_wakeup_initialize_cnt >= ((u32)10 * 60 * 1000))
- 117   2              // if (low_power_wakeup_initialize_cnt >= ((u32)330 * 1000)) // TEST ONLY
- 118   2              // if (low_power_wakeup_initialize_cnt >= ((u32)10 * 1000)) // TEST ONLY
- 119   2              {
- 120   3                  low_power_wakeup_initialize_cnt = 0;
- 121   3                  is_low_power_wakeup_initialize_enable = 0;
- 122   3      
- 123   3                  avg_voltage_mv = voltage_mv_global;
- 124   3                  bat_vol_history_buff_init(avg_voltage_mv);
- 125   3                  bat_discharge_time_cnt_update(avg_voltage_mv);
- 126   3                  bat_charge_time_cnt_update(avg_voltage_mv);
- 127   3      #if 0
+ 117   2              */
+ 118   2              if (cancel_shielding_bat_vol_scan_cnt >= ((u32)10 * 60 * 1000))
+ 119   2              // if (cancel_shielding_bat_vol_scan_cnt >= ((u32)330 * 1000)) // TEST ONLY
+ 120   2              // if (cancel_shielding_bat_vol_scan_cnt >= ((u32)10 * 1000)) // TEST ONLY
+ 121   2              {
+ 122   3                  cancel_shielding_bat_vol_scan_cnt = 0;
+ 123   3                  is_shielding_bat_vol_scan = 0;
+ 124   3      
+ 125   3                  avg_voltage_mv = voltage_mv_global;
+ 126   3                  bat_vol_history_buff_init(avg_voltage_mv);
+ 127   3                  bat_discharge_time_cnt_update(avg_voltage_mv);
+ 128   3                  bat_charge_time_cnt_update(avg_voltage_mv);
+ 129   3      #if 0
                           /*
                               不能直接取缓冲区中的平均电压                
                               关机后，会等几秒再进入低功耗。
@@ -153,237 +155,238 @@ line level    source
                           bat_discharge_time_cnt_update(avg_voltage_mv);
                           bat_charge_time_cnt_update(avg_voltage_mv);
               #endif
- 138   3      
- 139   3      #if USER_DEBUG_ENABLE
+ 140   3      
+ 141   3      #if USER_DEBUG_ENABLE
                           printf("low power wakeup initialize enable\n");
                           printf("avg_voltage_mv == %u\n", (u16)avg_voltage_mv);
               #endif
- 143   3              }
- 144   2          }
- 145   1          else
- 146   1          {
- 147   2              low_power_wakeup_initialize_cnt = 0;
- 148   2          }
- 149   1      }
- 150          
- 151          /**
- 152           * @brief 初始化电池充电时间
- 153           *      1. 在低功耗唤醒后调用
- 154           *      2. 在第一次上电后调用
- 155           *
- 156           */
- 157          void bat_charge_time_cnt_update(u16 voltage_mv)
- 158          {
- 159   1          if (0 == is_in_charging)
- 160   1          {
- 161   2              // 没有在充电，
- 162   2              // 直接根据当前电池电压，大致给出充电时间
- 163   2      
- 164   2              // 根据黄白灯一起亮的数据来初始化充电时间
- 165   2              if (voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
- 166   2              {
- 167   3                  // 电池电压小于低电量提示电压
- 168   3                  charge_time_cnt = 0;
- 169   3              }
- 170   2              else if (voltage_mv < BAT_WY_1LED_VOLTAGE)
- 171   2              {
- 172   3                  charge_time_cnt = 0;
- 173   3              }
- 174   2              else if (voltage_mv < BAT_WY_2LED_VOLTAGE)
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/21/2026 18:51:07 PAGE 4   
+ 145   3              }
+ 146   2          }
+ 147   1          else
+ 148   1          {
+ 149   2              cancel_shielding_bat_vol_scan_cnt = 0;
+ 150   2          }
+ 151   1      }
+ 152          
+ 153          /**
+ 154           * @brief 初始化电池充电时间
+ 155           *      1. 在低功耗唤醒后调用
+ 156           *      2. 在第一次上电后调用
+ 157           *
+ 158           */
+ 159          void bat_charge_time_cnt_update(u16 voltage_mv)
+ 160          {
+ 161   1          if (0 == is_in_charging)
+ 162   1          {
+ 163   2              // 没有在充电，
+ 164   2              // 直接根据当前电池电压，大致给出充电时间
+ 165   2      
+ 166   2              // 根据黄白灯一起亮的数据来初始化充电时间
+ 167   2              if (voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
+ 168   2              {
+ 169   3                  // 电池电压小于低电量提示电压
+ 170   3                  charge_time_cnt = 0;
+ 171   3              }
+ 172   2              else if (voltage_mv < BAT_WY_1LED_VOLTAGE)
+ 173   2              {
+ 174   3                  charge_time_cnt = 0;
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 4   
 
- 175   2              {
- 176   3                  // 电池电压小于电池电量指示灯2个灯对应的电压
- 177   3                  charge_time_cnt = BAT_CHARGE_1LED_TIME;
- 178   3              }
- 179   2              else if (voltage_mv < BAT_WY_3LED_VOLTAGE)
- 180   2              {
- 181   3                  // 电池电压小于电池电量指示灯3个灯对应的电压
- 182   3                  charge_time_cnt = BAT_CHARGE_2LED_TIME;
- 183   3              }
- 184   2              else
- 185   2              {
- 186   3                  charge_time_cnt = BAT_CHARGE_3LED_TIME;
- 187   3              }
- 188   2          }
- 189   1          else
- 190   1          {
- 191   2              // 正在充电
- 192   2              if (voltage_mv < BAT_CHARGE_1LED_VOLTAGE)
- 193   2              {
- 194   3                  charge_time_cnt = 0;
- 195   3              }
- 196   2              else if (voltage_mv < BAT_CHARGE_2LED_VOLTAGE)
- 197   2              {
- 198   3                  charge_time_cnt = BAT_CHARGE_1LED_TIME;
- 199   3              }
- 200   2              else if (voltage_mv < BAT_CHARGE_3LED_VOLTAGE)
- 201   2              {
- 202   3                  charge_time_cnt = BAT_CHARGE_2LED_TIME;
- 203   3              }
- 204   2              else
- 205   2              {
- 206   3                  charge_time_cnt = BAT_CHARGE_3LED_TIME;
- 207   3              }
- 208   2          }
- 209   1      }
- 210          
- 211          /**
- 212           * @brief 初始化电池放电时间
- 213           *      1. 在低功耗唤醒后调用
- 214           *      2. 在第一次上电后调用
- 215           *
- 216           */
- 217          void bat_discharge_time_cnt_update(u16 voltage_mv)
- 218          {
- 219   1          // 根据黄白灯一起亮的数据来初始化放电时间
- 220   1          if (voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
- 221   1          {
- 222   2              if (discharge_time_cnt < BAT_WY_LOW_WARN_TIME)
- 223   2              {
- 224   3                  /*
- 225   3                      电池电压小于低电量提示电压，
- 226   3                      并且放电时间小于低电量提示时间
- 227   3                  */
- 228   3                  discharge_time_cnt = BAT_WY_LOW_WARN_TIME;
- 229   3              }
- 230   2          }
- 231   1          else if (voltage_mv < BAT_WY_1LED_VOLTAGE)
- 232   1          {
- 233   2              if (discharge_time_cnt < BAT_WY_1LED_TIME)
- 234   2              {
- 235   3                  /*
- 236   3                      电池电压小于1个灯对应的电压
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/21/2026 18:51:07 PAGE 5   
+ 175   3              }
+ 176   2              else if (voltage_mv < BAT_WY_2LED_VOLTAGE)
+ 177   2              {
+ 178   3                  // 电池电压小于电池电量指示灯2个灯对应的电压
+ 179   3                  charge_time_cnt = BAT_CHARGE_1LED_TIME;
+ 180   3              }
+ 181   2              else if (voltage_mv < BAT_WY_3LED_VOLTAGE)
+ 182   2              {
+ 183   3                  // 电池电压小于电池电量指示灯3个灯对应的电压
+ 184   3                  charge_time_cnt = BAT_CHARGE_2LED_TIME;
+ 185   3              }
+ 186   2              else
+ 187   2              {
+ 188   3                  charge_time_cnt = BAT_CHARGE_3LED_TIME;
+ 189   3              }
+ 190   2          }
+ 191   1          else
+ 192   1          {
+ 193   2              // 正在充电
+ 194   2              if (voltage_mv < BAT_CHARGE_1LED_VOLTAGE)
+ 195   2              {
+ 196   3                  charge_time_cnt = 0;
+ 197   3              }
+ 198   2              else if (voltage_mv < BAT_CHARGE_2LED_VOLTAGE)
+ 199   2              {
+ 200   3                  charge_time_cnt = BAT_CHARGE_1LED_TIME;
+ 201   3              }
+ 202   2              else if (voltage_mv < BAT_CHARGE_3LED_VOLTAGE)
+ 203   2              {
+ 204   3                  charge_time_cnt = BAT_CHARGE_2LED_TIME;
+ 205   3              }
+ 206   2              else
+ 207   2              {
+ 208   3                  charge_time_cnt = BAT_CHARGE_3LED_TIME;
+ 209   3              }
+ 210   2          }
+ 211   1      }
+ 212          
+ 213          /**
+ 214           * @brief 初始化电池放电时间
+ 215           *      1. 在低功耗唤醒后调用
+ 216           *      2. 在第一次上电后调用
+ 217           *
+ 218           */
+ 219          void bat_discharge_time_cnt_update(u16 voltage_mv)
+ 220          {
+ 221   1          // 根据黄白灯一起亮的数据来初始化放电时间
+ 222   1          if (voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
+ 223   1          {
+ 224   2              if (discharge_time_cnt < BAT_WY_LOW_WARN_TIME)
+ 225   2              {
+ 226   3                  /*
+ 227   3                      电池电压小于低电量提示电压，
+ 228   3                      并且放电时间小于低电量提示时间
+ 229   3                  */
+ 230   3                  discharge_time_cnt = BAT_WY_LOW_WARN_TIME;
+ 231   3              }
+ 232   2          }
+ 233   1          else if (voltage_mv < BAT_WY_1LED_VOLTAGE)
+ 234   1          {
+ 235   2              if (discharge_time_cnt < BAT_WY_1LED_TIME)
+ 236   2              {
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 5   
 
- 237   3                      并且放电时间小于1个灯对应的放电时间
- 238   3                  */
- 239   3                  discharge_time_cnt = BAT_WY_1LED_TIME;
- 240   3              }
- 241   2          }
- 242   1          else if (voltage_mv < BAT_WY_2LED_VOLTAGE)
- 243   1          {
- 244   2              if (discharge_time_cnt < BAT_WY_2LED_TIME)
- 245   2              {
- 246   3                  /*
- 247   3                      电池电压小于2个灯对应的电压
- 248   3                      并且放电时间小于2个灯对应的放电时间
- 249   3                  */
- 250   3                  discharge_time_cnt = BAT_WY_2LED_TIME;
- 251   3              }
- 252   2          }
- 253   1          else if (voltage_mv < BAT_WY_3LED_VOLTAGE)
- 254   1          {
- 255   2              if (discharge_time_cnt < BAT_WY_3LED_TIME)
- 256   2              {
- 257   3                  /*
- 258   3                      电池电压小于3个灯对应的电压
- 259   3                      并且放电时间小于3个灯对应的放电时间
- 260   3                  */
- 261   3                  discharge_time_cnt = BAT_WY_3LED_TIME;
- 262   3              }
- 263   2          }
- 264   1          else
- 265   1          {
- 266   2              discharge_time_cnt = 0;
- 267   2          }
- 268   1      }
- 269          
- 270          // 修改后的电池监控处理函数
- 271          void battery_monitor_handle(void)
- 272          {
- 273   1          // REVIEW ，进入到这里进行判断，至少要等开机后10秒，否则电压值不准确
- 274   1      
- 275   1      
- 276   1          if ((led_bat_lev_sta != LED_BAT_LEV_STA_DISCHARGE) &&
- 277   1              led_bat_lev_sta != LED_BAT_LEV_STA_ALERT)
- 278   1          {
- 279   2              // 不在放电，直接返回
- 280   2              return;
- 281   2          }
- 282   1      
- 283   1          // 到了关机对应的电压
- 284   1          if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
- 285   1          {
- 286   2      #if USER_DEBUG_ENABLE
+ 237   3                  /*
+ 238   3                      电池电压小于1个灯对应的电压
+ 239   3                      并且放电时间小于1个灯对应的放电时间
+ 240   3                  */
+ 241   3                  discharge_time_cnt = BAT_WY_1LED_TIME;
+ 242   3              }
+ 243   2          }
+ 244   1          else if (voltage_mv < BAT_WY_2LED_VOLTAGE)
+ 245   1          {
+ 246   2              if (discharge_time_cnt < BAT_WY_2LED_TIME)
+ 247   2              {
+ 248   3                  /*
+ 249   3                      电池电压小于2个灯对应的电压
+ 250   3                      并且放电时间小于2个灯对应的放电时间
+ 251   3                  */
+ 252   3                  discharge_time_cnt = BAT_WY_2LED_TIME;
+ 253   3              }
+ 254   2          }
+ 255   1          else if (voltage_mv < BAT_WY_3LED_VOLTAGE)
+ 256   1          {
+ 257   2              if (discharge_time_cnt < BAT_WY_3LED_TIME)
+ 258   2              {
+ 259   3                  /*
+ 260   3                      电池电压小于3个灯对应的电压
+ 261   3                      并且放电时间小于3个灯对应的放电时间
+ 262   3                  */
+ 263   3                  discharge_time_cnt = BAT_WY_3LED_TIME;
+ 264   3              }
+ 265   2          }
+ 266   1          else
+ 267   1          {
+ 268   2              discharge_time_cnt = 0;
+ 269   2          }
+ 270   1      }
+ 271          
+ 272          // 修改后的电池监控处理函数
+ 273          void battery_monitor_handle(void)
+ 274          {
+ 275   1          // REVIEW ，进入到这里进行判断，至少要等灯光缓慢降到预定值之后，否则电�
+             -�值不准确
+ 276   1      
+ 277   1      
+ 278   1          if ((led_bat_lev_sta != LED_BAT_LEV_STA_DISCHARGE) &&
+ 279   1              led_bat_lev_sta != LED_BAT_LEV_STA_ALERT)
+ 280   1          {
+ 281   2              // 不在放电，直接返回
+ 282   2              return;
+ 283   2          }
+ 284   1      
+ 285   1          // 到了关机对应的电压
+ 286   1          if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+ 287   1          {
+ 288   2      #if USER_DEBUG_ENABLE
                       printf("detect bat power empty\n");
                       // printf("led_ctl.status == %u\n", (u16)led_ctl.status);
                       // printf("ble_ic.is_working == %u\n", (u16)ble_ic.is_working);
               #endif
- 291   2      
- 292   2              // 关闭灯光
- 293   2              if (led_ctl.status != LED_STATUS_OFF)
- 294   2              {
- 295   3                  led_status_set(LED_STATUS_OFF);
- 296   3              }
- 297   2      
- 298   2              /*
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/21/2026 18:51:07 PAGE 6   
+ 293   2      
+ 294   2              // 关闭灯光
+ 295   2              if (led_ctl.status != LED_STATUS_OFF)
+ 296   2              {
+ 297   3                  led_status_set(LED_STATUS_OFF);
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 6   
 
- 299   2                  关闭蓝牙，从低电量提示到低电量关机。
- 300   2                  这个时间段会打开蓝牙，进行低电量提示。
- 301   2                  到了低电量关机，这里需要能够重复进来，一直给蓝牙发送数据，确保�
+ 298   3              }
+ 299   2      
+ 300   2              /*
+ 301   2                  关闭蓝牙，从低电量提示到低电量关机。
+ 302   2                  这个时间段会打开蓝牙，进行低电量提示。
+ 303   2                  到了低电量关机，这里需要能够重复进来，一直给蓝牙发送数据，确保�
              -��牙关机
- 302   2              */
- 303   2              if (ble_ic.is_working)
- 304   2              {
- 305   3                  uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
- 306   3                  // delay_ms(5000); // 这里要等蓝牙播报完成
- 307   3                  delay_ms(30);
- 308   3                  ble_ic_disable_pre();
- 309   3                  delay_ms(100);
- 310   3              }
- 311   2      
- 312   2              return; // 提前退出，不再往下执行
- 313   2          }
- 314   1      
- 315   1          if (is_low_power_wakeup_initialize_enable)
- 316   1          {
- 317   2              // 刚从低功耗期间唤醒，还没有得到稳定的电池电压，直接返回
- 318   2              return;
- 319   2          }
- 320   1      
- 321   1          /*
- 322   1              低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
- 323   1              电池电量在关机电压和低电量阈值之间，才打开蓝牙
- 324   1          */
- 325   1          if (is_sent_low_bat_alert == 0 &&
- 326   1              /* 扩展低电量触发阈值，使用模式配置中的低电警告阈值（参考客户要求�
+ 304   2              */
+ 305   2              if (ble_ic.is_working)
+ 306   2              {
+ 307   3                  uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_SHUTDOWN);
+ 308   3                  // delay_ms(5000); // 这里要等蓝牙播报完成
+ 309   3                  delay_ms(30);
+ 310   3                  ble_ic_disable_pre();
+ 311   3                  delay_ms(100);
+ 312   3              }
+ 313   2      
+ 314   2              return; // 提前退出，不再往下执行
+ 315   2          }
+ 316   1      
+ 317   1          if (is_shielding_bat_vol_scan)
+ 318   1          {
+ 319   2              // 刚从低功耗期间唤醒，还没有得到稳定的电池电压，直接返回
+ 320   2              return;
+ 321   2          }
+ 322   1      
+ 323   1          /*
+ 324   1              低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
+ 325   1              电池电量在关机电压和低电量阈值之间，才打开蓝牙
+ 326   1          */
+ 327   1          if (is_sent_low_bat_alert == 0 &&
+ 328   1              /* 扩展低电量触发阈值，使用模式配置中的低电警告阈值（参考客户要求�
              -� */
- 327   1              avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
- 328   1          {
- 329   2              // u8 i; // 循环计数值，控制连续发送低电量报警的次数
- 330   2      #if USER_DEBUG_ENABLE
+ 329   1              avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
+ 330   1          {
+ 331   2              // u8 i; // 循环计数值，控制连续发送低电量报警的次数
+ 332   2      #if USER_DEBUG_ENABLE
                       // printf("detect low power\n");
               #endif
- 333   2              if (ble_ic.is_working == 0)
- 334   2              {
- 335   3                  ble_ic_enable();
- 336   3              }
- 337   2      
- 338   2              uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
- 339   2              is_sent_low_bat_alert = 1;
- 340   2          }
- 341   1      
- 342   1          // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间发送
+ 335   2              if (ble_ic.is_working == 0)
+ 336   2              {
+ 337   3                  ble_ic_enable();
+ 338   3              }
+ 339   2      
+ 340   2              uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
+ 341   2              is_sent_low_bat_alert = 1;
+ 342   2          }
+ 343   1      
+ 344   1          // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间发送
              -一次低电量报警：
- 343   1          if (is_send_low_bat_repeatedly_enable)
- 344   1          {
- 345   2              uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
- 346   2              is_send_low_bat_repeatedly_enable = 0;
- 347   2      
- 348   2      #if USER_DEBUG_ENABLE
+ 345   1          if (is_send_low_bat_repeatedly_enable)
+ 346   1          {
+ 347   2              uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
+ 348   2              is_send_low_bat_repeatedly_enable = 0;
+ 349   2      
+ 350   2      #if USER_DEBUG_ENABLE
                       printf("UART_SEND_CMD_LOW_POWER_WARNING\n");
               #endif
- 351   2          }
- 352   1      }
+ 353   2          }
+ 354   1      }
 
+
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 7   
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =    803    ----
    CONSTANT SIZE    =   ----    ----
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/21/2026 18:51:07 PAGE 7   
-
    XDATA SIZE       =     22       2
    PDATA SIZE       =   ----    ----
    DATA SIZE        =   ----    ----

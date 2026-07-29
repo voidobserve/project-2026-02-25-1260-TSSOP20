@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 1   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE LED_BAT_LEV
@@ -62,7 +62,7 @@ line level    source
   50   1              else
   51   1              {
   52   2                      led_bat_lev = LED_BAT_LEV_4;
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 2   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 2   
 
   53   2              }
   54   1      }
@@ -126,7 +126,7 @@ line level    source
  111   2                      else if (avg_voltage_mv < BAT_SINGLE_LIGHT_1LED_VOLTAGE)
  112   2                      {
  113   3                              target_bat_lev = LED_BAT_LEV_1;
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 3   
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 3   
 
  114   3                      }
  115   2                      else if (avg_voltage_mv < BAT_SINGLE_LIGHT_2LED_VOLTAGE)
@@ -147,32 +147,33 @@ line level    source
  130   3                              // 特殊情况
  131   3                      }
  132   2              }
- 133   1              else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 134   1              {
- 135   2                      // 黄白灯都亮
- 136   2                      if (avg_voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
- 137   2                      {
- 138   3                              target_bat_lev = LED_BAT_LEV_ALERT;
- 139   3                      }
- 140   2                      else if (avg_voltage_mv < BAT_WY_1LED_VOLTAGE)
- 141   2                      {
- 142   3                              target_bat_lev = LED_BAT_LEV_1;
- 143   3                      }
- 144   2                      else if (avg_voltage_mv < BAT_WY_2LED_VOLTAGE)
- 145   2                      {
- 146   3                              target_bat_lev = LED_BAT_LEV_2;
- 147   3                      }
- 148   2                      else if (avg_voltage_mv < BAT_WY_3LED_VOLTAGE)
- 149   2                      {
- 150   3                              target_bat_lev = LED_BAT_LEV_3;
- 151   3                      }
- 152   2                      else
- 153   2                      {
- 154   3                              target_bat_lev = LED_BAT_LEV_4;
- 155   3                      }
- 156   2              }
- 157   1      
- 158   1      #if USER_DEBUG_ENABLE
+ 133   1              // else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+ 134   1              else // 如果是黄白灯都亮，或者是只开蓝牙，又或者是只通过type-c放电
+ 135   1              {
+ 136   2                      // 黄白灯都亮
+ 137   2                      if (avg_voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
+ 138   2                      {
+ 139   3                              target_bat_lev = LED_BAT_LEV_ALERT;
+ 140   3                      }
+ 141   2                      else if (avg_voltage_mv < BAT_WY_1LED_VOLTAGE)
+ 142   2                      {
+ 143   3                              target_bat_lev = LED_BAT_LEV_1;
+ 144   3                      }
+ 145   2                      else if (avg_voltage_mv < BAT_WY_2LED_VOLTAGE)
+ 146   2                      {
+ 147   3                              target_bat_lev = LED_BAT_LEV_2;
+ 148   3                      }
+ 149   2                      else if (avg_voltage_mv < BAT_WY_3LED_VOLTAGE)
+ 150   2                      {
+ 151   3                              target_bat_lev = LED_BAT_LEV_3;
+ 152   3                      }
+ 153   2                      else
+ 154   2                      {
+ 155   3                              target_bat_lev = LED_BAT_LEV_4;
+ 156   3                      }
+ 157   2              }
+ 158   1      
+ 159   1      #if USER_DEBUG_ENABLE
               
                       {
                               static u16 cnt = 0;
@@ -184,229 +185,229 @@ line level    source
                               }
                       }
               #endif
- 170   1      
- 171   1              /*
- 172   1                      判断当前显示的电池电量等级是否跟目前电量等级相等
- 173   1                      如果不相等，
- 174   1                              - 判断挡位相差是否在1以内
- 175   1                                      如果在1以内，判断放电时间是否满足挡位对应的事件
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 4   
+ 171   1      
+ 172   1              /*
+ 173   1                      判断当前显示的电池电量等级是否跟目前电量等级相等
+ 174   1                      如果不相等，
+ 175   1                              - 判断挡位相差是否在1以内
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 4   
 
- 176   1                                      如果不再1以内，需要跳级
- 177   1              */
- 178   1              if (led_bat_lev > target_bat_lev)
- 179   1              {
- 180   2                      if (led_bat_lev - target_bat_lev <= 1)
- 181   2                      {
- 182   3                              /*
- 183   3                                      当前显示的电池电量与目标电量只相差1以内，
- 184   3                                      判断是否到了对应的放电时间
- 185   3                              */
- 186   3                              jump_down_cnt_ms = 0;
- 187   3      
- 188   3                              if (led_ctl.status == LED_STATUS_YELLOW ||
- 189   3                                      led_ctl.status == LED_STATUS_WHITE ||
- 190   3                                      led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
- 191   3                              {
- 192   4                                      // 单色灯
- 193   4                                      switch (target_bat_lev)
- 194   4                                      {
- 195   5                                      case LED_BAT_LEV_3:
- 196   5                                              if (discharge_time_cnt >= BAT_SINGLE_LIGHT_3LED_TIME)
- 197   5                                              {
- 198   6                                                      led_bat_lev = target_bat_lev;
- 199   6                                              }
- 200   5                                              break;
- 201   5      
- 202   5                                      case LED_BAT_LEV_2:
- 203   5                                              if (discharge_time_cnt >= BAT_SINGLE_LIGHT_2LED_TIME)
- 204   5                                              {
- 205   6                                                      led_bat_lev = target_bat_lev;
- 206   6                                              }
- 207   5                                              break;
- 208   5      
- 209   5                                      case LED_BAT_LEV_1:
- 210   5                                              if (discharge_time_cnt >= BAT_SINGLE_LIGHT_1LED_TIME)
- 211   5                                              {
- 212   6                                                      led_bat_lev = target_bat_lev;
- 213   6                                              }
- 214   5                                              break;
- 215   5      
- 216   5                                      case LED_BAT_LEV_ALERT:
- 217   5                                              led_bat_lev = target_bat_lev;
- 218   5                                              led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
- 219   5                                              LED_100_PERCENT_OFF();
- 220   5                                              LED_75_PERCENT_OFF();
- 221   5                                              LED_50_PERCENT_OFF();
- 222   5                                              LED_25_PERCENT_OFF();
- 223   5                                              return;
- 224   5                                              break;
- 225   5      
- 226   5                                      default:
- 227   5                                              break;
- 228   5                                      }
- 229   4                              }
- 230   3                              else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 231   3                              {
- 232   4                                      // 双色灯
- 233   4                                      switch (target_bat_lev)
- 234   4                                      {
- 235   5                                      case LED_BAT_LEV_3:
- 236   5                                              if (discharge_time_cnt >= BAT_WY_3LED_TIME)
- 237   5                                              {
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 5   
+ 176   1                                      如果在1以内，判断放电时间是否满足挡位对应的事件
+ 177   1                                      如果不再1以内，需要跳级
+ 178   1              */
+ 179   1              if (led_bat_lev > target_bat_lev)
+ 180   1              {
+ 181   2                      if (led_bat_lev - target_bat_lev <= 1)
+ 182   2                      {
+ 183   3                              /*
+ 184   3                                      当前显示的电池电量与目标电量只相差1以内，
+ 185   3                                      判断是否到了对应的放电时间
+ 186   3                              */
+ 187   3                              jump_down_cnt_ms = 0;
+ 188   3      
+ 189   3                              if (led_ctl.status == LED_STATUS_YELLOW ||
+ 190   3                                      led_ctl.status == LED_STATUS_WHITE ||
+ 191   3                                      led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
+ 192   3                              {
+ 193   4                                      // 单色灯
+ 194   4                                      switch (target_bat_lev)
+ 195   4                                      {
+ 196   5                                      case LED_BAT_LEV_3:
+ 197   5                                              if (discharge_time_cnt >= BAT_SINGLE_LIGHT_3LED_TIME)
+ 198   5                                              {
+ 199   6                                                      led_bat_lev = target_bat_lev;
+ 200   6                                              }
+ 201   5                                              break;
+ 202   5      
+ 203   5                                      case LED_BAT_LEV_2:
+ 204   5                                              if (discharge_time_cnt >= BAT_SINGLE_LIGHT_2LED_TIME)
+ 205   5                                              {
+ 206   6                                                      led_bat_lev = target_bat_lev;
+ 207   6                                              }
+ 208   5                                              break;
+ 209   5      
+ 210   5                                      case LED_BAT_LEV_1:
+ 211   5                                              if (discharge_time_cnt >= BAT_SINGLE_LIGHT_1LED_TIME)
+ 212   5                                              {
+ 213   6                                                      led_bat_lev = target_bat_lev;
+ 214   6                                              }
+ 215   5                                              break;
+ 216   5      
+ 217   5                                      case LED_BAT_LEV_ALERT:
+ 218   5                                              led_bat_lev = target_bat_lev;
+ 219   5                                              led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
+ 220   5                                              LED_100_PERCENT_OFF();
+ 221   5                                              LED_75_PERCENT_OFF();
+ 222   5                                              LED_50_PERCENT_OFF();
+ 223   5                                              LED_25_PERCENT_OFF();
+ 224   5                                              return;
+ 225   5                                              break;
+ 226   5      
+ 227   5                                      default:
+ 228   5                                              break;
+ 229   5                                      }
+ 230   4                              }
+ 231   3                              else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+ 232   3                              {
+ 233   4                                      // 双色灯
+ 234   4                                      switch (target_bat_lev)
+ 235   4                                      {
+ 236   5                                      case LED_BAT_LEV_3:
+ 237   5                                              if (discharge_time_cnt >= BAT_WY_3LED_TIME)
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 5   
 
- 238   6                                                      led_bat_lev = target_bat_lev;
- 239   6                                              }
- 240   5                                              break;
- 241   5      
- 242   5                                      case LED_BAT_LEV_2:
- 243   5                                              if (discharge_time_cnt >= BAT_WY_2LED_TIME)
- 244   5                                              {
- 245   6                                                      led_bat_lev = target_bat_lev;
- 246   6                                              }
- 247   5                                              break;
- 248   5      
- 249   5                                      case LED_BAT_LEV_1:
- 250   5                                              if (discharge_time_cnt >= BAT_WY_1LED_TIME)
- 251   5                                              {
- 252   6                                                      led_bat_lev = target_bat_lev;
- 253   6                                              }
- 254   5                                              break;
- 255   5      
- 256   5                                      case LED_BAT_LEV_ALERT:
- 257   5                                              led_bat_lev = target_bat_lev;
- 258   5                                              led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
- 259   5                                              LED_100_PERCENT_OFF();
- 260   5                                              LED_75_PERCENT_OFF();
- 261   5                                              LED_50_PERCENT_OFF();
- 262   5                                              LED_25_PERCENT_OFF();
- 263   5                                              return;
- 264   5                                              break;
- 265   5      
- 266   5                                      default:
- 267   5                                              break;
- 268   5                                      }
- 269   4                              }
- 270   3                      }
- 271   2                      else
- 272   2                      {
- 273   3                              /*
- 274   3                                      led_bat_lev > target_bat_lev，
- 275   3                                      并且 led_bat_lev 与 target_bat_lev 之间的差值大于1，需要跳级
- 276   3      
- 277   3                                      跳级之后，如果放电时间对不上，需要加上补偿
- 278   3                                      补偿之后，放电的时间会大于当前挡位对应的放电时间
- 279   3                              */
- 280   3                              jump_down_cnt_ms++;
- 281   3                              if (jump_down_cnt_ms >= LED_BAT_LEV_JUMP_DOWN_DEBOUNCE_MS)
- 282   3                              {
- 283   4                                      jump_down_cnt_ms = 0;
- 284   4      
- 285   4      #if USER_DEBUG_ENABLE
+ 238   5                                              {
+ 239   6                                                      led_bat_lev = target_bat_lev;
+ 240   6                                              }
+ 241   5                                              break;
+ 242   5      
+ 243   5                                      case LED_BAT_LEV_2:
+ 244   5                                              if (discharge_time_cnt >= BAT_WY_2LED_TIME)
+ 245   5                                              {
+ 246   6                                                      led_bat_lev = target_bat_lev;
+ 247   6                                              }
+ 248   5                                              break;
+ 249   5      
+ 250   5                                      case LED_BAT_LEV_1:
+ 251   5                                              if (discharge_time_cnt >= BAT_WY_1LED_TIME)
+ 252   5                                              {
+ 253   6                                                      led_bat_lev = target_bat_lev;
+ 254   6                                              }
+ 255   5                                              break;
+ 256   5      
+ 257   5                                      case LED_BAT_LEV_ALERT:
+ 258   5                                              led_bat_lev = target_bat_lev;
+ 259   5                                              led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
+ 260   5                                              LED_100_PERCENT_OFF();
+ 261   5                                              LED_75_PERCENT_OFF();
+ 262   5                                              LED_50_PERCENT_OFF();
+ 263   5                                              LED_25_PERCENT_OFF();
+ 264   5                                              return;
+ 265   5                                              break;
+ 266   5      
+ 267   5                                      default:
+ 268   5                                              break;
+ 269   5                                      }
+ 270   4                              }
+ 271   3                      }
+ 272   2                      else
+ 273   2                      {
+ 274   3                              /*
+ 275   3                                      led_bat_lev > target_bat_lev，
+ 276   3                                      并且 led_bat_lev 与 target_bat_lev 之间的差值大于1，需要跳级
+ 277   3      
+ 278   3                                      跳级之后，如果放电时间对不上，需要加上补偿
+ 279   3                                      补偿之后，放电的时间会大于当前挡位对应的放电时间
+ 280   3                              */
+ 281   3                              jump_down_cnt_ms++;
+ 282   3                              if (jump_down_cnt_ms >= LED_BAT_LEV_JUMP_DOWN_DEBOUNCE_MS)
+ 283   3                              {
+ 284   4                                      jump_down_cnt_ms = 0;
+ 285   4      
+ 286   4      #if USER_DEBUG_ENABLE
                                               printf("jump down\n");
               #endif
- 288   4      
- 289   4                                      if (led_bat_lev > LED_BAT_LEV_ALERT)
- 290   4                                      {
- 291   5                                              led_bat_lev--;
- 292   5                                      }
- 293   4      
- 294   4                                      if (led_ctl.status == LED_STATUS_YELLOW ||
- 295   4                                              led_ctl.status == LED_STATUS_WHITE ||
- 296   4                                              led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
- 297   4                                      {
- 298   5                                              // 单色灯
- 299   5                                              switch (led_bat_lev)
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 6   
+ 289   4      
+ 290   4                                      if (led_bat_lev > LED_BAT_LEV_ALERT)
+ 291   4                                      {
+ 292   5                                              led_bat_lev--;
+ 293   5                                      }
+ 294   4      
+ 295   4                                      if (led_ctl.status == LED_STATUS_YELLOW ||
+ 296   4                                              led_ctl.status == LED_STATUS_WHITE ||
+ 297   4                                              led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
+ 298   4                                      {
+ 299   5                                              // 单色灯
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 6   
 
- 300   5                                              {
- 301   6                                              case LED_BAT_LEV_3:
- 302   6                                                      if (discharge_time_cnt < BAT_SINGLE_LIGHT_3LED_TIME)
- 303   6                                                      {
- 304   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
- 305   7                                                              discharge_time_cnt =
- 306   7                                                                      ((BAT_SINGLE_LIGHT_3LED_TIME +
- 307   7                                                                        BAT_SINGLE_LIGHT_2LED_TIME) /
- 308   7                                                                       2);
- 309   7                                                      }
- 310   6                                                      break;
- 311   6      
- 312   6                                              case LED_BAT_LEV_2:
- 313   6                                                      if (discharge_time_cnt < BAT_SINGLE_LIGHT_2LED_TIME)
- 314   6                                                      {
- 315   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
- 316   7                                                              discharge_time_cnt =
- 317   7                                                                      ((BAT_SINGLE_LIGHT_2LED_TIME +
- 318   7                                                                        BAT_SINGLE_LIGHT_1LED_TIME) /
- 319   7                                                                       2);
- 320   7                                                      }
- 321   6                                                      break;
- 322   6      
- 323   6                                              case LED_BAT_LEV_1:
- 324   6                                                      if (discharge_time_cnt < BAT_SINGLE_LIGHT_1LED_TIME)
- 325   6                                                      {
- 326   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
- 327   7                                                              discharge_time_cnt =
- 328   7                                                                      ((BAT_SINGLE_LIGHT_1LED_TIME +
- 329   7                                                                        BAT_SINGLE_LIGHT_LOW_WARN_TIME) /
- 330   7                                                                       2);
- 331   7                                                      }
- 332   6                                                      break;
- 333   6      
- 334   6                                              default:
- 335   6                                                      break;
- 336   6                                              }
- 337   5                                      }
- 338   4                                      else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
- 339   4                                      {
- 340   5                                              // 双色灯
- 341   5                                              switch (led_bat_lev)
- 342   5                                              {
- 343   6                                              case LED_BAT_LEV_3:
- 344   6                                                      if (discharge_time_cnt < BAT_WY_3LED_TIME)
- 345   6                                                      {
- 346   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
- 347   7                                                              discharge_time_cnt =
- 348   7                                                                      ((BAT_WY_3LED_TIME +
- 349   7                                                                        BAT_WY_2LED_TIME) /
- 350   7                                                                       2);
- 351   7                                                      }
- 352   6                                                      break;
- 353   6      
- 354   6                                              case LED_BAT_LEV_2:
- 355   6                                                      if (discharge_time_cnt < BAT_WY_2LED_TIME)
- 356   6                                                      {
- 357   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
- 358   7                                                              discharge_time_cnt =
- 359   7                                                                      ((BAT_WY_2LED_TIME +
- 360   7                                                                        BAT_WY_1LED_TIME) /
- 361   7                                                                       2);
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 7   
+ 300   5                                              switch (led_bat_lev)
+ 301   5                                              {
+ 302   6                                              case LED_BAT_LEV_3:
+ 303   6                                                      if (discharge_time_cnt < BAT_SINGLE_LIGHT_3LED_TIME)
+ 304   6                                                      {
+ 305   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
+ 306   7                                                              discharge_time_cnt =
+ 307   7                                                                      ((BAT_SINGLE_LIGHT_3LED_TIME +
+ 308   7                                                                        BAT_SINGLE_LIGHT_2LED_TIME) /
+ 309   7                                                                       2);
+ 310   7                                                      }
+ 311   6                                                      break;
+ 312   6      
+ 313   6                                              case LED_BAT_LEV_2:
+ 314   6                                                      if (discharge_time_cnt < BAT_SINGLE_LIGHT_2LED_TIME)
+ 315   6                                                      {
+ 316   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
+ 317   7                                                              discharge_time_cnt =
+ 318   7                                                                      ((BAT_SINGLE_LIGHT_2LED_TIME +
+ 319   7                                                                        BAT_SINGLE_LIGHT_1LED_TIME) /
+ 320   7                                                                       2);
+ 321   7                                                      }
+ 322   6                                                      break;
+ 323   6      
+ 324   6                                              case LED_BAT_LEV_1:
+ 325   6                                                      if (discharge_time_cnt < BAT_SINGLE_LIGHT_1LED_TIME)
+ 326   6                                                      {
+ 327   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
+ 328   7                                                              discharge_time_cnt =
+ 329   7                                                                      ((BAT_SINGLE_LIGHT_1LED_TIME +
+ 330   7                                                                        BAT_SINGLE_LIGHT_LOW_WARN_TIME) /
+ 331   7                                                                       2);
+ 332   7                                                      }
+ 333   6                                                      break;
+ 334   6      
+ 335   6                                              default:
+ 336   6                                                      break;
+ 337   6                                              }
+ 338   5                                      }
+ 339   4                                      else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+ 340   4                                      {
+ 341   5                                              // 双色灯
+ 342   5                                              switch (led_bat_lev)
+ 343   5                                              {
+ 344   6                                              case LED_BAT_LEV_3:
+ 345   6                                                      if (discharge_time_cnt < BAT_WY_3LED_TIME)
+ 346   6                                                      {
+ 347   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
+ 348   7                                                              discharge_time_cnt =
+ 349   7                                                                      ((BAT_WY_3LED_TIME +
+ 350   7                                                                        BAT_WY_2LED_TIME) /
+ 351   7                                                                       2);
+ 352   7                                                      }
+ 353   6                                                      break;
+ 354   6      
+ 355   6                                              case LED_BAT_LEV_2:
+ 356   6                                                      if (discharge_time_cnt < BAT_WY_2LED_TIME)
+ 357   6                                                      {
+ 358   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
+ 359   7                                                              discharge_time_cnt =
+ 360   7                                                                      ((BAT_WY_2LED_TIME +
+ 361   7                                                                        BAT_WY_1LED_TIME) /
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 7   
 
- 362   7                                                      }
- 363   6                                                      break;
- 364   6      
- 365   6                                              case LED_BAT_LEV_1:
- 366   6                                                      if (discharge_time_cnt < BAT_WY_1LED_TIME)
- 367   6                                                      {
- 368   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
- 369   7                                                              discharge_time_cnt =
- 370   7                                                                      ((BAT_WY_1LED_TIME +
- 371   7                                                                        BAT_WY_LOW_WARN_TIME) /
- 372   7                                                                       2);
- 373   7                                                      }
- 374   6                                                      break;
- 375   6      
- 376   6                                              default:
- 377   6                                                      break;
- 378   6                                              }
- 379   5                                      }
- 380   4                              }
- 381   3                      }
- 382   2              }
- 383   1      
- 384   1      #if USER_DEBUG_ENABLE
+ 362   7                                                                       2);
+ 363   7                                                      }
+ 364   6                                                      break;
+ 365   6      
+ 366   6                                              case LED_BAT_LEV_1:
+ 367   6                                                      if (discharge_time_cnt < BAT_WY_1LED_TIME)
+ 368   6                                                      {
+ 369   7                                                              // 放电时间小于该挡位对应的时间，进行补偿
+ 370   7                                                              discharge_time_cnt =
+ 371   7                                                                      ((BAT_WY_1LED_TIME +
+ 372   7                                                                        BAT_WY_LOW_WARN_TIME) /
+ 373   7                                                                       2);
+ 374   7                                                      }
+ 375   6                                                      break;
+ 376   6      
+ 377   6                                              default:
+ 378   6                                                      break;
+ 379   6                                              }
+ 380   5                                      }
+ 381   4                              }
+ 382   3                      }
+ 383   2              }
+ 384   1      
+ 385   1      #if USER_DEBUG_ENABLE
               
                       {
                               static u16 cnt = 0;
@@ -418,262 +419,262 @@ line level    source
                               }
                       }
               #endif
- 396   1      
- 397   1              // 更新显示到新的档位
- 398   1              switch (led_bat_lev)
- 399   1              {
- 400   2              case LED_BAT_LEV_OFF:
- 401   2              case LED_BAT_LEV_ALERT:
- 402   2                      // 低电量提示，先关闭所有指示灯，由后续低电量提示的处理函数来控制动画
- 403   2                      led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
- 404   2                      LED_100_PERCENT_OFF();
- 405   2                      LED_75_PERCENT_OFF();
- 406   2                      LED_50_PERCENT_OFF();
- 407   2                      LED_25_PERCENT_OFF();
- 408   2                      break;
- 409   2              case LED_BAT_LEV_1:
- 410   2                      LED_100_PERCENT_OFF();
- 411   2                      LED_75_PERCENT_OFF();
- 412   2                      LED_50_PERCENT_OFF();
- 413   2                      LED_25_PERCENT_ON();
- 414   2                      break;
- 415   2              case LED_BAT_LEV_2:
- 416   2                      LED_100_PERCENT_OFF();
- 417   2                      LED_75_PERCENT_OFF();
- 418   2                      LED_50_PERCENT_ON();
- 419   2                      LED_25_PERCENT_ON();
- 420   2                      break;
- 421   2              case LED_BAT_LEV_3:
- 422   2                      LED_100_PERCENT_OFF();
- 423   2                      LED_75_PERCENT_ON();
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 8   
+ 397   1      
+ 398   1              // 更新显示到新的档位
+ 399   1              switch (led_bat_lev)
+ 400   1              {
+ 401   2              case LED_BAT_LEV_OFF:
+ 402   2              case LED_BAT_LEV_ALERT:
+ 403   2                      // 低电量提示，先关闭所有指示灯，由后续低电量提示的处理函数来控制动画
+ 404   2                      led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
+ 405   2                      LED_100_PERCENT_OFF();
+ 406   2                      LED_75_PERCENT_OFF();
+ 407   2                      LED_50_PERCENT_OFF();
+ 408   2                      LED_25_PERCENT_OFF();
+ 409   2                      break;
+ 410   2              case LED_BAT_LEV_1:
+ 411   2                      LED_100_PERCENT_OFF();
+ 412   2                      LED_75_PERCENT_OFF();
+ 413   2                      LED_50_PERCENT_OFF();
+ 414   2                      LED_25_PERCENT_ON();
+ 415   2                      break;
+ 416   2              case LED_BAT_LEV_2:
+ 417   2                      LED_100_PERCENT_OFF();
+ 418   2                      LED_75_PERCENT_OFF();
+ 419   2                      LED_50_PERCENT_ON();
+ 420   2                      LED_25_PERCENT_ON();
+ 421   2                      break;
+ 422   2              case LED_BAT_LEV_3:
+ 423   2                      LED_100_PERCENT_OFF();
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 8   
 
- 424   2                      LED_50_PERCENT_ON();
- 425   2                      LED_25_PERCENT_ON();
- 426   2                      break;
- 427   2              default:
- 428   2                      LED_100_PERCENT_ON();
- 429   2                      LED_75_PERCENT_ON();
- 430   2                      LED_50_PERCENT_ON();
- 431   2                      LED_25_PERCENT_ON();
- 432   2                      break;
- 433   2              }
- 434   1      }
- 435          
- 436          static void led_bat_lev_sta_alert_handle(void)
- 437          {
- 438   1              static volatile u16 cnt = 0; // 控制闪烁的时间间隔
- 439   1      
- 440   1              LED_100_PERCENT_OFF();
- 441   1              LED_75_PERCENT_OFF();
- 442   1              LED_50_PERCENT_OFF();
- 443   1      
- 444   1              cnt++;
- 445   1              if (cnt >= 500)
- 446   1              {
- 447   2                      cnt = 0;
- 448   2                      LED_25_PERCENT_TOGGLE();
- 449   2              }
- 450   1      }
- 451          
- 452          static void led_bat_lev_sta_idle_handle(void)
- 453          {
- 454   1              LED_100_PERCENT_OFF();
- 455   1              LED_75_PERCENT_OFF();
- 456   1              LED_50_PERCENT_OFF();
- 457   1              LED_25_PERCENT_OFF();
- 458   1      }
- 459          
- 460          static void led_bat_lev_sta_charge_begin_handle(void)
- 461          {
- 462   1              LED_100_PERCENT_OFF();
- 463   1              LED_75_PERCENT_OFF();
- 464   1              LED_50_PERCENT_OFF();
- 465   1              LED_25_PERCENT_OFF();
- 466   1              led_charge_anim_phase = 0; // 充电动画的阶段，初始化为0
- 467   1              led_charge_anim_cnt = 0;   // 清空充电动画的计数值
- 468   1              led_bat_lev_sta = LED_BAT_LEV_STA_CHARGE_BEGIN_ANIM;
- 469   1      }
- 470          
- 471          static void led_bat_lev_sta_charge_begin_anim_handle(void)
- 472          {
- 473   1              led_charge_anim_cnt++;
- 474   1              if (led_charge_anim_cnt >= 500)
- 475   1              {
- 476   2                      led_charge_anim_cnt = 0;
- 477   2                      if (led_charge_anim_phase == 0 &&
- 478   2                              LED_BAT_LEV_1 <= led_bat_lev)
- 479   2                      {
- 480   3                              LED_25_PERCENT_ON();
- 481   3                              led_charge_anim_phase = 1;
- 482   3                      }
- 483   2                      else if (led_charge_anim_phase == 1 &&
- 484   2                                       LED_BAT_LEV_2 <= led_bat_lev)
- 485   2                      {
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 9   
+ 424   2                      LED_75_PERCENT_ON();
+ 425   2                      LED_50_PERCENT_ON();
+ 426   2                      LED_25_PERCENT_ON();
+ 427   2                      break;
+ 428   2              default:
+ 429   2                      LED_100_PERCENT_ON();
+ 430   2                      LED_75_PERCENT_ON();
+ 431   2                      LED_50_PERCENT_ON();
+ 432   2                      LED_25_PERCENT_ON();
+ 433   2                      break;
+ 434   2              }
+ 435   1      }
+ 436          
+ 437          static void led_bat_lev_sta_alert_handle(void)
+ 438          {
+ 439   1              static volatile u16 cnt = 0; // 控制闪烁的时间间隔
+ 440   1      
+ 441   1              LED_100_PERCENT_OFF();
+ 442   1              LED_75_PERCENT_OFF();
+ 443   1              LED_50_PERCENT_OFF();
+ 444   1      
+ 445   1              cnt++;
+ 446   1              if (cnt >= 500)
+ 447   1              {
+ 448   2                      cnt = 0;
+ 449   2                      LED_25_PERCENT_TOGGLE();
+ 450   2              }
+ 451   1      }
+ 452          
+ 453          static void led_bat_lev_sta_idle_handle(void)
+ 454          {
+ 455   1              LED_100_PERCENT_OFF();
+ 456   1              LED_75_PERCENT_OFF();
+ 457   1              LED_50_PERCENT_OFF();
+ 458   1              LED_25_PERCENT_OFF();
+ 459   1      }
+ 460          
+ 461          static void led_bat_lev_sta_charge_begin_handle(void)
+ 462          {
+ 463   1              LED_100_PERCENT_OFF();
+ 464   1              LED_75_PERCENT_OFF();
+ 465   1              LED_50_PERCENT_OFF();
+ 466   1              LED_25_PERCENT_OFF();
+ 467   1              led_charge_anim_phase = 0; // 充电动画的阶段，初始化为0
+ 468   1              led_charge_anim_cnt = 0;   // 清空充电动画的计数值
+ 469   1              led_bat_lev_sta = LED_BAT_LEV_STA_CHARGE_BEGIN_ANIM;
+ 470   1      }
+ 471          
+ 472          static void led_bat_lev_sta_charge_begin_anim_handle(void)
+ 473          {
+ 474   1              led_charge_anim_cnt++;
+ 475   1              if (led_charge_anim_cnt >= 500)
+ 476   1              {
+ 477   2                      led_charge_anim_cnt = 0;
+ 478   2                      if (led_charge_anim_phase == 0 &&
+ 479   2                              LED_BAT_LEV_1 <= led_bat_lev)
+ 480   2                      {
+ 481   3                              LED_25_PERCENT_ON();
+ 482   3                              led_charge_anim_phase = 1;
+ 483   3                      }
+ 484   2                      else if (led_charge_anim_phase == 1 &&
+ 485   2                                       LED_BAT_LEV_2 <= led_bat_lev)
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 9   
 
- 486   3                              LED_50_PERCENT_ON();
- 487   3                              led_charge_anim_phase = 2;
- 488   3                      }
- 489   2                      else if (led_charge_anim_phase == 2 &&
- 490   2                                       LED_BAT_LEV_3 <= led_bat_lev)
- 491   2                      {
- 492   3                              LED_75_PERCENT_ON();
- 493   3                              led_charge_anim_phase = 3;
- 494   3                      }
- 495   2                      else
- 496   2                      {
- 497   3                              led_charge_anim_cnt = 0;
- 498   3      
- 499   3                              // 充电开始动画结束，转到充电动画状态
- 500   3                              led_bat_lev_sta = LED_BAT_LEV_STA_CHARGING;
- 501   3                      }
- 502   2              }
- 503   1      }
- 504          
- 505          static void led_bat_lev_sta_charging_handle(void)
- 506          {
- 507   1              static volatile u32 led_quick_fill_cnt = 0; // 充满电时，快速填充的计数值
- 508   1      
- 509   1              led_charge_anim_cnt++;
- 510   1              // 正在充电，让当前电量对应的指示灯闪烁（只闪烁一个灯）
- 511   1              // led_charge_anim_cnt == 0，说明刚进入这个阶段，也需要对应的指示灯状态翻转一次
- 512   1              if (led_charge_anim_cnt >= 500 || led_charge_anim_cnt == 0)
- 513   1              {
- 514   2                      led_charge_anim_cnt = 0;
- 515   2      
- 516   2                      // 根据 LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM 期间更新的值，让对应的指示灯闪烁
- 517   2                      switch (led_charge_anim_phase)
- 518   2                      {
- 519   3                      case 0:
- 520   3                              LED_25_PERCENT_TOGGLE();
- 521   3                              break;
- 522   3                      case 1:
- 523   3                              LED_50_PERCENT_TOGGLE();
- 524   3                              break;
- 525   3                      case 2:
- 526   3                              LED_75_PERCENT_TOGGLE();
- 527   3                              break;
- 528   3                      case 3:
- 529   3                              LED_100_PERCENT_TOGGLE();
- 530   3                              break;
- 531   3                      }
- 532   2              }
- 533   1      
- 534   1              if ((is_in_charging_by_charger || // 通过充电器充电，或者通过太阳能充电
- 535   1                       is_in_charging_by_solar_panel) &&
- 536   1                      is_charging_ic_stop) // 充电IC报告停止，认为充满电，进入快速填充显示状态
- 537   1              {
- 538   2                      // 如果已经是满电显示，直接标记为充满
- 539   2                      if (led_bat_lev >= LED_BAT_LEV_4)
- 540   2                      {
- 541   3                              led_bat_lev_sta = LED_BAT_LEV_STA_CHARGE_END;
- 542   3                      }
- 543   2                      else
- 544   2                      {
- 545   3                              // 如果已经满电，但是当前没有显示4个指示灯
- 546   3                              // 快速填充：以较短时间逐档上升显示（由 led_quick_fill_cnt 驱动）
- 547   3                              if (led_quick_fill_cnt < ((u32)-1))
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 10  
+ 486   2                      {
+ 487   3                              LED_50_PERCENT_ON();
+ 488   3                              led_charge_anim_phase = 2;
+ 489   3                      }
+ 490   2                      else if (led_charge_anim_phase == 2 &&
+ 491   2                                       LED_BAT_LEV_3 <= led_bat_lev)
+ 492   2                      {
+ 493   3                              LED_75_PERCENT_ON();
+ 494   3                              led_charge_anim_phase = 3;
+ 495   3                      }
+ 496   2                      else
+ 497   2                      {
+ 498   3                              led_charge_anim_cnt = 0;
+ 499   3      
+ 500   3                              // 充电开始动画结束，转到充电动画状态
+ 501   3                              led_bat_lev_sta = LED_BAT_LEV_STA_CHARGING;
+ 502   3                      }
+ 503   2              }
+ 504   1      }
+ 505          
+ 506          static void led_bat_lev_sta_charging_handle(void)
+ 507          {
+ 508   1              static volatile u32 led_quick_fill_cnt = 0; // 充满电时，快速填充的计数值
+ 509   1      
+ 510   1              led_charge_anim_cnt++;
+ 511   1              // 正在充电，让当前电量对应的指示灯闪烁（只闪烁一个灯）
+ 512   1              // led_charge_anim_cnt == 0，说明刚进入这个阶段，也需要对应的指示灯状态翻转一次
+ 513   1              if (led_charge_anim_cnt >= 500 || led_charge_anim_cnt == 0)
+ 514   1              {
+ 515   2                      led_charge_anim_cnt = 0;
+ 516   2      
+ 517   2                      // 根据 LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM 期间更新的值，让对应的指示灯闪烁
+ 518   2                      switch (led_charge_anim_phase)
+ 519   2                      {
+ 520   3                      case 0:
+ 521   3                              LED_25_PERCENT_TOGGLE();
+ 522   3                              break;
+ 523   3                      case 1:
+ 524   3                              LED_50_PERCENT_TOGGLE();
+ 525   3                              break;
+ 526   3                      case 2:
+ 527   3                              LED_75_PERCENT_TOGGLE();
+ 528   3                              break;
+ 529   3                      case 3:
+ 530   3                              LED_100_PERCENT_TOGGLE();
+ 531   3                              break;
+ 532   3                      }
+ 533   2              }
+ 534   1      
+ 535   1              if ((is_in_charging_by_charger || // 通过充电器充电，或者通过太阳能充电
+ 536   1                       is_in_charging_by_solar_panel) &&
+ 537   1                      is_charging_ic_stop) // 充电IC报告停止，认为充满电，进入快速填充显示状态
+ 538   1              {
+ 539   2                      // 如果已经是满电显示，直接标记为充满
+ 540   2                      if (led_bat_lev >= LED_BAT_LEV_4)
+ 541   2                      {
+ 542   3                              led_bat_lev_sta = LED_BAT_LEV_STA_CHARGE_END;
+ 543   3                      }
+ 544   2                      else
+ 545   2                      {
+ 546   3                              // 如果已经满电，但是当前没有显示4个指示灯
+ 547   3                              // 快速填充：以较短时间逐档上升显示（由 led_quick_fill_cnt 驱动）
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 10  
 
- 548   3                              {
- 549   4                                      led_quick_fill_cnt++;
- 550   4                              }
- 551   3      
- 552   3                              if (led_quick_fill_cnt >= LED_CHARGE_QUICK_FILL_INTERVAL_MS)
- 553   3                              {
- 554   4                                      led_quick_fill_cnt = 0;
- 555   4      
- 556   4                                      /*
- 557   4                                              REVIEW, 如果 led_bat_lev 和 led_charge_anim_phase
- 558   4                                              的数值并不对应，这里需要重新映射，建立对应关系
- 559   4                                      */
- 560   4                                      led_bat_lev++;
- 561   4                                      led_charge_anim_phase++;
- 562   4                              }
- 563   3                      }
- 564   2              }
- 565   1              else
- 566   1              {
- 567   2                      led_quick_fill_cnt = 0;
- 568   2              }
- 569   1      
- 570   1              if (charge_time_cnt >= BAT_CHARGE_3LED_TIME &&
- 571   1                      (led_charge_anim_phase == 2 ||
- 572   1                       led_charge_anim_phase == 3))
- 573   1              {
- 574   2                      led_charge_anim_phase = 3;
- 575   2                      LED_75_PERCENT_ON(); //
- 576   2      
- 577   2                      led_bat_lev = LED_BAT_LEV_3;
- 578   2              }
- 579   1              else if (charge_time_cnt >= BAT_CHARGE_2LED_TIME &&
- 580   1                               (led_charge_anim_phase == 1 ||
- 581   1                                led_charge_anim_phase == 2))
- 582   1              {
- 583   2                      led_charge_anim_phase = 2;
- 584   2                      LED_50_PERCENT_ON(); //
- 585   2      
- 586   2                      led_bat_lev = LED_BAT_LEV_2;
- 587   2              }
- 588   1              else if (charge_time_cnt >= BAT_CHARGE_1LED_TIME &&
- 589   1                               (led_charge_anim_phase == 0 ||
- 590   1                                led_charge_anim_phase == 1))
- 591   1              {
- 592   2                      led_charge_anim_phase = 1;
- 593   2                      LED_25_PERCENT_ON(); //
- 594   2      
- 595   2                      led_bat_lev = LED_BAT_LEV_1;
- 596   2              }
- 597   1      }
- 598          
- 599          static void led_bat_lev_sta_charge_end_handle(void)
- 600          {
- 601   1              // 充电结束，显示满电状态
- 602   1              LED_100_PERCENT_ON();
- 603   1              LED_75_PERCENT_ON();
- 604   1              LED_50_PERCENT_ON();
- 605   1              LED_25_PERCENT_ON();
- 606   1      }
- 607          
- 608          void led_bat_lev_dislplay_1ms_isr(void)
- 609          {
-C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/21/2026 18:51:08 PAGE 11  
+ 548   3                              if (led_quick_fill_cnt < ((u32)-1))
+ 549   3                              {
+ 550   4                                      led_quick_fill_cnt++;
+ 551   4                              }
+ 552   3      
+ 553   3                              if (led_quick_fill_cnt >= LED_CHARGE_QUICK_FILL_INTERVAL_MS)
+ 554   3                              {
+ 555   4                                      led_quick_fill_cnt = 0;
+ 556   4      
+ 557   4                                      /*
+ 558   4                                              REVIEW, 如果 led_bat_lev 和 led_charge_anim_phase
+ 559   4                                              的数值并不对应，这里需要重新映射，建立对应关系
+ 560   4                                      */
+ 561   4                                      led_bat_lev++; // 如果是充满电，这里会对应满电的值
+ 562   4                                      led_charge_anim_phase++;
+ 563   4                              }
+ 564   3                      }
+ 565   2              }
+ 566   1              else
+ 567   1              {
+ 568   2                      led_quick_fill_cnt = 0;
+ 569   2              }
+ 570   1      
+ 571   1              if (charge_time_cnt >= BAT_CHARGE_3LED_TIME &&
+ 572   1                      (led_charge_anim_phase == 2 ||
+ 573   1                       led_charge_anim_phase == 3))
+ 574   1              {
+ 575   2                      led_charge_anim_phase = 3;
+ 576   2                      LED_75_PERCENT_ON(); //
+ 577   2      
+ 578   2                      led_bat_lev = LED_BAT_LEV_3;
+ 579   2              }
+ 580   1              else if (charge_time_cnt >= BAT_CHARGE_2LED_TIME &&
+ 581   1                               (led_charge_anim_phase == 1 ||
+ 582   1                                led_charge_anim_phase == 2))
+ 583   1              {
+ 584   2                      led_charge_anim_phase = 2;
+ 585   2                      LED_50_PERCENT_ON(); //
+ 586   2      
+ 587   2                      led_bat_lev = LED_BAT_LEV_2;
+ 588   2              }
+ 589   1              else if (charge_time_cnt >= BAT_CHARGE_1LED_TIME &&
+ 590   1                               (led_charge_anim_phase == 0 ||
+ 591   1                                led_charge_anim_phase == 1))
+ 592   1              {
+ 593   2                      led_charge_anim_phase = 1;
+ 594   2                      LED_25_PERCENT_ON(); //
+ 595   2      
+ 596   2                      led_bat_lev = LED_BAT_LEV_1;
+ 597   2              }
+ 598   1      }
+ 599          
+ 600          static void led_bat_lev_sta_charge_end_handle(void)
+ 601          {
+ 602   1              // 充电结束，显示满电状态
+ 603   1              LED_100_PERCENT_ON();
+ 604   1              LED_75_PERCENT_ON();
+ 605   1              LED_50_PERCENT_ON();
+ 606   1              LED_25_PERCENT_ON();
+ 607   1      }
+ 608          
+ 609          void led_bat_lev_dislplay_1ms_isr(void)
+C51 COMPILER V9.60.7.0   LED_BAT_LEV                                                       07/29/2026 11:47:51 PAGE 11  
 
- 610   1              switch (led_bat_lev_sta)
- 611   1              {
- 612   2              case LED_BAT_LEV_STA_IDLE:
- 613   2                      led_bat_lev_sta_idle_handle();
- 614   2                      break;
- 615   2              case LED_BAT_LEV_STA_CHARGE_BEGIN:
- 616   2                      led_bat_lev_sta_charge_begin_handle();
- 617   2                      break;
- 618   2      
- 619   2              case LED_BAT_LEV_STA_CHARGE_BEGIN_ANIM:
- 620   2                      led_bat_lev_sta_charge_begin_anim_handle();
- 621   2                      break;
- 622   2      
- 623   2              case LED_BAT_LEV_STA_CHARGING:
- 624   2                      led_bat_lev_sta_charging_handle();
- 625   2                      break;
- 626   2      
- 627   2              case LED_BAT_LEV_STA_CHARGE_END:
- 628   2                      led_bat_lev_sta_charge_end_handle();
- 629   2                      break;
- 630   2      
- 631   2              case LED_BAT_LEV_STA_ALERT:
- 632   2                      led_bat_lev_sta_alert_handle();
- 633   2                      break;
- 634   2      
- 635   2              case LED_BAT_LEV_STA_DISCHARGE:
- 636   2                      led_bat_lev_sta_discharge_handle();
- 637   2                      break;
- 638   2              }
- 639   1      }
+ 610          {
+ 611   1              switch (led_bat_lev_sta)
+ 612   1              {
+ 613   2              case LED_BAT_LEV_STA_IDLE:
+ 614   2                      led_bat_lev_sta_idle_handle();
+ 615   2                      break;
+ 616   2              case LED_BAT_LEV_STA_CHARGE_BEGIN:
+ 617   2                      led_bat_lev_sta_charge_begin_handle();
+ 618   2                      break;
+ 619   2      
+ 620   2              case LED_BAT_LEV_STA_CHARGE_BEGIN_ANIM:
+ 621   2                      led_bat_lev_sta_charge_begin_anim_handle();
+ 622   2                      break;
+ 623   2      
+ 624   2              case LED_BAT_LEV_STA_CHARGING:
+ 625   2                      led_bat_lev_sta_charging_handle();
+ 626   2                      break;
+ 627   2      
+ 628   2              case LED_BAT_LEV_STA_CHARGE_END:
+ 629   2                      led_bat_lev_sta_charge_end_handle();
+ 630   2                      break;
+ 631   2      
+ 632   2              case LED_BAT_LEV_STA_ALERT:
+ 633   2                      led_bat_lev_sta_alert_handle();
+ 634   2                      break;
+ 635   2      
+ 636   2              case LED_BAT_LEV_STA_DISCHARGE:
+ 637   2                      led_bat_lev_sta_discharge_handle();
+ 638   2                      break;
+ 639   2              }
+ 640   1      }
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =   1494    ----
+   CODE SIZE        =   1488    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =     15       1
    PDATA SIZE       =   ----    ----
