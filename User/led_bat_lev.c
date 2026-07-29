@@ -228,9 +228,10 @@ static void led_bat_lev_sta_discharge_handle(void)
 					break;
 				}
 			}
-			else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+			// else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+			else
 			{
-				// 双色灯
+				// 双色灯，或者是只开蓝牙，又或者是只通过 type-c 放电
 				switch (target_bat_lev)
 				{
 				case LED_BAT_LEV_3:
@@ -336,9 +337,10 @@ static void led_bat_lev_sta_discharge_handle(void)
 						break;
 					}
 				}
-				else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+				// else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
+				else
 				{
-					// 双色灯
+					// 双色灯，或者是只打开蓝牙，又或者是只通过type-c进行放电
 					switch (led_bat_lev)
 					{
 					case LED_BAT_LEV_3:

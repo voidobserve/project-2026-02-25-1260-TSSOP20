@@ -111,7 +111,7 @@ void batttery_monitor_1ms_isr(void)
         cancel_shielding_bat_vol_scan_cnt++;
         // if (cancel_shielding_bat_vol_scan_cnt >= ((u16)15 * 1000))
         /*
-            REVIEW 
+            REVIEW
             从低功耗唤醒后，
             如果是开着灯，至少要等灯光缓慢调节完毕，再获取调节完成后，对应的电池电压
         */
@@ -274,11 +274,16 @@ void battery_monitor_handle(void)
 {
     // REVIEW ，进入到这里进行判断，至少要等灯光缓慢降到预定值之后，否则电压值不准确
 
-
     if ((led_bat_lev_sta != LED_BAT_LEV_STA_DISCHARGE) &&
         led_bat_lev_sta != LED_BAT_LEV_STA_ALERT)
     {
         // 不在放电，直接返回
+        return;
+    }
+
+    if (is_shielding_bat_vol_scan)
+    {
+        // 刚从低功耗期间唤醒，还没有得到稳定的电池电压，直接返回
         return;
     }
 
@@ -312,12 +317,6 @@ void battery_monitor_handle(void)
         }
 
         return; // 提前退出，不再往下执行
-    }
-
-    if (is_shielding_bat_vol_scan)
-    {
-        // 刚从低功耗期间唤醒，还没有得到稳定的电池电压，直接返回
-        return;
     }
 
     /*

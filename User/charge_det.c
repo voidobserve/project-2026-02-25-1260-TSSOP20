@@ -322,7 +322,6 @@ void detect_discharge_1khz_signal_100us(void)
             if (detect_discharge_signal_cnt >= 100) // 100 * 10ms
             {
                 detect_discharge_signal_cnt = 0;
-                // is_in_discharging = 1;
                 is_detect_discharge_signal = 1;
             }
         }
@@ -333,7 +332,6 @@ void detect_discharge_1khz_signal_100us(void)
             if (undetect_discharge_signal_cnt >= 100) // 100 * 10ms
             {
                 undetect_discharge_signal_cnt = 0;
-                // is_in_discharging = 0;
                 is_detect_discharge_signal = 0;
             }
         }
@@ -345,16 +343,14 @@ void charge_det_time_add(void)
     flag_is_time_to_det_charge = 1;
 }
 
-// extern volatile u16 adc_type_c_det_val;
-//
 void charge_det(void)
 {
-    static u16 adc_val_of_solar_panel = 0;
-    static u16 adc_val_of_type_c = 0;
-    u16 voltage_mv = 0;
+    static volatile u16 adc_val_of_solar_panel = 0;
+    static volatile u16 adc_val_of_type_c = 0;
+    u16 solar_panel_vol_mv = 0;
+    u16 type_c_vol_mv = 0;
 
     static volatile u8 is_discharge_det_time_cnt = 0; // 检测到正在放电的计数器
-    // static volatile u8 isnot_discharge_det_time_cnt = 0; // 检测到不是正在放电的计数器
 
     if (adc_get_update_flag(ADC_CHANNEL_SEL_SOLAR_DET))
     {
@@ -386,9 +382,8 @@ void charge_det(void)
         如果检测到太阳能一侧的电压比电池电压还要大一点，认为在通过太阳能充电
         暂定比电池电压还要大0.30V
     */
-    voltage_mv = (u32)adc_val_of_solar_panel * 2 * 2400 / 4096;
-    // if (voltage_mv >= 4500) // 大于 4.5V，认为是正在给电池充电
-    if (voltage_mv >= (avg_voltage_mv + 300)) // 比电池电压还要大 0.30 V
+    solar_panel_vol_mv = (u32)adc_val_of_solar_panel * 2 * 2400 / 4096;
+    if (solar_panel_vol_mv >= (voltage_mv_global + 300)) // 比电池电压还要大 0.30 V
     {
         is_not_charging_by_solar_panel_cnt = 0;
         is_charging_by_solar_panel_cnt++;
@@ -419,37 +414,42 @@ void charge_det(void)
         }
     }
 
-/**
- *    目前测试，使用2V参考电压，
- *    检测脚外部10K上拉、10K下拉，或者是100K上拉，100K下拉
- *    只插入type-c充电，检测到的ad值会在4095
- *    只通过太阳能一侧充电，检测到的ad值会在100附近（可以忽略不计）
- *
- *    这里只要小于2000，就认为没有通过type-c充电
- *
- *    REVIEW 如果在旧的板子上测试，
- *    旧的板子引脚连接到的是VDD，而不是type-c分压后的电压
- *    测试完成后，需要恢复这部分程序
- */
+    type_c_vol_mv = TYPE_C_DET_ADC_VAL_TO_VOL(adc_val_of_type_c);
 #if USER_DEBUG_ENABLE
     // printf("adc_val_of_type_c == %u\n", adc_val_of_type_c);
+    // printf("type_c_vol_mv == %u\n", type_c_vol_mv);
 #endif
-    if (adc_val_of_type_c <= 2000 ||
-        voltage_mv < (avg_voltage_mv + 200))
+
+    /**
+     *    检测脚外部10K上拉、10K下拉，或者是100K上拉，100K下拉
+     *    只插入type-c充电，检测到的ad值会在4095
+     *
+     *    如果是新的板子，只进行太阳能充电时，这里会检测到太阳能一侧对应的电压
+     *
+     */
+    if (type_c_vol_mv >= (4800 - 200)) // 留出 200mv 的误差
     {
-        // 充电口电压已经很低，或者太阳能侧输入已经不再有效时，
-        // 说明此时不是实际放电，直接清掉放电状态，避免误判。
-        is_discharge_det_time_cnt = 0;
-        // isnot_discharge_det_time_cnt = 0;
-        is_in_discharging = 0;
-        is_detect_discharge_signal = 0;
-    }
-    else if (adc_val_of_type_c >= 4000)
-    {
-        // 充电口的电压接近 5V，认为在通过 type-C 进行充电或者放电
-        if (is_detect_discharge_signal)
+        /*
+            充电口的电压接近 5V，
+            - 有可能在通过 type-C 进行充电或者放电
+            - 也有可能在通过太阳能进行充电，
+              - 如果是只通过太阳能充电，但是太阳能电压低于电池电压，
+              此时充电IC又会输出30秒的放电信号，导致这里误判为放电.
+              正在对外放电时，type-c口的电压应该由充电芯片的升压
+              提升到5V，这里检测到的电压应该非常接近5V，所以可以区分
+              是在放电还是太阳能充电导致充电ic输出了放电信号
+        */
+
+        if (is_detect_discharge_signal &&
+            type_c_vol_mv >= (4800 - 100)) // 留出 100mv 的误差
         {
-            // isnot_discharge_det_time_cnt = 0;
+            /*
+                检测到放电信号，并且 type-c 口电压要大于
+                (4800 - 100)mV，才认为是在放电
+
+                用于区分太阳能一侧电压下降后，充电IC输出了放电信号
+            */
+
             is_discharge_det_time_cnt++;
             if (is_discharge_det_time_cnt >= 200)
             {
@@ -458,13 +458,26 @@ void charge_det(void)
                 is_in_discharging = 1;
             }
         }
+        else
+        {
+            is_discharge_det_time_cnt = 0;
+            is_in_discharging = 0;
+        }
+    }
+    else if (type_c_vol_mv <= 2500 ||
+             solar_panel_vol_mv < (voltage_mv_global + 200))
+    {
+        // 充电口电压已经很低，或者太阳能侧输入已经不再有效时，
+        // 说明此时不是实际放电，直接清掉放电状态，避免误判。
+        is_discharge_det_time_cnt = 0;
+        is_in_discharging = 0;
+        is_detect_discharge_signal = 0;
     }
     else
     {
         // 处于 2V~4V 之间的过渡区间时，先不作为有效放电判定，
         // 避免在输入电压下降时把“弱输入/误触发”误认为真正放电。
         is_discharge_det_time_cnt = 0;
-        // isnot_discharge_det_time_cnt = 0;
         is_in_discharging = 0;
     }
 
@@ -475,7 +488,10 @@ void charge_det(void)
         is_in_charging = 1;
 
         // 有充电之后，清空低电量相关标志位
-        is_sent_low_bat_alert = 0;  
+        is_sent_low_bat_alert = 0;
+
+        // 充电时取消低电量缓慢调节限制，恢复正常缓慢调节
+        led_ctl.is_cancel_slowly_adjust = 0;
     }
     else if (is_in_charging_by_charger == 0 && is_in_charging_by_solar_panel == 0)
     {

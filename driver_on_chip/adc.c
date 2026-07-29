@@ -4,8 +4,6 @@
 #include "user_config.h"
 #include "user_include.h"
 
-
-
 volatile u8 cur_adc_status = ADC_STATUS_IDLE;
 
 // ad按键：
@@ -30,7 +28,7 @@ void adc_pin_init(void)
 
     // P14 检测太阳能一侧的电压
     P1_MD1 |= GPIO_P14_MODE_SEL(0x3);
- 
+
     // 检测type-c充电的引脚
     P1_MD1 |= GPIO_P16_MODE_SEL(0x03);
 }
@@ -125,7 +123,7 @@ u8 adc_get_update_flag(adc_channel_sel_t adc_channel)
         break;
     case ADC_CHANNEL_SEL_TYPE_C:
         ret = (u8)flag_is_adc_type_c_det_val_update;
-        break; 
+        break;
 
     default:
         break;
@@ -189,7 +187,7 @@ void adc_channel_sel(adc_channel_sel_t adc_channel)
         break;
 
     case ADC_CHANNEL_SEL_TYPE_C:
-        ADC_ACON1 |= ADC_VREF_SEL(0x01) | // 选择 内部2.0V 作为参考电压
+        ADC_ACON1 |= ADC_VREF_SEL(0x02) | // 选择 内部 2.4V 作为参考电压
                      ADC_TEN_SEL(0x03) |  // 关闭测试信号
                      ADC_INREF_SEL(0x01); // 使能内部参考电压
         ADC_CHS0 = ADC_ANALOG_CHAN(0x0E); // 选则引脚对应的通道（0x0E -- P16）
@@ -246,10 +244,7 @@ void adc_scan(void)
         cur_adc_status = ADC_STATUS_SEL_BAT_DET_WAITING;
         break;
     case ADC_STATUS_SEL_BAT_DET_WAITING:
-        // 准备采集电池电压对应的ad值前，先关闭led显示，不包括电量指示灯
-        // led_suspend();
-
-        // 开启转换，之后在ad中断获取ad值 
+        // 开启转换，之后在ad中断获取ad值
         ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
         cur_adc_status = ADC_STATUS_SEL_BAT_DET;
         break;
@@ -272,7 +267,7 @@ void adc_scan(void)
 
     default:
         break;
-    } 
+    }
 }
 
 void ADC_IRQHandler(void) interrupt ADC_IRQn
@@ -288,14 +283,14 @@ void ADC_IRQHandler(void) interrupt ADC_IRQn
     {
         ADC_STA |= ADC_CHAN0_DONE(0x01);                 // 清除ADC0转换完成标志位
         adc_val = (ADC_DATAH0 << 4) | (ADC_DATAL0 >> 4); // 先接收ad值
-         
+
         switch (cur_adc_status)
         {
         case ADC_STATUS_SEL_AD_KEY:
             adc_update_val(ADC_CHANNEL_SEL_AD_KEY, adc_val);
             break;
         case ADC_STATUS_SEL_BAT_DET:
-            adc_update_val(ADC_CHANNEL_SEL_BAT_DET, adc_val);  
+            adc_update_val(ADC_CHANNEL_SEL_BAT_DET, adc_val);
             battery_voltage_update_by_isr();
             break;
         case ADC_STATUS_SEL_SOLAR_DET:

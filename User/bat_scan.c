@@ -27,7 +27,7 @@ volatile u16 voltage_mv_global = 0;				//
 // 采集电池电压的定时计数器
 static volatile u32 bat_avg_vol_scan_period_cnt = 0;
 // 最后得到的、稳定的电池电压
-volatile u16 avg_voltage_mv = 0; //
+volatile u16 avg_voltage_mv = 0;
 
 void bat_get_avg_vol_period_add(void)
 {
@@ -172,8 +172,8 @@ void battery_voltage_update_by_isr(void)
 				第一次上电，初始化完成后，也给该标志位置一
 				防止第一次上电，没有进入低功耗就开机，
 				电压突然从4.0V拉低到3.5V，导致电池电量挡位误判断
-			*/ 
-			is_shielding_bat_vol_scan = 1; 
+			*/
+			is_shielding_bat_vol_scan = 1;
 
 #if USER_DEBUG_ENABLE
 			printf("bat monitor init\n");
@@ -261,7 +261,10 @@ void bat_scan(void)
 
 	if (is_shielding_bat_vol_scan)
 	{
-		// 低功耗唤醒后的一段时间内，不采集电池电压，等电压稳定之后再采集
+		/*
+			低功耗唤醒后的一段时间内，不采集电池电压（不更新稳定的电池电压值），
+			等电压稳定之后再采集
+		*/
 		return;
 	}
 

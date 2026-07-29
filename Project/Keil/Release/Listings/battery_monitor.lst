@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 1   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/29/2026 17:46:38 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BATTERY_MONITOR
@@ -62,7 +62,7 @@ line level    source
   49   2              {
   50   3                  if (is_first_time_to_send)
   51   3                  {
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 2   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/29/2026 17:46:38 PAGE 2   
 
   52   4                      is_first_time_to_send = 0;
   53   4                  }
@@ -126,7 +126,7 @@ line level    source
  111   2              cancel_shielding_bat_vol_scan_cnt++;
  112   2              // if (cancel_shielding_bat_vol_scan_cnt >= ((u16)15 * 1000))
  113   2              /*
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 3   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/29/2026 17:46:38 PAGE 3   
 
  114   2                  REVIEW 
  115   2                  从低功耗唤醒后，
@@ -190,7 +190,7 @@ line level    source
  172   2              else if (voltage_mv < BAT_WY_1LED_VOLTAGE)
  173   2              {
  174   3                  charge_time_cnt = 0;
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 4   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/29/2026 17:46:38 PAGE 4   
 
  175   3              }
  176   2              else if (voltage_mv < BAT_WY_2LED_VOLTAGE)
@@ -254,7 +254,7 @@ line level    source
  234   1          {
  235   2              if (discharge_time_cnt < BAT_WY_1LED_TIME)
  236   2              {
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 5   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/29/2026 17:46:38 PAGE 5   
 
  237   3                  /*
  238   3                      电池电压小于1个灯对应的电压
@@ -318,7 +318,7 @@ line level    source
  295   2              if (led_ctl.status != LED_STATUS_OFF)
  296   2              {
  297   3                  led_status_set(LED_STATUS_OFF);
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 6   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/29/2026 17:46:38 PAGE 6   
 
  298   3              }
  299   2      
@@ -382,7 +382,7 @@ line level    source
  354   1      }
 
 
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/24/2026 13:53:25 PAGE 7   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/29/2026 17:46:38 PAGE 7   
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
    CODE SIZE        =    803    ----

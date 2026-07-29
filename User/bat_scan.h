@@ -52,7 +52,7 @@ typedef u8 bat_vol_update_sta_t;
 	((u32)1000)
 
 extern volatile u16 avg_voltage_mv;	   // @attention 在当前.c文件外调用时，慎用
-extern volatile u16 voltage_mv_global; // 只在测试时引到外部，打印
+extern volatile u16 voltage_mv_global; // 
 
 u16 bat_vol_history_buff_get_avg(void);
 

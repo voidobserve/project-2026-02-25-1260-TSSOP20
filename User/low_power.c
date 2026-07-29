@@ -347,6 +347,17 @@ label_low_power_in:
     // 通过按键退出低功耗，也会清除这些标志位
     is_sent_low_bat_alert = 0;
     user_init();
+
+    // 低功耗期间电池电压最稳定，此时判断是否需要取消灯光缓慢调节
+    if (tmp_voltage_mv < BAT_LOW_VOLTAGE_CANCEL_SLOW_ADJUST_MV)
+    {
+        led_ctl.is_cancel_slowly_adjust = 1;
+    }
+    else
+    {
+        led_ctl.is_cancel_slowly_adjust = 0;
+    }
+
     is_shielding_bat_vol_scan = 1;
 }
 

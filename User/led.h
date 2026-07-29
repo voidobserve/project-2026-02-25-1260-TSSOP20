@@ -4,7 +4,7 @@
 #include "include.h"
 
 #include "pwm.h"
-#include "led_bat_lev.h" // REVIEW 
+#include "led_bat_lev.h"  
 
 // 定义LED指示灯对应的驱动引脚
 #define LED_PIN_100_PERCENT P13
@@ -49,6 +49,9 @@
 // #define PWM_DEST_DUTY_PERCENT ((u8)100 - 65)
 // 充电期间，最终要调节到的占空比值，单位：百分比
 #define PWM_DEST_DUTY_PERCENT_DURING_CHARGING ((u8)100 - 35)
+
+// 低功耗唤醒后，如果电池电压低于此值，取消灯光缓慢调节
+#define BAT_LOW_VOLTAGE_CANCEL_SLOW_ADJUST_MV ((u16)3200)
 
 /**
  * @brief 每 xx ms调节1单位的占空比值。前提条件：占空比值小于调节时间
@@ -128,21 +131,11 @@ typedef struct
 
     // 用于控制红灯和蓝灯闪烁的动画：
     u32 red_blue_flash_time_cnt; // 红灯、蓝灯闪烁的时间计数
+  
+    u8 is_cancel_slowly_adjust; // 是否取消缓慢调节（低电量开机时置1，充电时清零）
 
 } led_ctl_t;
-
-// // 定义电池电量指示灯的各个状态
-// enum
-// {
-//     LED_BAT_LEVEL_STA_IDLE,
-//     LED_BAT_LEVEL_STA_CHARGE_BEGIN,      // 充电开始
-//     LED_BAT_LEVEL_STA_CHARGE_BEGIN_ANIM, // 正在跑充电开始的动画
-//     LED_BAT_LEVEL_STA_CHARGING,          // 充电中
-//     LED_BAT_LEVEL_STA_CHARGE_END,        // 充电结束
-
-//     LED_BAT_LEVEL_STA_DISCHARGE, // 放电中
-// };
-// typedef u8 led_bat_level_anim_sta_t;
+ 
 
 extern volatile led_ctl_t led_ctl;
 // extern volatile led_bat_level_anim_sta_t led_bat_level_sta; 
@@ -166,7 +159,6 @@ void led_status_set(led_status_t status);
 // void led_bat_lev_sta_init(u16 voltage_mv);
 
 void led_red_blue_flash_1ms_isr(void);
-void led_slow_adjust_isr(void);
-// void led_bat_instruction_timer_callback(void);
+void led_slow_adjust_isr(void); 
 
 #endif

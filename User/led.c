@@ -63,60 +63,11 @@ void led_ctl_init(void)
     memset(&led_ctl, 0, sizeof(led_ctl_t));
 }
 
-#if 0
-/**
- * @brief 初始化电池电量指示灯对应的状态
- *      只在第一次上电后调用
- *
- */
-void led_bat_lev_sta_init(u16 voltage_mv)
-{
-    static u8 is_initialized = 0;
-    if (is_initialized)
-    {
-        return;
-    }
-
-    is_initialized = 1;
-
-    // 直接根据黄白灯都点亮对应的电池电压来划分
-    if (voltage_mv >= BAT_WY_4LED_VOLTAGE)
-    {
-        led_bat_lev_sta = LED_BAT_LEV_4;
-    }
-    else if (voltage_mv >= BAT_WY_3LED_VOLTAGE)
-    {
-        led_bat_lev_sta = LED_BAT_LEV_3;
-    }
-    else if (voltage_mv >= BAT_WY_2LED_VOLTAGE)
-    {
-        led_bat_lev_sta = LED_BAT_LEV_2;
-    }
-    // else if (voltage_mv >=
-    //          (BAT_WY_LOW_WARN_VOLTAGE + BAT_WY_DEAD_ZONE_VOLTAGE))
-    else
-    {
-        led_bat_lev_sta = LED_BAT_LEV_1;
-    }
-}
-#endif
-
 void led_yellow_on(void)
-{
-    // pwm_set_channel_0_duty(STMR0_PERIOD_30_PERCENT_VAL);
-    pwm_set_channel_0_duty(STMR0_PERIOD_0_PERCENT_VAL);
-    // led_ctl.cur_pwm_duty_val = STMR0_PERIOD_0_PERCENT_VAL;
+{ 
+    pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val); 
     FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
 }
-
-#if 0
-// 只由 led_resume() 调用
-void __led_yellow_resume__(void)
-{
-    pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
-    FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
-}
-#endif
 
 void led_yellow_off(void)
 {
@@ -125,21 +76,10 @@ void led_yellow_off(void)
 }
 
 void led_white_on(void)
-{
-    // pwm_set_channel_1_duty(STMR1_PERIOD_30_PERCENT_VAL);
-    pwm_set_channel_1_duty(STMR1_PERIOD_0_PERCENT_VAL); //
-    // led_ctl.cur_pwm_duty_val = STMR1_PERIOD_0_PERCENT_VAL;
+{ 
+    pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val); // 
     FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
 }
-
-#if 0
-// 只由 led_resume() 调用
-void __led_white_resume__(void)
-{
-    pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val);
-    FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
-}
-#endif
 
 void led_white_off(void)
 {
@@ -153,43 +93,23 @@ void led_status_switch(void)
     switch (led_ctl.status)
     {
     case LED_STATUS_OFF:
-        // 关灯 -> 打开黄灯
-        // led_ctl.status = LED_STATUS_YELLOW;
-        // led_yellow_on();
+        // 关灯 -> 打开黄灯 
         led_status_set(LED_STATUS_YELLOW);
         break;
     case LED_STATUS_YELLOW:
-        // 黄灯打开 -> 关闭黄灯，打开白灯
-        // led_ctl.status = LED_STATUS_WHITE;
-        // led_yellow_off();
-        // led_white_on();
+        // 黄灯打开 -> 关闭黄灯，打开白灯 
         led_status_set(LED_STATUS_WHITE);
         break;
     case LED_STATUS_WHITE:
-        // 白灯打开 -> 打开白灯，打开黄灯
-        // led_ctl.status = LED_STATUS_WHITE_YELLOW;
-        // led_yellow_on();
+        // 白灯打开 -> 打开白灯，打开黄灯 
         led_status_set(LED_STATUS_WHITE_YELLOW);
         break;
     case LED_STATUS_WHITE_YELLOW:
-        // 白灯和黄灯都打开 -> 关闭黄灯和白灯，执行红灯和蓝灯闪烁的动画（红灯和蓝灯闪烁由其他函数来控制）
-        // led_ctl.red_blue_flash_time_cnt = 0; // 红灯和蓝灯闪烁的时间计数清零
-        // led_ctl.status = LED_STATUS_RED_BLUE_FLASH;
-        // led_yellow_off();
-        // led_white_off();
+        // 白灯和黄灯都打开 -> 关闭黄灯和白灯，执行红灯和蓝灯闪烁的动画（红灯和蓝灯闪烁由其他函数来控制） 
         led_status_set(LED_STATUS_RED_BLUE_FLASH);
         break;
     case LED_STATUS_RED_BLUE_FLASH:
-        // 当前红灯和蓝灯都闪烁 -> 关闭红灯和蓝灯
-        // led_ctl.status = LED_STATUS_OFF;
-
-        // // 这里要关闭红灯和蓝灯
-        // LED_RED_OFF();
-        // LED_BLUE_OFF();
-
-        // led_ctl.working_time = 0;         // 工作时间清零
-        // led_ctl.cur_pwm_duty_val = 0;     // PWM占空比值清零
-        // led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
+        // 当前红灯和蓝灯都闪烁 -> 关闭红灯和蓝灯 
         led_status_set(LED_STATUS_OFF);
         break;
     }
@@ -210,7 +130,17 @@ void led_status_set(led_status_t status)
 {
     // 每次切换状态时，都清空工作时间
     led_ctl.working_time = 0;     // 工作时间清零
-    led_ctl.cur_pwm_duty_val = 0; // PWM占空比值清零（表示当前灯光为最亮）
+
+    // 低电量且未充电时，跳过缓慢调节，直接使用目标占空比
+    if (led_ctl.is_cancel_slowly_adjust && !is_in_charging)
+    {
+        led_ctl.cur_pwm_duty_val = PWM_DUTY_VAL_PERCENT_X(PWM_DEST_DUTY_PERCENT);
+    }
+    else
+    {
+        led_ctl.cur_pwm_duty_val = 0; // PWM占空比值清零（表示当前灯光为最亮）
+    }
+
     // led_ctl.is_slowly_adjust_end = 0; // 表示没有慢速调节结束
     led_ctl.adjust_time_cnt = 0;
 
@@ -430,13 +360,15 @@ void led_slow_adjust_isr(void)
             // 如果当前占空比 小于 目标占空比（当前灯光亮度大于目标亮度）
             // 要按照 正常工作 的缓慢速度进行调节
 
-#if 1 // REVIEW 测试时屏蔽
+#if 1 // 测试时屏蔽
+
             if (led_ctl.working_time <= (u32)180 * 1000)
             {
                 // 开灯的前180s不调节
                 led_ctl.adjust_time_cnt = 0;
                 return;
             }
+
 #endif
 
             if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT)
@@ -497,15 +429,4 @@ void led_slow_adjust_isr(void)
 #endif
 #endif
 }
-
-/**
- * @brief 充电或放电时，电池电量指示灯的动画
- *
- * 外部参数： 全局变量 bat_percent ，电池电量百分比
- *
- * 目前 1ms 调用一次
- *
- */
-// void led_bat_instruction_timer_callback(void)
-// {
-// }
+ 
