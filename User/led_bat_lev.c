@@ -73,10 +73,11 @@ void led_bat_lev_handle(void)
 			不在充电
 			蓝牙ic没有工作
 			主灯光没有打开
-			充电IC没有输出放电的信号
+			当前没有在通过 type-c 放电
 			这些条件都满足时，电池电量指示灯进入待机状态
 		*/
 		led_bat_lev_sta = LED_BAT_LEV_STA_IDLE;
+		is_dev_close_enable = 0; // 关机后，清空该标志位
 	}
 	else if (is_in_charging == 0 &&
 			 (ble_ic.is_working ||
@@ -92,6 +93,9 @@ void led_bat_lev_handle(void)
 	}
 }
 
+#if (BAT_DISCHARGE_DETERMINATION_METHOD == BAT_DISCHARGE_W_Y_TOGETHER_DETERMINATION_METHOD)
+// 将白灯放电跟黄白灯一起放电视为同一种放电情况
+
 // 放电时，电池电量指示灯的处理函数
 static void led_bat_lev_sta_discharge_handle(void)
 {
@@ -100,7 +104,7 @@ static void led_bat_lev_sta_discharge_handle(void)
 	volatile u8 target_bat_lev = LED_BAT_LEV_4; // 目标电量等级
 
 	if (led_ctl.status == LED_STATUS_YELLOW ||
-		led_ctl.status == LED_STATUS_WHITE ||
+		// led_ctl.status == LED_STATUS_WHITE ||
 		led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
 	{
 		// 只有一种灯亮（single light）
@@ -120,14 +124,10 @@ static void led_bat_lev_sta_discharge_handle(void)
 		{
 			target_bat_lev = LED_BAT_LEV_3;
 		}
-		else if (avg_voltage_mv > BAT_SINGLE_LIGHT_3LED_VOLTAGE)
-		{
-			target_bat_lev = LED_BAT_LEV_4;
-		}
+		// else if (avg_voltage_mv > BAT_SINGLE_LIGHT_3LED_VOLTAGE)
 		else
 		{
-			// REVIEW
-			// 特殊情况
+			target_bat_lev = LED_BAT_LEV_4;
 		}
 	}
 	// else if (led_ctl.status == LED_STATUS_WHITE_YELLOW)
@@ -178,7 +178,7 @@ static void led_bat_lev_sta_discharge_handle(void)
 	*/
 	if (led_bat_lev > target_bat_lev)
 	{
-		if (led_bat_lev - target_bat_lev <= 1)
+		if ((led_bat_lev - target_bat_lev) <= 1)
 		{
 			/*
 				当前显示的电池电量与目标电量只相差1以内，
@@ -187,7 +187,7 @@ static void led_bat_lev_sta_discharge_handle(void)
 			jump_down_cnt_ms = 0;
 
 			if (led_ctl.status == LED_STATUS_YELLOW ||
-				led_ctl.status == LED_STATUS_WHITE ||
+				// led_ctl.status == LED_STATUS_WHITE ||
 				led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
 			{
 				// 单色灯
@@ -294,7 +294,7 @@ static void led_bat_lev_sta_discharge_handle(void)
 				}
 
 				if (led_ctl.status == LED_STATUS_YELLOW ||
-					led_ctl.status == LED_STATUS_WHITE ||
+					// led_ctl.status == LED_STATUS_WHITE ||
 					led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
 				{
 					// 单色灯
@@ -395,6 +395,7 @@ static void led_bat_lev_sta_discharge_handle(void)
 			printf("led_bat_lev == %u\n", (u16)led_bat_lev);
 		}
 	}
+
 #endif
 
 	// 更新显示到新的档位
@@ -435,6 +436,450 @@ static void led_bat_lev_sta_discharge_handle(void)
 		break;
 	}
 }
+
+#elif (BAT_DISCHARGE_DETERMINATION_METHOD == BAT_DISCHARGE_W_WY_Y_SINGLE_DETERMINATION_METHOD)
+// 将白灯放电、黄白灯一起放电、黄灯放电，视为单独的放电情况
+static void led_bat_lev_sta_discharge_handle(void)
+{
+	static volatile u32 jump_down_cnt_ms = 0; // 跳级向下的去抖计时（ms）
+
+	volatile u8 target_bat_lev = LED_BAT_LEV_4; // 目标电量等级
+
+	if (led_ctl.status == LED_STATUS_YELLOW ||
+		led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
+	{
+		// 只有黄灯亮或者只有红蓝灯亮
+		if (avg_voltage_mv < BAT_SINGLE_LIGHT_LOW_WARN_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_ALERT;
+		}
+		else if (avg_voltage_mv < BAT_SINGLE_LIGHT_1LED_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_1;
+		}
+		else if (avg_voltage_mv < BAT_SINGLE_LIGHT_2LED_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_2;
+		}
+		else if (avg_voltage_mv < BAT_SINGLE_LIGHT_3LED_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_3;
+		}
+		else
+		{
+			target_bat_lev = LED_BAT_LEV_4;
+		}
+	}
+	else if (led_ctl.status == LED_STATUS_WHITE)
+	{
+		// 只开白灯
+		if (avg_voltage_mv < BAT_W_LOW_WARN_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_ALERT;
+		}
+		else if (avg_voltage_mv < BAT_W_1LED_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_1;
+		}
+		else if (avg_voltage_mv < BAT_W_2LED_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_2;
+		}
+		else if (avg_voltage_mv < BAT_W_3LED_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_3;
+		}
+		else
+		{
+			target_bat_lev = LED_BAT_LEV_4;
+		}
+	}
+	else // 如果是黄白灯都亮，或者是只开蓝牙，又或者是只通过type-c放电
+	{
+		// 黄白灯都亮
+		if (avg_voltage_mv < BAT_WY_LOW_WARN_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_ALERT;
+		}
+		else if (avg_voltage_mv < BAT_WY_1LED_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_1;
+		}
+		else if (avg_voltage_mv < BAT_WY_2LED_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_2;
+		}
+		else if (avg_voltage_mv < BAT_WY_3LED_VOLTAGE)
+		{
+			target_bat_lev = LED_BAT_LEV_3;
+		}
+		else
+		{
+			target_bat_lev = LED_BAT_LEV_4;
+		}
+	}
+
+#if USER_DEBUG_ENABLE
+
+	{
+		static u16 cnt = 0;
+		cnt++;
+		if (cnt >= 1000)
+		{
+			cnt = 0;
+			printf("target_bat_lev == %u\n", (u16)target_bat_lev);
+		}
+	}
+#endif
+
+	/*
+		判断当前显示的电池电量等级是否跟目前电量等级相等
+		如果不相等，
+			- 判断挡位相差是否在1以内
+				如果在1以内，判断放电时间是否满足挡位对应的事件
+				如果不再1以内，需要跳级
+	*/
+	if (led_bat_lev > target_bat_lev)
+	{
+		if ((led_bat_lev - target_bat_lev) <= 1)
+		{
+			/*
+				当前显示的电池电量与目标电量只相差1以内，
+				判断是否到了对应的放电时间
+			*/
+			jump_down_cnt_ms = 0;
+
+			if (led_ctl.status == LED_STATUS_YELLOW ||
+				led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
+			{
+				// 只开黄灯，或者只开红蓝灯
+				switch (target_bat_lev)
+				{
+				case LED_BAT_LEV_3:
+					if (discharge_time_cnt >= BAT_SINGLE_LIGHT_3LED_TIME)
+					{
+						led_bat_lev = target_bat_lev;
+					}
+					break;
+
+				case LED_BAT_LEV_2:
+					if (discharge_time_cnt >= BAT_SINGLE_LIGHT_2LED_TIME)
+					{
+						led_bat_lev = target_bat_lev;
+					}
+					break;
+
+				case LED_BAT_LEV_1:
+					if (discharge_time_cnt >= BAT_SINGLE_LIGHT_1LED_TIME)
+					{
+						led_bat_lev = target_bat_lev;
+					}
+					break;
+
+				case LED_BAT_LEV_ALERT:
+					led_bat_lev = target_bat_lev;
+					led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
+					LED_100_PERCENT_OFF();
+					LED_75_PERCENT_OFF();
+					LED_50_PERCENT_OFF();
+					LED_25_PERCENT_OFF();
+					return;
+					break;
+
+				default:
+					break;
+				}
+			}
+			else if (led_ctl.status == LED_STATUS_WHITE)
+			{
+				// 只开白灯
+				switch (target_bat_lev)
+				{
+				case LED_BAT_LEV_3:
+					if (discharge_time_cnt >= BAT_W_3LED_TIME)
+					{
+						led_bat_lev = target_bat_lev;
+					}
+					break;
+
+				case LED_BAT_LEV_2:
+					if (discharge_time_cnt >= BAT_W_2LED_TIME)
+					{
+						led_bat_lev = target_bat_lev;
+					}
+					break;
+
+				case LED_BAT_LEV_1:
+					if (discharge_time_cnt >= BAT_W_1LED_TIME)
+					{
+						led_bat_lev = target_bat_lev;
+					}
+					break;
+
+				case LED_BAT_LEV_ALERT:
+					led_bat_lev = target_bat_lev;
+					led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
+					LED_100_PERCENT_OFF();
+					LED_75_PERCENT_OFF();
+					LED_50_PERCENT_OFF();
+					LED_25_PERCENT_OFF();
+					return;
+					break;
+
+				default:
+					break;
+				}
+			}
+			else
+			{
+				// 双色灯（黄白灯），或者是只开蓝牙，又或者是只通过 type-c 放电
+				switch (target_bat_lev)
+				{
+				case LED_BAT_LEV_3:
+					if (discharge_time_cnt >= BAT_WY_3LED_TIME)
+					{
+						led_bat_lev = target_bat_lev;
+					}
+					break;
+
+				case LED_BAT_LEV_2:
+					if (discharge_time_cnt >= BAT_WY_2LED_TIME)
+					{
+						led_bat_lev = target_bat_lev;
+					}
+					break;
+
+				case LED_BAT_LEV_1:
+					if (discharge_time_cnt >= BAT_WY_1LED_TIME)
+					{
+						led_bat_lev = target_bat_lev;
+					}
+					break;
+
+				case LED_BAT_LEV_ALERT:
+					led_bat_lev = target_bat_lev;
+					led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
+					LED_100_PERCENT_OFF();
+					LED_75_PERCENT_OFF();
+					LED_50_PERCENT_OFF();
+					LED_25_PERCENT_OFF();
+					return;
+					break;
+
+				default:
+					break;
+				}
+			}
+		}
+		else
+		{
+			/*
+				led_bat_lev > target_bat_lev，
+				并且 led_bat_lev 与 target_bat_lev 之间的差值大于1，需要跳级
+
+				跳级之后，如果放电时间对不上，需要加上补偿
+				补偿之后，放电的时间会大于当前挡位对应的放电时间
+			*/
+			jump_down_cnt_ms++;
+			if (jump_down_cnt_ms >= LED_BAT_LEV_JUMP_DOWN_DEBOUNCE_MS)
+			{
+				jump_down_cnt_ms = 0;
+
+#if USER_DEBUG_ENABLE
+				printf("jump down\n");
+#endif
+
+				if (led_bat_lev > LED_BAT_LEV_ALERT)
+				{
+					led_bat_lev--;
+				}
+
+				if (led_ctl.status == LED_STATUS_YELLOW ||
+					led_ctl.status == LED_STATUS_RED_BLUE_FLASH)
+				{
+					// 单色灯
+					switch (led_bat_lev)
+					{
+					case LED_BAT_LEV_3:
+						if (discharge_time_cnt < BAT_SINGLE_LIGHT_3LED_TIME)
+						{
+							// 放电时间小于该挡位对应的时间，进行补偿
+							discharge_time_cnt =
+								((BAT_SINGLE_LIGHT_3LED_TIME +
+								  BAT_SINGLE_LIGHT_2LED_TIME) /
+								 2);
+						}
+						break;
+
+					case LED_BAT_LEV_2:
+						if (discharge_time_cnt < BAT_SINGLE_LIGHT_2LED_TIME)
+						{
+							// 放电时间小于该挡位对应的时间，进行补偿
+							discharge_time_cnt =
+								((BAT_SINGLE_LIGHT_2LED_TIME +
+								  BAT_SINGLE_LIGHT_1LED_TIME) /
+								 2);
+						}
+						break;
+
+					case LED_BAT_LEV_1:
+						if (discharge_time_cnt < BAT_SINGLE_LIGHT_1LED_TIME)
+						{
+							// 放电时间小于该挡位对应的时间，进行补偿
+							discharge_time_cnt =
+								((BAT_SINGLE_LIGHT_1LED_TIME +
+								  BAT_SINGLE_LIGHT_LOW_WARN_TIME) /
+								 2);
+						}
+						break;
+
+					default:
+						break;
+					}
+				}
+				else if (led_ctl.status == LED_STATUS_WHITE)
+				{
+					// 白灯
+					switch (led_bat_lev)
+					{
+					case LED_BAT_LEV_3:
+						if (discharge_time_cnt < BAT_W_3LED_TIME)
+						{
+							// 放电时间小于该挡位对应的时间，进行补偿
+							discharge_time_cnt =
+								((BAT_W_3LED_TIME +
+								  BAT_W_2LED_TIME) /
+								 2);
+						}
+						break;
+
+					case LED_BAT_LEV_2:
+						if (discharge_time_cnt < BAT_W_2LED_TIME)
+						{
+							// 放电时间小于该挡位对应的时间，进行补偿
+							discharge_time_cnt =
+								((BAT_W_2LED_TIME +
+								  BAT_W_1LED_TIME) /
+								 2);
+						}
+						break;
+
+					case LED_BAT_LEV_1:
+						if (discharge_time_cnt < BAT_W_1LED_TIME)
+						{
+							// 放电时间小于该挡位对应的时间，进行补偿
+							discharge_time_cnt =
+								((BAT_W_1LED_TIME +
+								  BAT_W_LOW_WARN_TIME) /
+								 2);
+						}
+						break;
+
+					default:
+						break;
+					}
+				}
+				else
+				{
+					// 双色灯，或者是只打开蓝牙，又或者是只通过type-c进行放电
+					switch (led_bat_lev)
+					{
+					case LED_BAT_LEV_3:
+						if (discharge_time_cnt < BAT_WY_3LED_TIME)
+						{
+							// 放电时间小于该挡位对应的时间，进行补偿
+							discharge_time_cnt =
+								((BAT_WY_3LED_TIME +
+								  BAT_WY_2LED_TIME) /
+								 2);
+						}
+						break;
+
+					case LED_BAT_LEV_2:
+						if (discharge_time_cnt < BAT_WY_2LED_TIME)
+						{
+							// 放电时间小于该挡位对应的时间，进行补偿
+							discharge_time_cnt =
+								((BAT_WY_2LED_TIME +
+								  BAT_WY_1LED_TIME) /
+								 2);
+						}
+						break;
+
+					case LED_BAT_LEV_1:
+						if (discharge_time_cnt < BAT_WY_1LED_TIME)
+						{
+							// 放电时间小于该挡位对应的时间，进行补偿
+							discharge_time_cnt =
+								((BAT_WY_1LED_TIME +
+								  BAT_WY_LOW_WARN_TIME) /
+								 2);
+						}
+						break;
+
+					default:
+						break;
+					}
+				}
+			}
+		}
+	}
+
+#if USER_DEBUG_ENABLE
+
+	{
+		static u16 cnt = 0;
+		cnt++;
+		if (cnt >= 1000)
+		{
+			cnt = 0;
+			printf("led_bat_lev == %u\n", (u16)led_bat_lev);
+		}
+	}
+
+#endif
+
+	// 更新显示到新的档位
+	switch (led_bat_lev)
+	{
+	case LED_BAT_LEV_OFF:
+	case LED_BAT_LEV_ALERT:
+		// 低电量提示，先关闭所有指示灯，由后续低电量提示的处理函数来控制动画
+		led_bat_lev_sta = LED_BAT_LEV_STA_ALERT;
+		LED_100_PERCENT_OFF();
+		LED_75_PERCENT_OFF();
+		LED_50_PERCENT_OFF();
+		LED_25_PERCENT_OFF();
+		break;
+	case LED_BAT_LEV_1:
+		LED_100_PERCENT_OFF();
+		LED_75_PERCENT_OFF();
+		LED_50_PERCENT_OFF();
+		LED_25_PERCENT_ON();
+		break;
+	case LED_BAT_LEV_2:
+		LED_100_PERCENT_OFF();
+		LED_75_PERCENT_OFF();
+		LED_50_PERCENT_ON();
+		LED_25_PERCENT_ON();
+		break;
+	case LED_BAT_LEV_3:
+		LED_100_PERCENT_OFF();
+		LED_75_PERCENT_ON();
+		LED_50_PERCENT_ON();
+		LED_25_PERCENT_ON();
+		break;
+	default:
+		LED_100_PERCENT_ON();
+		LED_75_PERCENT_ON();
+		LED_50_PERCENT_ON();
+		LED_25_PERCENT_ON();
+		break;
+	}
+}
+#else
+#error "Please select the appropriate LED battery level indication method"
+#endif
 
 static void led_bat_lev_sta_alert_handle(void)
 {

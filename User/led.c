@@ -64,8 +64,8 @@ void led_ctl_init(void)
 }
 
 void led_yellow_on(void)
-{ 
-    pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val); 
+{
+    pwm_set_channel_0_duty(led_ctl.cur_pwm_duty_val);
     FOUT_S30 = GPIO_FOUT_STMR0_PWMOUT;
 }
 
@@ -76,8 +76,8 @@ void led_yellow_off(void)
 }
 
 void led_white_on(void)
-{ 
-    pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val); // 
+{
+    pwm_set_channel_1_duty(led_ctl.cur_pwm_duty_val); //
     FOUT_S27 = GPIO_FOUT_STMR1_PWMOUT;
 }
 
@@ -89,47 +89,53 @@ void led_white_off(void)
 
 void led_status_switch(void)
 {
-    // printf("led_ctl.status == %u\n", (u16)led_ctl.status);
-    switch (led_ctl.status)
-    {
-    case LED_STATUS_OFF:
-        // 关灯 -> 打开黄灯 
-        led_status_set(LED_STATUS_YELLOW);
-        break;
-    case LED_STATUS_YELLOW:
-        // 黄灯打开 -> 关闭黄灯，打开白灯 
-        led_status_set(LED_STATUS_WHITE);
-        break;
-    case LED_STATUS_WHITE:
-        // 白灯打开 -> 打开白灯，打开黄灯 
-        led_status_set(LED_STATUS_WHITE_YELLOW);
-        break;
-    case LED_STATUS_WHITE_YELLOW:
-        // 白灯和黄灯都打开 -> 关闭黄灯和白灯，执行红灯和蓝灯闪烁的动画（红灯和蓝灯闪烁由其他函数来控制） 
-        led_status_set(LED_STATUS_RED_BLUE_FLASH);
-        break;
-    case LED_STATUS_RED_BLUE_FLASH:
-        // 当前红灯和蓝灯都闪烁 -> 关闭红灯和蓝灯 
-        led_status_set(LED_STATUS_OFF);
-        break;
-    }
-
     /*
         补丁：由于每次切换挡位，灯光都会从100%开始放电，
             这个时候电池电压会被拉得很低，导致电池电压检测不准确，
             电池电量显示也不准确
 
         这里每次切换挡位时，都重置下一次检测电池电压的时间
+
+        加入判断条件，如果灯光没有从100%开始放电（取消了缓慢调节），
+        不重置检测电池电压的时间
     */
-    cancel_shielding_bat_vol_scan_cnt = 0;
-    is_shielding_bat_vol_scan = 1;
+    if (0 == led_ctl.is_cancel_slowly_adjust)
+    {
+        cancel_shielding_bat_vol_scan_cnt = 0;
+        is_shielding_bat_vol_scan = 1;
+    }
+
+    // printf("led_ctl.status == %u\n", (u16)led_ctl.status);
+    switch (led_ctl.status)
+    {
+    case LED_STATUS_OFF:
+        // 关灯 -> 打开黄灯
+        led_status_set(LED_STATUS_YELLOW);
+        break;
+    case LED_STATUS_YELLOW:
+        // 黄灯打开 -> 关闭黄灯，打开白灯
+        led_status_set(LED_STATUS_WHITE);
+        break;
+    case LED_STATUS_WHITE:
+        // 白灯打开 -> 打开白灯，打开黄灯
+        led_status_set(LED_STATUS_WHITE_YELLOW);
+        break;
+    case LED_STATUS_WHITE_YELLOW:
+        // 白灯和黄灯都打开 -> 关闭黄灯和白灯，执行红灯和蓝灯闪烁的动画（红灯和蓝灯闪烁由其他函数来控制）
+        led_status_set(LED_STATUS_RED_BLUE_FLASH);
+        break;
+    case LED_STATUS_RED_BLUE_FLASH:
+        // 当前红灯和蓝灯都闪烁 -> 关闭红灯和蓝灯
+        led_status_set(LED_STATUS_OFF);
+        break;
+    }
 }
 
 // 设置led灯的状态
 void led_status_set(led_status_t status)
 {
     // 每次切换状态时，都清空工作时间
-    led_ctl.working_time = 0;     // 工作时间清零
+    led_ctl.working_time = 0; // 工作时间清零
 
     // 低电量且未充电时，跳过缓慢调节，直接使用目标占空比
     if (led_ctl.is_cancel_slowly_adjust && !is_in_charging)
@@ -390,7 +396,7 @@ void led_slow_adjust_isr(void)
         }
         else if (led_ctl.cur_pwm_duty_val > led_ctl.dest_pwm_duty_val)
         {
-            // 如果当前占空比 大于 目标占空（当前灯光亮度小于目标亮度值）
+            // 如果当前占空比 大于 目标占空比（当前灯光亮度小于目标亮度值）
             // 要按照 充电期间 的速度进行调节
             if (led_ctl.adjust_time_cnt >= PWM_DUTY_SLOW_ADJUST_UNIT_DURING_CHARGING)
             {
@@ -429,4 +435,3 @@ void led_slow_adjust_isr(void)
 #endif
 #endif
 }
- 

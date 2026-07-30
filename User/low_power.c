@@ -352,13 +352,13 @@ label_low_power_in:
     if (tmp_voltage_mv < BAT_LOW_VOLTAGE_CANCEL_SLOW_ADJUST_MV)
     {
         led_ctl.is_cancel_slowly_adjust = 1;
+        is_shielding_bat_vol_scan = 0; // 3.2V 以下的电压再去开机，不再屏蔽电池电压扫描
     }
     else
     {
         led_ctl.is_cancel_slowly_adjust = 0;
+        is_shielding_bat_vol_scan = 1;
     }
-
-    is_shielding_bat_vol_scan = 1;
 }
 
 // wake up timer 中断服务函数

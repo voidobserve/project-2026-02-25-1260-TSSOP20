@@ -14,6 +14,8 @@ extern volatile u32 cancel_shielding_bat_vol_scan_cnt;
 extern volatile u32 discharge_time_cnt; // 放电时间计数，单位：s
 extern volatile u32 charge_time_cnt;	// 充电时间计数，单位：s
 
+extern volatile u8 is_dev_close_enable; // 是否允许关机
+
 void battery_monitor_handle(void);
 
 void batttery_monitor_1ms_isr(void);

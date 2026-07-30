@@ -7,6 +7,21 @@
 // TEST_ONLY
 #define BAT_LED_TEST_ENABLE 0 // 电池电量指示灯测试
 
+// 将 白灯 放电、黄白灯 一起放电、黄灯 放电，视为单独的放电情况
+#define BAT_DISCHARGE_W_WY_Y_SINGLE_DETERMINATION_METHOD 0
+
+// 将 白灯 放电跟 黄白灯 一起放电视为同一种放电情况
+#define BAT_DISCHARGE_W_Y_TOGETHER_DETERMINATION_METHOD 1
+
+/*
+	程序中使用的放电判断方式 determination method
+
+	由于红蓝灯闪烁、单独打开蓝牙放音乐拉低电池电压的能力比较低，
+	通过type-c放电，拉低电池电压的能力未知并且不唯一，
+	因此将红蓝灯闪烁，type-c放电，都视为黄白灯一起放电的情况
+*/
+#define BAT_DISCHARGE_DETERMINATION_METHOD BAT_DISCHARGE_W_WY_Y_SINGLE_DETERMINATION_METHOD
+
 // =====================================================================
 // =====================================================================
 
@@ -39,8 +54,6 @@
 #define BAT_WY_2LED_VOLTAGE ((u16)3600)
 #define BAT_WY_1LED_VOLTAGE ((u16)3500)
 #define BAT_WY_LOW_WARN_VOLTAGE ((u16)3250)
-// 死区电压
-#define BAT_WY_DEAD_ZONE_VOLTAGE ((u16)50)
 
 #if (!BAT_LED_TEST_ENABLE)
 // 放电时，电池电量指示灯只显示 3颗 时，对应的放电时间（从满电开始计算），单位：s
@@ -70,8 +83,6 @@
 #define BAT_SINGLE_LIGHT_2LED_VOLTAGE ((u16)3700)
 #define BAT_SINGLE_LIGHT_1LED_VOLTAGE ((u16)3600)
 #define BAT_SINGLE_LIGHT_LOW_WARN_VOLTAGE ((u16)3250)
-// 死区电压
-#define BAT_SINGLE_LIGHT_DEAD_ZONE_VOLTAGE ((u16)50)
 
 #if (!BAT_LED_TEST_ENABLE)
 // 放电时，电池电量指示灯只显示 3颗 时，对应的放电时间（从满电开始计算），单位：s
@@ -85,6 +96,26 @@
 #define BAT_SINGLE_LIGHT_2LED_TIME ((u16)17)
 #define BAT_SINGLE_LIGHT_1LED_TIME ((u16)26)
 #define BAT_SINGLE_LIGHT_LOW_WARN_TIME ((u16)31)
+#endif
+
+#if (BAT_DISCHARGE_DETERMINATION_METHOD == BAT_DISCHARGE_W_WY_Y_SINGLE_DETERMINATION_METHOD)
+// 白灯单独点亮（ WHITE ）
+
+// 目前是在黄白灯一起点亮的判断阈值上，减去100mV，作为判断阈值
+#define BAT_W_3LED_VOLTAGE ((u16)3600)
+#define BAT_W_2LED_VOLTAGE ((u16)3500)
+#define BAT_W_1LED_VOLTAGE ((u16)3400)
+#define BAT_W_LOW_WARN_VOLTAGE ((u16)3250)
+
+// 放电时，电池电量指示灯只显示 3颗 时，对应的放电时间（从满电开始计算），单位：s
+#define BAT_W_3LED_TIME ((u16)60 * 60)
+// 放电时，电池电量指示灯只显示 2颗 时，对应的放电时间（从满电开始计算），单位：s
+#define BAT_W_2LED_TIME ((u16)120 * 60)
+// 放电时，电池电量指示灯只显示 1颗 时，对应的放电时间（从满电开始计算），单位：s
+#define BAT_W_1LED_TIME ((u16)180 * 60)
+// 放电时，电池电量指示灯进行 低电量提示 时，对应的放电时间（从满电开始计算），单位：s
+#define BAT_W_LOW_WARN_TIME ((u16)220 * 60)
+
 #endif
 
 // =====================================================================
@@ -126,6 +157,7 @@
 #define LED_CHARGE_QUICK_FILL_INTERVAL_MS ((u32)1 * 10 * 1000)
 
 // 电池电量指示灯对应的挡位
+// REVIEW led_bat_lev_t 容易与 led_bat_lev_sta_t 混淆，需要检查有没有混淆的地方
 enum
 {
 	LED_BAT_LEV_OFF = 0x00, // 关灯
@@ -137,6 +169,7 @@ enum
 };
 typedef u8 led_bat_lev_t;
 
+// REVIEW led_bat_lev_t 容易与 led_bat_lev_sta_t 混淆，需要检查有没有混淆的地方
 enum
 {
 	LED_BAT_LEV_STA_IDLE = 0x00,

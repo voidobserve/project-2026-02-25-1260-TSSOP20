@@ -446,6 +446,8 @@ void charge_det(void)
             /*
                 检测到放电信号，并且 type-c 口电压要大于
                 (4800 - 100)mV，才认为是在放电
+                放电时，充电ic有升压和补偿，应该是稳定的接近5V的电压，
+                电压不会被负载拉得过低
 
                 用于区分太阳能一侧电压下降后，充电IC输出了放电信号
             */
@@ -492,6 +494,8 @@ void charge_det(void)
 
         // 充电时取消低电量缓慢调节限制，恢复正常缓慢调节
         led_ctl.is_cancel_slowly_adjust = 0;
+
+        is_dev_close_enable = 0; // 充电时，清空控制关机的标志位
     }
     else if (is_in_charging_by_charger == 0 && is_in_charging_by_solar_panel == 0)
     {

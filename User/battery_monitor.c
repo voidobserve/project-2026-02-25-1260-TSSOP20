@@ -30,6 +30,15 @@ volatile u8 is_shielding_bat_vol_scan = 0;
 // 取消屏蔽电池电压扫描的计数
 volatile u32 cancel_shielding_bat_vol_scan_cnt = 0;
 
+/*
+    是否允许关机
+
+    该标志位置一后，直接进入关机的处理函数，直到主灯光、蓝牙ic关闭，再进入关机
+
+    进入关机的状态后，或者进入充电状态后，再清零
+*/
+volatile u8 is_dev_close_enable = 0; //
+
 // 控制发送低电量的周期
 void send_low_bat_timer_callback(void)
 {
@@ -287,14 +296,24 @@ void battery_monitor_handle(void)
         return;
     }
 
-    // 到了关机对应的电压
-    if (avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE)
+    /*
+        到了关机对应的电压
+        要等到电池电量指示灯处于低电量提示状态，再去关机，
+        关闭主灯之后，电池电压会回升，如果此时蓝牙接收不到关机的指令，
+        之后会一直处于低电量提示，关不了机
+        -> 加入一个标志位，如果标志位置一，就重复执行关机的操作，直到成功关机
+    */
+    if ((avg_voltage_mv <= BATTERY_EMPTY_VOLTAGE &&
+         led_bat_lev == LED_BAT_LEV_ALERT) ||
+        is_dev_close_enable)
     {
 #if USER_DEBUG_ENABLE
         printf("detect bat power empty\n");
         // printf("led_ctl.status == %u\n", (u16)led_ctl.status);
         // printf("ble_ic.is_working == %u\n", (u16)ble_ic.is_working);
 #endif
+
+        is_dev_close_enable = 1;
 
         // 关闭灯光
         if (led_ctl.status != LED_STATUS_OFF)
@@ -322,10 +341,11 @@ void battery_monitor_handle(void)
     /*
         低电量，并且没有发送过低电量报警，要打开蓝牙，发送低电量报警
         电池电量在关机电压和低电量阈值之间，才打开蓝牙
+
+        等到指示灯变成低电量提示状态，再发送报警
     */
     if (is_sent_low_bat_alert == 0 &&
-        /* 扩展低电量触发阈值，使用模式配置中的低电警告阈值（参考客户要求） */
-        avg_voltage_mv <= BATTERY_LOW_WARNING_VOLTAGE)
+        led_bat_lev == LED_BAT_LEV_ALERT)
     {
         // u8 i; // 循环计数值，控制连续发送低电量报警的次数
 #if USER_DEBUG_ENABLE
@@ -338,6 +358,9 @@ void battery_monitor_handle(void)
 
         uart_data_send_cmd(UART_SEND_CMD_LOW_POWER_WARNING);
         is_sent_low_bat_alert = 1;
+
+
+        led_ctl.is_cancel_slowly_adjust = 1; // 取消灯光的缓慢调节，直接让灯光变为目标PWM占空比
     }
 
     // 灯开着，或者蓝牙正在工作，并且到了电池低电量状态，每隔一段时间发送一次低电量报警：

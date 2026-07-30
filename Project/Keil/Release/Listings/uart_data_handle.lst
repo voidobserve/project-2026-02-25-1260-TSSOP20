@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/29/2026 17:46:38 PAGE 1   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/30/2026 16:03:35 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE UART_DATA_HANDLE
@@ -62,7 +62,7 @@ line level    source
   51   2          }
   52   1          else
   53   1          {
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/29/2026 17:46:38 PAGE 2   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/30/2026 16:03:35 PAGE 2   
 
   54   2      #if USER_DEBUG_ENABLE
                       // 校验和错误
@@ -126,7 +126,7 @@ line level    source
  113   3              }
  114   2              break;
  115   2      
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/29/2026 17:46:38 PAGE 3   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/30/2026 16:03:35 PAGE 3   
 
  116   2          case UART_DATA_HANDLE_STATUS_FORMAT_FIX_VAL0:
  117   2              // CMD字节，任何值都可以接受
@@ -190,7 +190,7 @@ line level    source
  175   1          return 1;
  176   1      }
  177          
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/29/2026 17:46:38 PAGE 4   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/30/2026 16:03:35 PAGE 4   
 
  178          // 超时处理函数
  179          void uart_receiver_timeout_handler(void)
@@ -254,7 +254,7 @@ line level    source
  237   2                  uart_receiver.status == UART_DATA_HANDLE_STATUS_FORMAT_CHECK_SUM) // 接收完校验和就认�
              -��接收完成
  238   2              {
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/29/2026 17:46:38 PAGE 5   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/30/2026 16:03:35 PAGE 5   
 
  239   3      #if USER_DEBUG_ENABLE
                           // 缓冲区为空或者接收完成，退出循环
@@ -318,7 +318,7 @@ line level    source
                               printf("cur uart receiver status: %02d\n", (u16)uart_receiver.status);
                           }
               
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/29/2026 17:46:38 PAGE 6   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/30/2026 16:03:35 PAGE 6   
 
                           // printf("cur uart receiver index: %02d\n", (u16)uart_receiver.index);
                           // printf("cur recved byte: 0x%02x\n", (u16)recv_byte);
@@ -382,7 +382,7 @@ line level    source
  358   2          }
  359   1      
  360   1          // 重置接收器，准备下一次接收
-C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/29/2026 17:46:38 PAGE 7   
+C51 COMPILER V9.60.7.0   UART_DATA_HANDLE                                                  07/30/2026 16:03:35 PAGE 7   
 
  361   1          uart_receiver_reset();
  362   1      }
