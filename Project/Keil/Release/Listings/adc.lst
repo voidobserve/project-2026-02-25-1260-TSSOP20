@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:03:34 PAGE 1   
+C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:16:49 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE ADC
@@ -62,7 +62,7 @@ line level    source
   50   1                      ADC_EN(0x1);        // 使能 adc
   51   1      
   52   1          delay_ms(1); // 等待ADC模块配置稳定，需要等待20us以上
-C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:03:34 PAGE 2   
+C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:16:49 PAGE 2   
 
   53   1      }
   54          
@@ -126,7 +126,7 @@ line level    source
  112   1          u8 ret = 0xFF;
  113   1          switch (adc_channel)
  114   1          {
-C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:03:34 PAGE 3   
+C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:16:49 PAGE 3   
 
  115   2          case ADC_CHANNEL_SEL_AD_KEY:
  116   2              ret = (u8)flag_is_adkey_val_update;
@@ -190,7 +190,7 @@ line level    source
  174   2                           ADC_TEN_SEL(0x03) |  // 关闭测试信号
  175   2                           ADC_INREF_SEL(0x01); // 使能内部参考电压
  176   2              ADC_CHS0 = ADC_EXT_SEL(0x01) |    // 选择内部通道
-C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:03:34 PAGE 4   
+C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:16:49 PAGE 4   
 
  177   2                         ADC_ANALOG_CHAN(0x03); // 选择 VDD 1/5 分压的通道
  178   2              break;
@@ -254,7 +254,7 @@ line level    source
  235   2              cur_adc_status = ADC_STATUS_SEL_AD_KEY_WAITING;
  236   2              break;
  237   2          case ADC_STATUS_SEL_AD_KEY_WAITING:
-C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:03:34 PAGE 5   
+C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:16:49 PAGE 5   
 
  238   2              // 开启转换，之后在ad中断获取ad值
  239   2              ADC_CFG0 |= 0x01 << 0; // 开启 adc0 转换
@@ -318,7 +318,7 @@ line level    source
  297   3                  adc_update_val(ADC_CHANNEL_SEL_SOLAR_DET, adc_val);
  298   3                  break;
  299   3              case ADC_STATUS_SEL_TYPE_C:
-C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:03:34 PAGE 6   
+C51 COMPILER V9.60.7.0   ADC                                                               07/30/2026 16:16:49 PAGE 6   
 
  300   3                  adc_update_val(ADC_CHANNEL_SEL_TYPE_C, adc_val);
  301   3                  break;

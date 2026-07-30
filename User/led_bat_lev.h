@@ -20,7 +20,7 @@
 	通过type-c放电，拉低电池电压的能力未知并且不唯一，
 	因此将红蓝灯闪烁，type-c放电，都视为黄白灯一起放电的情况
 */
-#define BAT_DISCHARGE_DETERMINATION_METHOD BAT_DISCHARGE_W_WY_Y_SINGLE_DETERMINATION_METHOD
+#define BAT_DISCHARGE_DETERMINATION_METHOD BAT_DISCHARGE_W_Y_TOGETHER_DETERMINATION_METHOD
 
 // =====================================================================
 // =====================================================================

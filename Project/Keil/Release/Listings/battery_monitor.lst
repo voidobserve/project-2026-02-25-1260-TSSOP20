@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:03:35 PAGE 1   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:16:50 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE BATTERY_MONITOR
@@ -62,7 +62,7 @@ line level    source
   48   1             需要隔一时间再发送，又不能隔太长时间，否则蓝牙会自动关机
   49   1             这里控制刚打开蓝牙之后，发送低电量报警
   50   1          */
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:03:35 PAGE 2   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:16:50 PAGE 2   
 
   51   1          static volatile u8 is_first_time_to_send = 0;
   52   1      
@@ -126,7 +126,7 @@ line level    source
  110   4                  }
  111   3              }
  112   2          }
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:03:35 PAGE 3   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:16:50 PAGE 3   
 
  113   1          else
  114   1          {
@@ -190,7 +190,7 @@ line level    source
  171   1          {
  172   2              // 没有在充电，
  173   2              // 直接根据当前电池电压，大致给出充电时间
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:03:35 PAGE 4   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:16:50 PAGE 4   
 
  174   2      
  175   2              // 根据黄白灯一起亮的数据来初始化充电时间
@@ -254,7 +254,7 @@ line level    source
  233   2              if (discharge_time_cnt < BAT_WY_LOW_WARN_TIME)
  234   2              {
  235   3                  /*
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:03:35 PAGE 5   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:16:50 PAGE 5   
 
  236   3                      电池电压小于低电量提示电压，
  237   3                      并且放电时间小于低电量提示时间
@@ -318,7 +318,7 @@ line level    source
  294   1          {
  295   2              // 刚从低功耗期间唤醒，还没有得到稳定的电池电压，直接返回
  296   2              return;
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:03:35 PAGE 6   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:16:50 PAGE 6   
 
  297   2          }
  298   1      
@@ -382,7 +382,7 @@ line level    source
  354   2              if (ble_ic.is_working == 0)
  355   2              {
  356   3                  ble_ic_enable();
-C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:03:35 PAGE 7   
+C51 COMPILER V9.60.7.0   BATTERY_MONITOR                                                   07/30/2026 16:16:50 PAGE 7   
 
  357   3              }
  358   2      
