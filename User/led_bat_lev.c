@@ -383,6 +383,11 @@ static void led_bat_lev_sta_discharge_handle(void)
 			}
 		}
 	}
+	else
+	{
+		// led_bat_lev <= target_bat_lev 时，不需要跳级，清空计数
+		jump_down_cnt_ms = 0;
+	}
 
 #if USER_DEBUG_ENABLE
 
@@ -823,6 +828,11 @@ static void led_bat_lev_sta_discharge_handle(void)
 				}
 			}
 		}
+	}
+	else
+	{
+		// led_bat_lev <= target_bat_lev 时，不需要跳级，清空计数
+		jump_down_cnt_ms = 0;
 	}
 
 #if USER_DEBUG_ENABLE

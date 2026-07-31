@@ -1,4 +1,4 @@
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/30/2026 16:16:50 PAGE 1   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/31/2026 17:59:08 PAGE 1   
 
 
 C51 COMPILER V9.60.7.0, COMPILATION OF MODULE CHARGE_DET
@@ -62,7 +62,7 @@ line level    source
   50   1          u8 current_pin_state = CHARGE_IC_CH1; // 当前引脚状态
   51   1          // 如果连续多次检测到1KHz信号模式，则设置充电标志
   52   1          static volatile u16 consecutive_detection_count = 0; // 计数器，是否连续检测到多次充电�
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/30/2026 16:16:50 PAGE 2   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/31/2026 17:59:08 PAGE 2   
 
              -��号（用于检测是否有充电）
   53   1      
@@ -126,7 +126,7 @@ line level    source
              -��期）
  111   3                  // 允许一定误差范围，比如3 ~ 5 个 100us 周期之间
  112   3                  // user_debug_val_u16 = signal_high_duration; // 获取得到的计数值（测试时使用）
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/30/2026 16:16:50 PAGE 3   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/31/2026 17:59:08 PAGE 3   
 
  113   3                  if (signal_high_duration >= 3 && signal_high_duration <= 5)
  114   3                  {
@@ -190,7 +190,7 @@ line level    source
  170   3                  is_in_charging_by_charger = 1;
  171   3              }
  172   2      
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/30/2026 16:16:50 PAGE 4   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/31/2026 17:59:08 PAGE 4   
 
  173   2              // 5000 *10 * 100 us 连续 5s 检测到1Khz信号，说明充满电(实际测试可能只有3s)
  174   2              if (consecutive_detection_count >= (u32)5000 * 10)
@@ -254,7 +254,7 @@ line level    source
  232   3                  /*
  233   3                      检测到高电平
  234   3                      进入高电平检测状态
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/30/2026 16:16:50 PAGE 5   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/31/2026 17:59:08 PAGE 5   
 
  235   3                  */
  236   3                  detection_state = 1;
@@ -318,7 +318,7 @@ line level    source
  293   3                  signal_low_duration = 0;
  294   3              }
  295   2              break;
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/30/2026 16:16:50 PAGE 6   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/31/2026 17:59:08 PAGE 6   
 
  296   2          }
  297   1      
@@ -382,7 +382,7 @@ line level    source
  354   1      
  355   1          if (adc_get_update_flag(ADC_CHANNEL_SEL_SOLAR_DET))
  356   1          {
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/30/2026 16:16:50 PAGE 7   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/31/2026 17:59:08 PAGE 7   
 
  357   2              adc_clear_update_flag(ADC_CHANNEL_SEL_SOLAR_DET);
  358   2              adc_val_of_solar_panel = adc_get_val(ADC_CHANNEL_SEL_SOLAR_DET);
@@ -446,7 +446,7 @@ line level    source
  415   2          }
  416   1      
  417   1          type_c_vol_mv = TYPE_C_DET_ADC_VAL_TO_VOL(adc_val_of_type_c);
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/30/2026 16:16:50 PAGE 8   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/31/2026 17:59:08 PAGE 8   
 
  418   1      #if USER_DEBUG_ENABLE
                   // printf("adc_val_of_type_c == %u\n", adc_val_of_type_c);
@@ -510,7 +510,7 @@ line level    source
  476   2              is_detect_discharge_signal = 0;
  477   2          }
  478   1          else
-C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/30/2026 16:16:50 PAGE 9   
+C51 COMPILER V9.60.7.0   CHARGE_DET                                                        07/31/2026 17:59:08 PAGE 9   
 
  479   1          {
  480   2              // 处于 2V~4V 之间的过渡区间时，先不作为有效放电判定，
